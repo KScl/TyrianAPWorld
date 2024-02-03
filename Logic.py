@@ -77,11 +77,12 @@ class TyrianLogic(LogicMixin):
                     if not self.has_any(LocalItemData.all_by_tag(condition[3:]), player):
                         break
                 elif condition == "Repulsor":
-                    if not (self.has("Repulsor", player) or self._tyrian_has_twiddle(player, "Repulsor")):
+                    if not (self.has("Repulsor", player) \
+                          or self._tyrian_has_twiddle(player, "Repulsor")):
                         break
                 elif condition == "Invulnerability":
                     if not (self.has("Invulnerability", player) \
-                        or self._tyrian_has_twiddle(player, "Invulnerability")):
+                          or self._tyrian_has_twiddle(player, "Invulnerability")):
                         break
                 else:
                     raise Exception(f"Invalid condition '{condition}' specified")

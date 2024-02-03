@@ -90,10 +90,10 @@ class LocalItemData:
         "SAWBLADES (Episode 3)": LocalLevel(205, Episode.MissionSuicide),
         "CAMANIS (Episode 3)":   LocalLevel(206, Episode.MissionSuicide),
         "MACES (Episode 3)":     LocalLevel(207, Episode.MissionSuicide),
-        "FLEET (Episode 3)":     LocalLevel(208, Episode.MissionSuicide), # Goal
-        "TYRIAN X (Episode 3)":  LocalLevel(209, Episode.MissionSuicide),
-        "SAVARA Y (Episode 3)":  LocalLevel(210, Episode.MissionSuicide),
-        "NEW DELI (Episode 3)":  LocalLevel(211, Episode.MissionSuicide),
+        "TYRIAN X (Episode 3)":  LocalLevel(208, Episode.MissionSuicide),
+        "SAVARA Y (Episode 3)":  LocalLevel(209, Episode.MissionSuicide),
+        "NEW DELI (Episode 3)":  LocalLevel(210, Episode.MissionSuicide),
+        "FLEET (Episode 3)":     LocalLevel(211, Episode.MissionSuicide), # Goal
 
         "SURFACE (Episode 4)":   LocalLevel(300, Episode.AnEndToFate),
         "WINDY (Episode 4)":     LocalLevel(301, Episode.AnEndToFate),
@@ -222,14 +222,14 @@ class LocalItemData:
         "Charge Cannon":              LocalWeapon(802, count=2),
         "Vulcan Shot Option":         LocalWeapon(803, count=2),
         "Wobbley":                    LocalWeapon(804, count=2),
-        "MegaMissile":                LocalWeapon(805, count=2, tags=['HasAmmo', 'HighDPS'], \
-            item_class=IC.useful),
-        "Atom Bombs":                 LocalWeapon(806, count=2, tags=['HasAmmo', 'HighDPS'], \
-            item_class=IC.useful),
-        "Phoenix Device":             LocalWeapon(807, count=2, tags=['HasAmmo', 'HighDPS', 'Defensive'], \
-            item_class=IC.useful),
-        "Plasma Storm":               LocalWeapon(808, count=1, tags=['HasAmmo', 'HighDPS'], \
-            item_class=IC.useful), # Too OP for two sidekicks, reduced to just one (still pretty good)
+        "MegaMissile":                LocalWeapon(805, count=2, tags=['HasAmmo', 'HighDPS'],
+              item_class=IC.useful),
+        "Atom Bombs":                 LocalWeapon(806, count=2, tags=['HasAmmo', 'HighDPS'],
+              item_class=IC.useful),
+        "Phoenix Device":             LocalWeapon(807, count=2, tags=['HasAmmo', 'HighDPS', 'Defensive'],
+              item_class=IC.useful),
+        "Plasma Storm":               LocalWeapon(808, count=1, tags=['HasAmmo', 'HighDPS'],
+              item_class=IC.useful), # Too OP for two sidekicks, reduced to just one (still pretty good)
         "Mini-Missile":               LocalWeapon(809, count=2, tags=['HasAmmo']),
         "Buster Rocket":              LocalWeapon(810, count=2, tags=['HasAmmo']),
         "Zica Supercharger":          LocalWeapon(811, count=2),
@@ -259,14 +259,18 @@ class LocalItemData:
     # ----------------------------------------------------------------------------------------------------------------
 
     other_items: Dict[str, LocalItem] = {
-        "Maximum Power Up":      LocalItem(900, count=10, item_class=IC.progression), # Starts at 1, caps at 11
-        "Progressive Generator": LocalItem(901, count=5,  item_class=IC.progression),
+        "Advanced MR-12":        LocalItem(900, item_class=IC.progression),
+        "Gencore Custom MR-12":  LocalItem(901, item_class=IC.progression),
+        "Standard MicroFusion":  LocalItem(902, item_class=IC.progression),
+        "Advanced MicroFusion":  LocalItem(903, item_class=IC.progression),
+        "Gravitron Pulse-Wave":  LocalItem(904, item_class=IC.progression),
+        "Progressive Generator": LocalItem(905, count=5,  item_class=IC.progression),
+        "Maximum Power Up":      LocalItem(906, count=10, item_class=IC.progression), # Starts at 1, caps at 11
+        "Armor Up":              LocalItem(907, count=9,  item_class=IC.progression), # Starts at 5, caps at 14
+        "Shield Up":             LocalItem(908, count=9,  item_class=IC.useful), # Starts at 5, caps at 14
+        "Solar Shields":         LocalItem(909, count=1,  item_class=IC.useful),
 
-        "Armor Up":              LocalItem(902, count=9, item_class=IC.progression), # Starts at 5, caps at 14
-        "Shield Up":             LocalItem(903, count=9, item_class=IC.useful), # Starts at 5, caps at 14
-        "Solar Shields":         LocalItem(904, count=1, item_class=IC.useful),
-
-        "SuperBomb":             LocalItem(905, count=1), # More can be added in junk fill
+        "SuperBomb":             LocalItem(910, count=1), # More can be added in junk fill
 
         # All Credits items have their count set dynamically.
         "50 Credits":            LocalItem(980),

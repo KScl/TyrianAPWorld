@@ -4,26 +4,75 @@
 # and is released under the terms of the zlib license.
 # See "LICENSE" for more details.
 
-from typing import Optional, Dict, Union
+from typing import Optional, Dict, Union, List
+
+from BaseClasses import Location
+from BaseClasses import LocationProgressType as LP
 
 from .Logic import RequirementList
 
 class LevelRegion:
+    # I don't really like the distribution I was getting from just doing random.triangular, so
+    # instead we have multiple different types of random prices that can get generated, and we choose
+    # which one we want randomly (based on the level we're generating it for).
+    # Appending an "!" makes the shop location prioritized.
+    # Appending a "#" makes the shop location excluded.
+    base_shop_setup_list = {
+        "A": (   50,   501,   1),
+        "B": (  100,  1001,   1),
+        "C": (  200,  2001,   2),
+        "D": (  400,  3001,   2),
+        "E": (  750,  3001,   5),
+        "F": (  500,  5001,   5),
+        "G": ( 1000,  7501,   5),
+        "H": ( 2000,  7501,  10),
+        "I": ( 3000,  9001,  10),
+        "J": ( 2000, 10001,   5),
+        "K": ( 3000, 10001,  10),
+        "L": ( 5000, 10001,  25),
+        "M": ( 3000, 15001,  10),
+        "N": ( 5000, 15001,  25),
+        "O": ( 7500, 15001,  50),
+        "P": ( 4000, 20001,  10),
+        "Q": ( 6000, 20001,  25),
+        "R": ( 5000, 25001,  50),
+        "S": ( 5000, 30001, 100),
+        "T": (10000, 30001,  25),
+        "U": (10000, 40001,  50),
+        "V": (10000, 50001, 100),
+        "W": (10000, 65601, 100),
+        "X": (20000, 65601, 100),
+        "Y": (30000, 65601, 100),
+        "Z": (65535, 65536,   1) # Always max shop price
+    }
+
     completion_reqs: Union[str, RequirementList, None]
     locations: Dict[str, Optional[RequirementList]]
     base_id: int # Should match ID in lvlmast.c
+    shop_setups: List[str] # See base_shop_setups_list above
 
-    def __init__(self, base_id: int, locations: Dict[str, Optional[RequirementList]], \
-        completion_reqs: Optional[RequirementList] = None):
+    def __init__(self, base_id: int, locations: Dict[str, Optional[RequirementList]],
+          completion_reqs: Optional[RequirementList] = None,
+          shop_setups: List[str] = ["F", "H", "K", "L"]):
         self.base_id = base_id
         self.locations = locations
         self.completion_reqs = completion_reqs
+        self.shop_setups = shop_setups
 
     def items(self):
         return self.locations.items()
 
     def keys(self):
         return self.locations.keys()
+
+    # Gets a random price based on this level's shop setups, and assigns it to the locaton.
+    # Also changes location to prioritized/excluded automatically based on the setup rolled.
+    def set_random_shop_price(self, world, location: Location) -> None:
+        setup_choice = world.random.choice(self.shop_setups)
+        if len(setup_choice) > 1:
+            location.progress_type = LP.PRIORITY if setup_choice[-1] == "!" else LP.EXCLUDED
+        location.shop_price = min(world.random.randrange(*self.base_shop_setup_list[setup_choice[0]]), 65535)
+
 
 class LevelLocationData:
 
@@ -44,7 +93,9 @@ class LevelLocationData:
             "TYRIAN (Episode 1) - First Line of Tanks": None,
             "TYRIAN (Episode 1) - SOH JIN Orb": None,
             "TYRIAN (Episode 1) - Boss": None,
-        }, completion_reqs=None),
+        }, completion_reqs=None,
+        # Make sure to put especially low prices in the shops of all episode start levels
+        shop_setups=["A#", "B#", "C", "D", "D", "E", "F", "F", "G", "I!"]),
 
         "BUBBLES (Episode 1)": LevelRegion(base_id=10, locations={
             "BUBBLES (Episode 1) - Orbiting Bubbles": None,
@@ -56,7 +107,8 @@ class LevelLocationData:
             "BUBBLES (Episode 1) - Coin Rain 2": RequirementList(["SideHighDPS"], ["Power3"]),
             "BUBBLES (Episode 1) - Coin Rain 3": RequirementList(["SideHighDPS"], ["Power3"]),
             "BUBBLES (Episode 1) - Final Bubble Line": None,
-        }, completion_reqs=None),
+        }, completion_reqs=None,
+        shop_setups=["C", "D", "E", "G", "I"]),
 
         "HOLES (Episode 1)": LevelRegion(base_id=20, locations={
             "HOLES (Episode 1) - U-Ship Formation 1": RequirementList(["Power3"]),
@@ -74,32 +126,33 @@ class LevelLocationData:
             "SOH JIN (Episode 1) - Triple Orb Launchers": None,
             "SOH JIN (Episode 1) - Double Orb Launcher Line": None,
             "SOH JIN (Episode 1) - Next to Double Point Items": None,
-        }, completion_reqs=None),
+        }, completion_reqs=None,
+        shop_setups=["F", "H", "H", "J", "J", "T"]),
 
         "ASTEROID1 (Episode 1)": LevelRegion(base_id=40, locations={
             "ASTEROID1 (Episode 1) - Shield Ship in Asteroid Field": None,
             "ASTEROID1 (Episode 1) - Railgunner 1": None,
             "ASTEROID1 (Episode 1) - Railgunner 2": RequirementList(
-                ["Power2"], ["AnyHighDPS"], ["SideDefensive"]),
+                  ["Power2"], ["AnyHighDPS"], ["SideDefensive"]),
             "ASTEROID1 (Episode 1) - Railgunner 3": RequirementList(
-                ["Power2"], ["AnyHighDPS"], ["SideDefensive"]),
+                  ["Power2"], ["AnyHighDPS"], ["SideDefensive"]),
             "ASTEROID1 (Episode 1) - ASTEROID? Face Rock": RequirementList(
-                ["Power2"], ["AnyHighDPS"], ["SideDefensive"]),
+                  ["Power2"], ["AnyHighDPS"], ["SideDefensive"]),
             "ASTEROID1 (Episode 1) - Maneuvering Missiles": RequirementList(
-                ["Power2"], ["AnyHighDPS"], ["SideDefensive"]),
+                  ["Power2"], ["AnyHighDPS"], ["SideDefensive"]),
             "ASTEROID1 (Episode 1) - Boss": RequirementList(
-                ["Power2"], ["AnyHighDPS"], ["SideDefensive"]),
+                  ["Power2"], ["AnyHighDPS"], ["SideDefensive"]),
         }, completion_reqs="Boss"),
 
         "ASTEROID2 (Episode 1)": LevelRegion(base_id=50, locations={
             "ASTEROID2 (Episode 1) - Tank Turn-around Secret 1": None, # Game's hints tell you about this one
             "ASTEROID2 (Episode 1) - First Tank Squadron": RequirementList(["Power2"], ["AnyHighDPS"]),
             "ASTEROID2 (Episode 1) - Tank Turn-around Secret 2": RequirementList(
-                ["Power2"], ["AnyHighDPS"], obscure=True),
+                  ["Power2"], ["AnyHighDPS"], obscure=True),
             "ASTEROID2 (Episode 1) - Second Tank Squadron": RequirementList(["Power2"], ["AnyHighDPS"]),
             "ASTEROID2 (Episode 1) - Tank Bridge": RequirementList(["Power2"], ["AnyHighDPS"]),
             "ASTEROID2 (Episode 1) - Tank Assault Right Tank Secret": RequirementList(
-                ["Power2"], ["AnyHighDPS"], obscure=True),
+                  ["Power2"], ["AnyHighDPS"], obscure=True),
             "ASTEROID2 (Episode 1) - MINEMAZE Face Rock": RequirementList(["Power2"], ["AnyHighDPS"]),
             "ASTEROID2 (Episode 1) - Boss": RequirementList(["Power2"], ["AnyHighDPS"]),
         }, completion_reqs="Boss"),
@@ -109,11 +162,11 @@ class LevelLocationData:
             "MINEMAZE (Episode 1) - Lone Orb": None,
             "MINEMAZE (Episode 1) - Right Path Gate": None,
             "MINEMAZE (Episode 1) - Spinning Orb Overload": RequirementList(
-                ["Power3"], ["FrontHighDPS", "Power2"], ["SideHighDPS"]),
+                  ["Power3"], ["FrontHighDPS", "Power2"], ["SideHighDPS"]),
             "MINEMAZE (Episode 1) - ASTEROID? Orb": RequirementList(
-                ["Power3"], ["FrontHighDPS", "Power2"], ["SideHighDPS"]),
+                  ["Power3"], ["FrontHighDPS", "Power2"], ["SideHighDPS"]),
             "MINEMAZE (Episode 1) - Ships Behind Central Gate": RequirementList(
-                ["Power3"], ["FrontHighDPS", "Power2"], ["SideHighDPS"])
+                  ["Power3"], ["FrontHighDPS", "Power2"], ["SideHighDPS"])
         }, completion_reqs=RequirementList(["Power3"], ["FrontHighDPS", "Power2"], ["SideHighDPS"]) ),
 
         "ASTEROID? (Episode 1)": LevelRegion(base_id=70, locations={
@@ -126,18 +179,18 @@ class LevelLocationData:
             # - Destroy the correct enemies to spawn the WINDY orb, and
             # - Destroy the specific ships after the WINDY orb within two seconds of them spawning
             "ASTEROID? (Episode 1) - Secret Ship Quick Shot 1": RequirementList(
-                ["FrontHighDPS", "Power7", "Generator3"], obscure=True),
+                  ["FrontHighDPS", "Power7", "Generator3"], obscure=True),
             "ASTEROID? (Episode 1) - Secret Ship Quick Shot 2": RequirementList(
-                ["FrontHighDPS", "Power7", "Generator3"], obscure=True)
+                  ["FrontHighDPS", "Power7", "Generator3"], obscure=True)
         }, completion_reqs=RequirementList(["Power4", "Generator2"]) ),
 
         "WINDY (Episode 1)": LevelRegion(base_id=80, locations={
             # Embedded in a wall
             "WINDY (Episode 1) - Central Question Mark": RequirementList(
-                ["Invulnerability", "SideHighDPS", "Power5", "Armor7"], # The sane way
-                ["Invulnerability", "Power8", "Armor7"], # Alternative (high weapon power)
-                ["Armor14", "Power9"], # The less sane way (just taking the damage -- OOF)
-                obscure=True)
+                  ["Invulnerability", "SideHighDPS", "Power5", "Armor7"], # The sane way
+                  ["Invulnerability", "Power8", "Armor7"], # Alternative (high weapon power)
+                  ["Armor14", "Power9"], # The less sane way (just taking the damage -- OOF)
+            obscure=True)
         }, completion_reqs=RequirementList(["Power5"], ["SideHighDPS"], require_all=["Armor7"]) ),
 
         "SAVARA (Episode 1)": LevelRegion(base_id=90, locations={
@@ -164,33 +217,33 @@ class LevelLocationData:
 
         "MINES (Episode 1)": LevelRegion(base_id=120, locations={
             "MINES (Episode 1) - Regular Spinning Orbs": RequirementList(
-                ["Power5"], ["Power4", "FrontHighDPS"], ["SideHighDPS"], ["SpecialHighDPS"], ["AnyPierces"]),
+                  ["Power5"], ["Power4", "FrontHighDPS"], ["SideHighDPS"], ["SpecialHighDPS"], ["AnyPierces"]),
             "MINES (Episode 1) - Blue Mine": None,
 
             # Speed up section makes Power 5 with regular shot not quite cut it
             "MINES (Episode 1) - Repulsor Spinning Orbs":  RequirementList(
-                ["Power4", "FrontHighDPS"], ["SideHighDPS"], ["SpecialHighDPS"]),
+                  ["Power4", "FrontHighDPS"], ["SideHighDPS"], ["SpecialHighDPS"]),
             "MINES (Episode 1) - Absolutely Free": None, # Literally just out in the open at the end of the level
             "MINES (Episode 1) - But Wait There's More": None, # See above
         }, completion_reqs=None),
 
         "DELIANI (Episode 1)": LevelRegion(base_id=130, locations={
             "DELIANI (Episode 1) - Turret Wave 1": RequirementList(
-                ["Power3"], ["FrontHighDPS", "Power2"], ["SideHighDPS"], ["SpecialHighDPS", "Power2"]),
+                  ["Power3"], ["FrontHighDPS", "Power2"], ["SideHighDPS"], ["SpecialHighDPS", "Power2"]),
             "DELIANI (Episode 1) - Turret Wave 2": RequirementList(
-                ["Power3"], ["FrontHighDPS", "Power2"], ["SideHighDPS"], ["SpecialHighDPS", "Power2"]),
+                  ["Power3"], ["FrontHighDPS", "Power2"], ["SideHighDPS"], ["SpecialHighDPS", "Power2"]),
             "DELIANI (Episode 1) - Turret Wave 3": RequirementList(
-                ["Power3"], ["FrontHighDPS", "Power2"], ["SideHighDPS"], ["SpecialHighDPS", "Power2"]),
+                  ["Power3"], ["FrontHighDPS", "Power2"], ["SideHighDPS"], ["SpecialHighDPS", "Power2"]),
             "DELIANI (Episode 1) - Turret Wave 4": RequirementList(
-                ["Power3"], ["FrontHighDPS", "Power2"], ["SideHighDPS"], ["SpecialHighDPS", "Power2"]),
+                  ["Power3"], ["FrontHighDPS", "Power2"], ["SideHighDPS"], ["SpecialHighDPS", "Power2"]),
 
             # Earlier checks don't require much but you need decent survivability past this point
             "DELIANI (Episode 1) - Ambush": RequirementList(
-                ["Power7"], ["AnyHighDPS"], require_all=["Armor6", "Power4"]),
+                  ["Power7"], ["AnyHighDPS"], require_all=["Armor6", "Power4"]),
             "DELIANI (Episode 1) - Last Cross Formation": RequirementList(
-                ["Power7"], ["AnyHighDPS"], require_all=["Armor6", "Power4"]),
+                  ["Power7"], ["AnyHighDPS"], require_all=["Armor6", "Power4"]),
             "DELIANI (Episode 1) - Boss": RequirementList(
-                ["Power7"], ["AnyHighDPS"], require_all=["Armor6", "Power4"]),
+                  ["Power7"], ["AnyHighDPS"], require_all=["Armor6", "Power4"]),
         }, completion_reqs="Boss"),
 
         "SAVARA V (Episode 1)": LevelRegion(base_id=140, locations={
@@ -213,8 +266,9 @@ class LevelLocationData:
 
         "ASSASSIN (Episode 1)": LevelRegion(base_id=150, locations={
             "ASSASSIN (Episode 1) - Boss": RequirementList(
-                ["Power8"], ["AnyHighDPS"], require_all=["Armor7", "Generator2", "Power5"]),
-        }, completion_reqs="Boss"),
+                  ["Power8"], ["AnyHighDPS"], require_all=["Armor7", "Generator2", "Power5"]),
+        }, completion_reqs="Boss",
+        shop_setups=["S"]),
         # Event: "Episode 1 (Escape) Complete"
 
         # =============================================================================================
@@ -262,7 +316,8 @@ class LevelLocationData:
 
         "MISTAKES (Episode 2)": LevelRegion(base_id=230, locations={
             # TODO This level is path split hell.
-        }, completion_reqs=None),
+        }, completion_reqs=None,
+        shop_setups=["B", "D", "J", "K", "L", "O", "V", "Z!"]),
 
         "SOH JIN (Episode 2)": LevelRegion(base_id=240, locations={
         }, completion_reqs=None),
@@ -275,15 +330,15 @@ class LevelLocationData:
 
         "BOTANY B (Episode 2)": LevelRegion(base_id=260, locations={
             "BOTANY B (Episode 2) - Starting Platform Sensor": RequirementList(
-                ["Armor7"], ["SideDefensive"], require_all=["Power5", "Generator2"]),
+                  ["Armor7"], ["SideDefensive"], require_all=["Power5", "Generator2"]),
             "BOTANY B (Episode 2) - Main Platform First Sensor": RequirementList(
-                ["Armor7"], ["SideDefensive"], require_all=["Power5", "Generator2"]),
+                  ["Armor7"], ["SideDefensive"], require_all=["Power5", "Generator2"]),
             "BOTANY B (Episode 2) - Main Platform Second Sensor": RequirementList(
-                ["Armor7"], ["SideDefensive"], require_all=["Power5", "Generator2"]),
+                  ["Armor7"], ["SideDefensive"], require_all=["Power5", "Generator2"]),
             "BOTANY B (Episode 2) - Main Platform Last Sensor": RequirementList(
-                ["Armor7"], ["SideDefensive"], require_all=["Power5", "Generator2"]),
+                  ["Armor7"], ["SideDefensive"], require_all=["Power5", "Generator2"]),
             "BOTANY B (Episode 2) - Super-Turret on Bridge": RequirementList(
-                ["Armor7"], ["SideDefensive"], require_all=["Power5", "Generator2"]),
+                  ["Armor7"], ["SideDefensive"], require_all=["Power5", "Generator2"]),
             "BOTANY B (Episode 2) - Boss": None,
         }, completion_reqs="Boss"),
 
@@ -311,13 +366,13 @@ class LevelLocationData:
 
             # Invulnerability does not last long enough to pass this section on its own.
             "BONUS (Episode 3) - Sonic Wave Hell Turret": RequirementList(
-                ["Repulsor", "Power9", "Armor7", "Generator3"], # The only way this is remotely feasible
-                ["Armor14", "Power11", "Generator5"], # Basically require everything, absurdly difficult
+                  ["Repulsor", "Power9", "Armor7", "Generator3"], # The only way this is remotely feasible
+                  ["Armor14", "Power11", "Generator5"], # Basically require everything, absurdly difficult
             obscure=True), # Excessively difficult
         }, completion_reqs=RequirementList(
-            ["Repulsor", "Power9", "Armor7", "Generator3"], # The only way this is remotely feasible
-            ["Armor14", "Power11", "Generator5"], obscure=True, # Excessively difficult
-        ) ),
+              ["Repulsor", "Power9", "Armor7", "Generator3"], # The only way this is remotely feasible
+              ["Armor14", "Power11", "Generator5"], obscure=True), # Excessively difficult
+        shop_setups=["G", "G"]),
 
         "STARGATE (Episode 3)": LevelRegion(base_id=310, locations={
             "STARGATE (Episode 3) - First Bubbleway": RequirementList(["Power3"]),
@@ -350,12 +405,7 @@ class LevelLocationData:
             "MACES (Episode 3) - Mace Reprieve 3": None,
         }, completion_reqs=None),
 
-        "FLEET (Episode 3)": LevelRegion(base_id=360, locations={
-            "FLEET (Episode 3) - Boss": None, # Needs conditions
-        }, completion_reqs="Boss"),
-        # Event: "Episode 3 (Mission: Suicide) Complete"
-
-        "TYRIAN X (Episode 3)": LevelRegion(base_id=370, locations={
+        "TYRIAN X (Episode 3)": LevelRegion(base_id=360, locations={
             "TYRIAN X (Episode 3) - First U-Ship Secret": None, # Needs conditions
             "TYRIAN X (Episode 3) - Second Secret, Same as the First": None, # Needs conditions
             "TYRIAN X (Episode 3) - Side-flying Ship Near Landers": None, # Needs conditions
@@ -364,11 +414,11 @@ class LevelLocationData:
             "TYRIAN X (Episode 3) - Boss": None, # Needs conditions
         }, completion_reqs=None),
 
-        "SAVARA Y (Episode 3)": LevelRegion(base_id=380, locations={
+        "SAVARA Y (Episode 3)": LevelRegion(base_id=370, locations={
             "SAVARA Y (Episode 3) - Boss": None,
         }, completion_reqs=None),
 
-        "NEW DELI (Episode 3)": LevelRegion(base_id=390, locations={
+        "NEW DELI (Episode 3)": LevelRegion(base_id=380, locations={
             "NEW DELI (Episode 3) - First Turret Line": None, # Needs conditions
             "NEW DELI (Episode 3) - Second Turret Line": None, # Needs conditions
             "NEW DELI (Episode 3) - Third Turret Line": None, # Needs conditions
@@ -377,6 +427,11 @@ class LevelLocationData:
             "NEW DELI (Episode 3) - Sixth Turret Line": None, # Needs conditions
             "NEW DELI (Episode 3) - Boss": None, # Needs conditions
         }, completion_reqs="Boss"),
+
+        "FLEET (Episode 3)": LevelRegion(base_id=390, locations={
+            "FLEET (Episode 3) - Boss": None, # Needs conditions
+        }, completion_reqs="Boss"),
+        # Event: "Episode 3 (Mission: Suicide) Complete"
 
         # =============================================================================================
         # EPISODE 4 - AN END TO FATE
@@ -446,7 +501,7 @@ class LevelLocationData:
 
         "HARVEST (Episode 4)": LevelRegion(base_id=500, locations={
             "HARVEST (Episode 4) - High Speed V Formation": RequirementList(
-                ["SideHighDPS"], ["FrontHighDPS"], ["Power10"], require_all=["Power7", "Generator2"]),
+                  ["SideHighDPS"], ["FrontHighDPS"], ["Power10"], require_all=["Power7", "Generator2"]),
             "HARVEST (Episode 4) - Shooter with Gravity Orbs": None, # Needs conditions
             "HARVEST (Episode 4) - Shooter with Clone Bosses": None, # Needs conditions
             "HARVEST (Episode 4) - Grounded Shooter 1": None, # Needs conditions
@@ -471,11 +526,11 @@ class LevelLocationData:
             "SAVARA IV (Episode 4) - Last Breakaway V Formation": RequirementList(["Power5", "Generator2"]),
             "SAVARA IV (Episode 4) - Second Drunk Plane": RequirementList(["Power5", "Generator2"]),
             "SAVARA IV (Episode 4) - Boss": RequirementList(
-                ["RearSideways", "Armor7"], # Can move up to the top and hit from the side
-                ["AnyPierces"], # SDF Main Gun, piercing front weapon, etc. gets past
-                ["SideRightOnly"], # Right-only Sidekicks can be fired out
-                ["Armor9", "Power8"], # If you survive long enough, enemy planes will start dropping SuperBombs
-                require_all=["Power5", "Generator2"]),
+                  ["RearSideways", "Armor7"], # Can move up to the top and hit from the side
+                  ["AnyPierces"], # SDF Main Gun, piercing front weapon, etc. gets past
+                  ["SideRightOnly"], # Right-only Sidekicks can be fired out
+                  ["Armor9", "Power8"], # If you survive long enough, enemy planes will start dropping SuperBombs
+            require_all=["Power5", "Generator2"]),
 
             # Can time out, but beating the boss is more likely than surviving that long
         }, completion_reqs="Boss"),
@@ -483,9 +538,8 @@ class LevelLocationData:
         "DREAD-NOT (Episode 4)": LevelRegion(base_id=540, locations={
             # Only a boss fight
             "DREAD-NOT (Episode 4) - Boss": RequirementList(
-                ["FrontHighDPS", "Power6", "Armor6", "Generator3"],
-                ["Power8", "Armor6", "Generator3"],
-            ),
+                  ["FrontHighDPS", "Power6", "Armor6", "Generator3"],
+                  ["Power8", "Armor6", "Generator3"]),
         }, completion_reqs="Boss"),
 
         "EYESPY (Episode 4)": LevelRegion(base_id=550, locations={
@@ -502,23 +556,24 @@ class LevelLocationData:
             "BRAINIAC (Episode 4) - Turret-Guarded Pathway": None, # Needs conditions
             "BRAINIAC (Episode 4) - Mid-Boss 1": None, # Needs conditions
             "BRAINIAC (Episode 4) - Mid-Boss 2": RequirementList(
-                # Stays at the bottom of the screen
-                ["RearSideways", "Power9", "Armor9", "Generator5"]),
+                  # Stays at the bottom of the screen
+                  ["RearSideways", "Power9", "Armor9", "Generator5"]),
             "BRAINIAC (Episode 4) - Boss": RequirementList(
-                ["FrontHighDPS"],
-                ["FrontPierces"],
-                ["SpecialPierces"],
-                ["SideRightOnly"],
-                require_all=["Power9", "Armor9", "Generator5"]),
+                  ["FrontHighDPS"],
+                  ["FrontPierces"],
+                  ["SpecialPierces"],
+                  ["SideRightOnly"],
+            require_all=["Power9", "Armor9", "Generator5"]),
         }, completion_reqs="Boss"),
 
         "NOSE DRIP (Episode 4)": LevelRegion(base_id=570, locations={
             "NOSE DRIP (Episode 4) - Boss": RequirementList(
-                # Without a good loadout, this boss is extremely difficult, so...
-                ["FrontHighDPS"],
-                ["SideHighDPS", "SideDefensive"],
-                require_all=["Power9", "Armor11", "Generator5"]),
-        }, completion_reqs="Boss"),
+                  # Without a good loadout, this boss is extremely difficult, so...
+                  ["FrontHighDPS"],
+                  ["SideHighDPS", "SideDefensive"],
+            require_all=["Power9", "Armor11", "Generator5"]),
+        }, completion_reqs="Boss",
+        shop_setups=["S"]),
         # Event: "Episode 4 (An End To Fate) Complete"
 
         # =============================================================================================

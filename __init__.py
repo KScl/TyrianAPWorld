@@ -15,7 +15,7 @@ from BaseClasses import ItemClassification as IC
 from BaseClasses import LocationProgressType as LP
 
 from .Items import LocalItemData, LocalItem
-from .Locations import LevelLocationData
+from .Locations import LevelLocationData, LevelRegion
 from .Logic import RequirementList, TyrianLogic
 from .Options import TyrianOptions
 
@@ -30,8 +30,8 @@ class TyrianLocation(Location):
     requirement_list: Optional[RequirementList]
     shop_price: Optional[int] # None if not a shop, price in credits if it is
 
-    def __init__(self, player: int, name: str, address: Optional[int], parent: Region, \
-        requirement_list: Optional[RequirementList] = None):
+    def __init__(self, player: int, name: str, address: Optional[int], parent: Region,
+          requirement_list: Optional[RequirementList] = None):
         super().__init__(player, name, address, parent)
         self.requirement_list = requirement_list
         self.shop_price = 0 if name.startswith("Shop ") else None
@@ -52,7 +52,7 @@ class TyrianWorld(World):
     location_descriptions = LevelLocationData.secret_descriptions
 
     # Raise this to force outdated clients to update.
-    aptyrian_net_version = 1
+    aptyrian_net_version = 2
 
     # --------------------------------------------------------------------------------------------
 
@@ -93,8 +93,8 @@ class TyrianWorld(World):
 
         return TyrianItem(name, item_class, self.item_name_to_id[name], self.player)
 
-    def create_level_location(self, name: str, region: Region, \
-        requirement_list: Optional[RequirementList] = None) -> TyrianLocation:
+    def create_level_location(self, name: str, region: Region,
+          requirement_list: Optional[RequirementList] = None) -> TyrianLocation:
         loc = TyrianLocation(self.player, name, self.location_name_to_id[name], region, requirement_list)
 
         if self.options.exclude_obscure_checks and isinstance(requirement_list, RequirementList):
@@ -104,13 +104,15 @@ class TyrianWorld(World):
         region.locations.append(loc)
         return loc
 
-    def create_shop_location(self, name: str, region: Region, exclude: bool = False) -> TyrianLocation:
+    def create_shop_location(self, name: str, region: Region, region_data: LevelRegion) -> TyrianLocation:
         loc = TyrianLocation(self.player, name, self.location_name_to_id[name], region)
-        loc.shop_price = self.get_random_price()
+        region_data.set_random_shop_price(self, loc)
 
-        if self.options.exclude_obscure_checks:
-            loc.progress_type = LP.EXCLUDED if exclude else LP.DEFAULT
-        # Otherwise, always set to LP.DEFAULT by default
+        # If completion is obscure, exclude the entirety of the shop
+        if self.options.exclude_obscure_checks \
+              and isinstance(region_data.completion_reqs, RequirementList) \
+              and region_data.completion_reqs.obscure:
+            loc.progress_type = LP.EXCLUDED
 
         region.locations.append(loc)
         return loc
@@ -139,7 +141,7 @@ class TyrianWorld(World):
         total_money = int(total_money * (self.options.money_pool_scale / 100))
 
         valid_money_amounts = \
-            [int(name.removesuffix(" Credits")) for name in LocalItemData.other_items if name.endswith(" Credits")]
+              [int(name.removesuffix(" Credits")) for name in LocalItemData.other_items if name.endswith(" Credits")]
 
         junk_list = []
 
@@ -189,11 +191,11 @@ class TyrianWorld(World):
         elif self.options.base_weapon_cost.current_key == "balanced":
             return {key: value.balanced for (key, value) in LocalItemData.default_upgrade_costs.items()}
         elif self.options.base_weapon_cost.current_key == "randomized":
-            return {key: self.random.randrange(500, 2001, 25) \
-                for key in LocalItemData.default_upgrade_costs.keys()}
+            return {key: self.random.randrange(500, 2001, 25)
+                  for key in LocalItemData.default_upgrade_costs.keys()}
         else:
-            return {key: int(self.options.base_weapon_cost.current_key) \
-                for key in LocalItemData.default_upgrade_costs.keys()}
+            return {key: int(self.options.base_weapon_cost.current_key)
+                  for key in LocalItemData.default_upgrade_costs.keys()}
 
     # ================================================================================================================
     # Slot Data / File Output
@@ -268,9 +270,9 @@ class TyrianWorld(World):
 
     # Which locations are progression (used for multiworld slot data)
     def output_progression_data(self) -> List[int]:
-        return [location.address - self.base_id \
-            for location in self.multiworld.get_locations(self.player) \
-            if location.item.advancement and not location.shop_price and location.address is not None]
+        return [location.address - self.base_id
+              for location in self.multiworld.get_locations(self.player)
+              if location.item.advancement and not location.shop_price and location.address is not None]
 
     # The contents of every single location (local games only)
     def output_all_locations(self) -> Dict[int, int]:
@@ -279,21 +281,25 @@ class TyrianWorld(World):
         def get_location_item(location: Location) -> str:
             return f"{'!' if location.item.advancement else ''}{location.item.code - self.base_id}"
 
-        return {location.address - self.base_id: get_location_item(location) \
-            for location in self.multiworld.get_locations(self.player) \
-            if location.address is not None}
+        return {location.address - self.base_id: get_location_item(location)
+              for location in self.multiworld.get_locations(self.player)
+              if location.address is not None}
 
     # Shop prices, possibly other relevant information
     def output_shop_data(self) -> Dict[int, int]:
         def correct_shop_price(location: Location) -> int:
+            # If the shop has credits, and the cost is more than you'd gain, reduce the cost.
+            # Don't do this in hidden mode, though, since the player shouldn't have any idea what each item is.
             if self.options.shop_mode != "hidden" and location.item.player == self.player \
-                and location.item.name.endswith(" Credits"):
-                return 0 # Free money!
+                  and location.item.name.endswith(" Credits"):
+                credit_amount = int(location.item.name.removesuffix(" Credits"))
+                adjusted_shop_price = location.shop_price % credit_amount
+                return adjusted_shop_price if adjusted_shop_price != 0 else credit_amount
             return location.shop_price
 
-        return {location.address - self.base_id: correct_shop_price(location) \
-            for location in self.multiworld.get_locations(self.player) \
-            if getattr(location, 'shop_price', None) is not None}
+        return {location.address - self.base_id: correct_shop_price(location)
+              for location in self.multiworld.get_locations(self.player)
+              if getattr(location, 'shop_price', None) is not None}
 
     # --------------------------------------------------------------------------------------------
 
@@ -331,6 +337,7 @@ class TyrianWorld(World):
     def get_slot_data(self, local_mode: bool = False) -> Dict[str, Any]:
         # local_mode: If true, return a JSON file meant to be downloaded, for offline play
         slot_data = {
+            "Seed": self.multiworld.seed_name,
             "NetVersion": self.aptyrian_net_version,
             "Settings": self.output_settings(),
             "StartState": self.obfuscate_object(self.output_start_state()),
@@ -474,12 +481,11 @@ class TyrianWorld(World):
                 self.multiworld.regions.append(shop_region)
 
                 # Get region data; if completion requirements exist and are marked obscure, all shop checks are too
-                region_data = LevelLocationData.level_regions[level].completion_reqs
-                region_excluded = isinstance(region_data, RequirementList) and region_data.obscure
+                region_data = LevelLocationData.level_regions[level]
 
                 for i in range(items_per_shop[level]):
                     shop_loc_name = f"Shop ({level}) - Item {i + 1}"
-                    new_location = self.create_shop_location(shop_loc_name, shop_region, exclude=region_excluded)
+                    new_location = self.create_shop_location(shop_loc_name, shop_region, region_data)
                     self.total_money_needed += new_location.shop_price
 
         # ==============
@@ -604,8 +610,8 @@ class TyrianWorld(World):
         # (or, hell, if rest_item_count is negative in the first place), we'll toss stuff from the pool to make space.
         minimum_needed_item_count = math.ceil(self.total_money_needed / 50000)
         if rest_item_count < minimum_needed_item_count:
-            tossable_items = [name for name in self.local_itempool if not name.startswith("!") \
-                and LocalItemData.get(name).item_class == IC.filler]
+            tossable_items = [name for name in self.local_itempool if not name.startswith("!")
+                  and LocalItemData.get(name).item_class == IC.filler]
             need_to_toss = minimum_needed_item_count - rest_item_count
 
             if need_to_toss > len(tossable_items):
@@ -661,7 +667,7 @@ class TyrianWorld(World):
         def create_location_rule(location_name: str):
             location = self.multiworld.get_location(location_name, self.player)
             location.access_rule = lambda state: \
-                state._tyrian_requirement_satisfied(self.player, location.requirement_list)
+                  state._tyrian_requirement_satisfied(self.player, location.requirement_list)
 
         for check in self.level_locations:
             create_location_rule(check)
@@ -684,8 +690,8 @@ class TyrianWorld(World):
 
             # If only one episode is goal, exclude anything in the shop behind the goal level.
             if len(self.goal_episodes) == 1:
-                shop_locations = [loc for loc in self.multiworld.get_locations(self.player) \
-                    if loc.name.startswith(f"Shop ({level_name})")]
+                shop_locations = [loc for loc in self.multiworld.get_locations(self.player)
+                      if loc.name.startswith(f"Shop ({level_name})")]
 
                 for location in shop_locations:
                     location.progress_type = LP.EXCLUDED
@@ -704,6 +710,9 @@ class TyrianWorld(World):
             json.dump(self.get_slot_data(local_mode=True), f)
 
     def write_spoiler(self, spoiler_handle: TextIO):
+        for shop in [loc for loc in self.multiworld.get_locations(self.player) if loc.name.startswith(f"Shop (")]:
+            print(f"{shop.name}: {shop.shop_price}")
+
         precollected_names = [item.name for item in self.multiworld.precollected_items[self.player]]
 
         spoiler_handle.write(f"\n\nLevel locations ({self.multiworld.player_name[self.player]}):\n\n")
