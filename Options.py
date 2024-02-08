@@ -183,6 +183,16 @@ class BaseWeaponCost(TextChoice):
         raise ValueError(f"Could not find option '{self.value}' for '{self.__class__.__name__}', "
                          f"known options are {', '.join(self.options)}, <any positive integer>")
 
+class ProgressiveItems(DefaultOnToggle):
+    """
+    How items with multiple tiers (in this game, only generators) should be rewarded.
+
+    If 'on', each item can be independently picked up, letting you skip tiers. Picking up an item of a lower tier
+    after an item of a higher tier does nothing.
+    If 'off', each "Progressive" item will move you up to the next tier, regardless of which one you find.
+    """
+    display_name = "Progressive Items"
+
 class Specials(Choice):
     """
     Enable or disable specials (extra behaviors when starting to fire).
@@ -295,6 +305,7 @@ class TyrianOptions(PerGameCommonOptions):
     shop_item_count: ShopItemCount
     money_pool_scale: MoneyPoolScale
     base_weapon_cost: BaseWeaponCost
+    progressive_items: ProgressiveItems
     specials: Specials
     twiddles: Twiddles
 

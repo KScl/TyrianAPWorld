@@ -36,7 +36,15 @@ class TyrianLogic(LogicMixin):
         return True if power_level <= 1 else self.has("Maximum Power Up", player, power_level - 1)
 
     def _tyrian_has_generator_level(self, player: int, gen_level: int):
-        return True if gen_level <= 1 else self.has("Progressive Generator", player, gen_level - 1)
+        base_gen_level = 1
+        if self.has("Gravitron Pulse-Wave", player):   return True
+        elif self.has("Advanced MicroFusion", player): base_gen_level = 5
+        elif self.has("Standard MicroFusion", player): base_gen_level = 4
+        elif self.has("Gencore Custom MR-12", player): base_gen_level = 3
+        elif self.has("Advanced MR-12", player):       base_gen_level = 2
+
+        return gen_level <= base_gen_level \
+              or self.has("Progressive Generator", player, gen_level - base_gen_level)
 
     def _tyrian_has_twiddle(self, player: int, action: str):
         return False # TODO NYI

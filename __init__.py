@@ -74,17 +74,6 @@ class TyrianWorld(World):
     # Item / Location Helpers
     # ================================================================================================================
 
-    def get_random_price(self) -> int:
-        # I don't really like the distribution I was getting from just doing random.triangular, so
-        # instead we have ten different types of random prices that can get generated, and we choose
-        # which one we want randomly.
-        range_list = [
-            ( 100,  1001,  1), ( 200,  3001,  2), ( 500,  5001,  5), (1000,  7501,  5), ( 2000, 10001,   5),
-            (3000, 15001, 10), (4000, 20001, 10), (5000, 30001, 25), (7500, 40001, 25), (10000, 65601, 100)
-        ]
-        range_set = self.random.randrange(10)
-        return min(self.random.randrange(*range_list[range_set]), 65535)
-
     def create_item(self, name: str) -> TyrianItem:
         name = name[1:] if (force_progression := name.startswith("!")) else name
 
@@ -191,7 +180,7 @@ class TyrianWorld(World):
         elif self.options.base_weapon_cost.current_key == "balanced":
             return {key: value.balanced for (key, value) in LocalItemData.default_upgrade_costs.items()}
         elif self.options.base_weapon_cost.current_key == "randomized":
-            return {key: self.random.randrange(500, 2001, 25)
+            return {key: self.random.randrange(400, 1801, 50)
                   for key in LocalItemData.default_upgrade_costs.keys()}
         else:
             return {key: int(self.options.base_weapon_cost.current_key)
@@ -252,6 +241,11 @@ class TyrianWorld(World):
             elif item.name == "Maximum Power Up":            increase_state("Power")
             elif item.name == "Shield Up":                   increase_state("Shield")
             elif item.name == "Progressive Generator":       increase_state("Generator")
+            elif item.name == "Advanced MR-12":              start_state["Generator"] = 1
+            elif item.name == "Gencore Custom MR-12":        start_state["Generator"] = 2
+            elif item.name == "Standard MicroFusion":        start_state["Generator"] = 3
+            elif item.name == "Advanced MicroFusion":        start_state["Generator"] = 4
+            elif item.name == "Gravitron Pulse-Wave":        start_state["Generator"] = 5
             elif item.name == "Solar Shields":               start_state["SolarShield"] = True
             elif item.name == "SuperBomb":                   pass # Only useful if obtained in level, ignore
             elif item.name.endswith(" Credits"):             add_credits(item.name)
@@ -273,6 +267,10 @@ class TyrianWorld(World):
         return [location.address - self.base_id
               for location in self.multiworld.get_locations(self.player)
               if location.item.advancement and not location.shop_price and location.address is not None]
+
+    # Total number of locations available (used for multiworld slot data)
+    def output_location_count(self) -> int:
+        return len([loc for loc in self.multiworld.get_locations(self.player) if loc.address is not None])
 
     # The contents of every single location (local games only)
     def output_all_locations(self) -> Dict[int, int]:
@@ -351,6 +349,7 @@ class TyrianWorld(World):
             slot_data["LocationData"] = self.obfuscate_object(self.output_all_locations())
         else: # Remote mode: Just output a list of location IDs that contain progression
             slot_data["ProgressionData"] = self.obfuscate_object(self.output_progression_data())
+            slot_data["LocationMax"] = self.output_location_count()
 
         if self.options.shop_mode != "none":
             slot_data["ShopData"] = self.obfuscate_object(self.output_shop_data())
@@ -531,6 +530,20 @@ class TyrianWorld(World):
                 self.local_itempool.append(f"!{item_name}")
                 return True
             return False
+
+        # ----------------------------------------------------------------------------------------
+
+        # Based on progressive items and starting inventory, add generators to the pool.
+
+        generator_pool = ["Gravitron Pulse-Wave",
+                          "Advanced MicroFusion",
+                          "Standard MicroFusion",
+                          "Gencore Custom MR-12",
+                          "Advanced MR-12"]
+        if self.options.progressive_items:
+            generator_pool = ["Progressive Generator"] * 5
+
+        self.local_itempool.extend(generator_pool)
 
         # ----------------------------------------------------------------------------------------
 

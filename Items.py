@@ -127,62 +127,63 @@ class LocalItemData:
     # ----------------------------------------------------------------------------------------------------------------
 
     # Tags are as follows
-    # 'Pierces': Goes through enemies to hit others, also hits enemies that can't normally be hit from the front
-    # 'HighDPS': Self-explanatory (Concentrated fire harmful to all enemy life)
-    # 'Sideways': Can reliably hit things horizontally adjacent to you (required for some bosses)
-    # 'HasAmmo': Sidekicks with limited ammo (they replenish slowly, but still limits firing)
-    # 'RightOnly': Distinguishes sidekicks that can only be on the right (so only one in pool)
-    # 'Defensive': Sidekick that provides some level of all-around defense.
+    # "Pierces": Goes through enemies to hit others, also hits enemies that can't normally be hit from the front
+    # "HighDPS": Self-explanatory (Concentrated fire harmful to all enemy life)
+    # "Sideways": Can reliably hit things horizontally adjacent to you (required for some bosses)
+    # "HasAmmo": Sidekicks with limited ammo (they replenish slowly, but still limits firing)
+    # "RightOnly": Distinguishes sidekicks that can only be on the right (so only one in pool)
+    # "FullScreen": Distinguishes specials that can deal damage anywhere on the screen
+    # "Defensive": Anything that provides some level of all-around defense
     front_ports: Dict[str, LocalWeapon] = {
-        "Pulse-Cannon":           LocalWeapon(500), # Default start
-        "Multi-Cannon":           LocalWeapon(501),
-        "Mega Cannon":            LocalWeapon(502, tags=['Pierces']),
-        "Laser":                  LocalWeapon(503, tags=['HighDPS'], item_class=IC.useful),
-        "Zica Laser":             LocalWeapon(504, tags=['HighDPS'], item_class=IC.useful),
-        "Protron Z":              LocalWeapon(505, tags=['HighDPS']),
-        "Vulcan Cannon":          LocalWeapon(506),
-        "Lightning Cannon":       LocalWeapon(507, tags=['HighDPS']),
-        "Protron":                LocalWeapon(508),
-        "Missile Launcher":       LocalWeapon(509),
-        "Mega Pulse":             LocalWeapon(510, tags=['HighDPS']),
-        "Heavy Missile Launcher": LocalWeapon(511, tags=['HighDPS']),
-        "Banana Blast":           LocalWeapon(512),
-        "HotDog":                 LocalWeapon(513),
-        "Hyper Pulse":            LocalWeapon(514),
-        "Guided Bombs":           LocalWeapon(515),
-        "Shuruiken Field":        LocalWeapon(516, tags=['HighDPS']),
-        "Poison Bomb":            LocalWeapon(517, tags=['HighDPS']),
-        "Protron Wave":           LocalWeapon(518),
-        "The Orange Juicer":      LocalWeapon(519), # Requires suicidal flying for max DPS
-        "NortShip Super Pulse":   LocalWeapon(520, tags=['HighDPS']),
-        "Atomic RailGun":         LocalWeapon(521, tags=['HighDPS'], item_class=IC.useful),
-        "Widget Beam":            LocalWeapon(522),
-        "Sonic Impulse":          LocalWeapon(523, tags=['Pierces']),
-        "RetroBall":              LocalWeapon(524),
+        "Pulse-Cannon":                   LocalWeapon(500), # Default start
+        "Multi-Cannon (Front)":           LocalWeapon(501),
+        "Mega Cannon":                    LocalWeapon(502, tags=["Pierces"]),
+        "Laser":                          LocalWeapon(503, tags=["HighDPS"], item_class=IC.useful),
+        "Zica Laser":                     LocalWeapon(504, tags=["HighDPS"], item_class=IC.useful),
+        "Protron Z":                      LocalWeapon(505, tags=["HighDPS"]),
+        "Vulcan Cannon (Front)":          LocalWeapon(506),
+        "Lightning Cannon":               LocalWeapon(507, tags=["HighDPS"]),
+        "Protron (Front)":                LocalWeapon(508),
+        "Missile Launcher":               LocalWeapon(509),
+        "Mega Pulse (Front)":             LocalWeapon(510, tags=["HighDPS"]),
+        "Heavy Missile Launcher (Front)": LocalWeapon(511, tags=["HighDPS"]),
+        "Banana Blast (Front)":           LocalWeapon(512),
+        "HotDog (Front)":                 LocalWeapon(513),
+        "Hyper Pulse":                    LocalWeapon(514),
+        "Guided Bombs":                   LocalWeapon(515),
+        "Shuruiken Field":                LocalWeapon(516, tags=["HighDPS"]),
+        "Poison Bomb":                    LocalWeapon(517, tags=["HighDPS"]),
+        "Protron Wave":                   LocalWeapon(518),
+        "The Orange Juicer":              LocalWeapon(519), # Requires suicidal flying for max DPS
+        "NortShip Super Pulse":           LocalWeapon(520, tags=["HighDPS"]),
+        "Atomic RailGun":                 LocalWeapon(521, tags=["HighDPS"], item_class=IC.useful),
+        "Widget Beam":                    LocalWeapon(522),
+        "Sonic Impulse":                  LocalWeapon(523, tags=["Pierces"]),
+        "RetroBall":                      LocalWeapon(524),
         # ---------- TYRIAN 2000 LINE ----------
-        "Needle Laser":           LocalWeapon(525, count=0, tags=['Pierces']),
-        "Pretzel Missile":        LocalWeapon(526, count=0, tags=['HighDPS']),
-        "Dragon Frost":           LocalWeapon(527, count=0),
-        "Dragon Flame":           LocalWeapon(528, count=0), # Pierces at 9, 10, 11 only
+        "Needle Laser":                   LocalWeapon(525, count=0, tags=["Pierces"]),
+        "Pretzel Missile":                LocalWeapon(526, count=0, tags=["HighDPS"]),
+        "Dragon Frost":                   LocalWeapon(527, count=0),
+        "Dragon Flame":                   LocalWeapon(528, count=0), # Pierces at 9, 10, 11 only
     }
 
     rear_ports: Dict[str, LocalWeapon] = {
-        "Starburst":                     LocalWeapon(600, tags=['Sideways']),
-        "Multi-Cannon (Rear)":           LocalWeapon(601, tags=['Sideways']),
-        "Sonic Wave":                    LocalWeapon(602, tags=['Sideways']),
-        "Protron (Rear)":                LocalWeapon(603, tags=['Sideways']),
+        "Starburst":                     LocalWeapon(600, tags=["Sideways"]),
+        "Multi-Cannon (Rear)":           LocalWeapon(601, tags=["Sideways"]),
+        "Sonic Wave":                    LocalWeapon(602, tags=["Sideways"]),
+        "Protron (Rear)":                LocalWeapon(603, tags=["Sideways"]),
         "Wild Ball":                     LocalWeapon(604),
         "Vulcan Cannon (Rear)":          LocalWeapon(605),
         "Fireball":                      LocalWeapon(606),
         "Heavy Missile Launcher (Rear)": LocalWeapon(607),
-        "Mega Pulse (Rear)":             LocalWeapon(608, tags=['Sideways']),
+        "Mega Pulse (Rear)":             LocalWeapon(608, tags=["Sideways"]),
         "Banana Blast (Rear)":           LocalWeapon(609),
         "HotDog (Rear)":                 LocalWeapon(610),
         "Guided Micro Bombs":            LocalWeapon(611),
         "Heavy Guided Bombs":            LocalWeapon(612),
-        "Scatter Wave":                  LocalWeapon(613, tags=['Sideways']),
+        "Scatter Wave":                  LocalWeapon(613, tags=["Sideways"]),
         "NortShip Spreader":             LocalWeapon(614), # Sideways at some levels?
-        "NortShip Spreader B":           LocalWeapon(615, tags=['Pierces']), # Pierces but awkward to use
+        "NortShip Spreader B":           LocalWeapon(615, tags=["Pierces"]), # Pierces but awkward to use
         # ---------- TYRIAN 2000 LINE ----------
         "People Pretzels":               LocalWeapon(616, count=0),
     }
@@ -193,26 +194,26 @@ class LocalItemData:
         "Soul of Zinglon":   LocalWeapon(702), # Pierces, but doesn't normally do damage
         "Attractor":         LocalWeapon(703),
         "Ice Beam":          LocalWeapon(704),
-        "Flare":             LocalWeapon(705, tags=['FullScreen']),
+        "Flare":             LocalWeapon(705, tags=["FullScreen"]),
         "Blade Field":       LocalWeapon(706),
-        "SandStorm":         LocalWeapon(707, tags=['FullScreen']),
-        "MineField":         LocalWeapon(708, tags=['FullScreen']),
+        "SandStorm":         LocalWeapon(707, tags=["FullScreen"]),
+        "MineField":         LocalWeapon(708, tags=["FullScreen"]),
         "Dual Vulcan":       LocalWeapon(709),
-        "Banana Bomb":       LocalWeapon(710, tags=['HighDPS']),
+        "Banana Bomb":       LocalWeapon(710, tags=["HighDPS"]),
         "Protron Dispersal": LocalWeapon(711),
-        "Astral Zone":       LocalWeapon(712, tags=['FullScreen']),
-        "Xega Ball":         LocalWeapon(713),
-        "MegaLaser Dual":    LocalWeapon(714, tags=['HighDPS']),
+        "Astral Zone":       LocalWeapon(712, tags=["FullScreen"]),
+        "Xega Ball":         LocalWeapon(713, tags=["Defensive"]),
+        "MegaLaser Dual":    LocalWeapon(714, tags=["HighDPS"]),
         "Orange Shield":     LocalWeapon(715),
         "Pulse Blast":       LocalWeapon(716),
-        "MegaLaser":         LocalWeapon(717, tags=['Pierces']),
+        "MegaLaser":         LocalWeapon(717, tags=["Pierces"]),
         "Missile Pod":       LocalWeapon(718),
         "Invulnerability":   LocalWeapon(719, item_class=IC.progression),
         "Lightning Zone":    LocalWeapon(720),
-        "SDF Main Gun":      LocalWeapon(721, tags=['Pierces', 'HighDPS'], item_class=IC.useful),
-        "Protron Field":     LocalWeapon(722, tags=['HighDPS']),
+        "SDF Main Gun":      LocalWeapon(721, tags=["Pierces", "HighDPS"], item_class=IC.useful),
+        "Protron Field":     LocalWeapon(722, tags=["HighDPS"]),
         # ---------- TYRIAN 2000 LINE ----------
-        "Super Pretzel":     LocalWeapon(723, count=0, tags=['Pierces']),
+        "Super Pretzel":     LocalWeapon(723, count=0, tags=["Pierces"]),
         "Dragon Lightning":  LocalWeapon(724, count=0),
     }
 
@@ -222,38 +223,38 @@ class LocalItemData:
         "Charge Cannon":              LocalWeapon(802, count=2),
         "Vulcan Shot Option":         LocalWeapon(803, count=2),
         "Wobbley":                    LocalWeapon(804, count=2),
-        "MegaMissile":                LocalWeapon(805, count=2, tags=['HasAmmo', 'HighDPS'],
+        "MegaMissile":                LocalWeapon(805, count=2, tags=["HasAmmo", "HighDPS"],
               item_class=IC.useful),
-        "Atom Bombs":                 LocalWeapon(806, count=2, tags=['HasAmmo', 'HighDPS'],
+        "Atom Bombs":                 LocalWeapon(806, count=2, tags=["HasAmmo", "HighDPS"],
               item_class=IC.useful),
-        "Phoenix Device":             LocalWeapon(807, count=2, tags=['HasAmmo', 'HighDPS', 'Defensive'],
+        "Phoenix Device":             LocalWeapon(807, count=2, tags=["HasAmmo", "HighDPS", "Defensive"],
               item_class=IC.useful),
-        "Plasma Storm":               LocalWeapon(808, count=1, tags=['HasAmmo', 'HighDPS'],
+        "Plasma Storm":               LocalWeapon(808, count=1, tags=["HasAmmo", "HighDPS"],
               item_class=IC.useful), # Too OP for two sidekicks, reduced to just one (still pretty good)
-        "Mini-Missile":               LocalWeapon(809, count=2, tags=['HasAmmo']),
-        "Buster Rocket":              LocalWeapon(810, count=2, tags=['HasAmmo']),
+        "Mini-Missile":               LocalWeapon(809, count=2, tags=["HasAmmo"]),
+        "Buster Rocket":              LocalWeapon(810, count=2, tags=["HasAmmo"]),
         "Zica Supercharger":          LocalWeapon(811, count=2),
-        "MicroBomb":                  LocalWeapon(812, count=2, tags=['HasAmmo']),
-        "8-Way MicroBomb":            LocalWeapon(813, count=2, tags=['HasAmmo', 'Defensive']),
-        "Post-It Mine":               LocalWeapon(814, count=2, tags=['HasAmmo']),
+        "MicroBomb":                  LocalWeapon(812, count=2, tags=["HasAmmo"]),
+        "8-Way MicroBomb":            LocalWeapon(813, count=2, tags=["HasAmmo", "Defensive"]),
+        "Post-It Mine":               LocalWeapon(814, count=2, tags=["HasAmmo"]),
         "Mint-O-Ship":                LocalWeapon(815, count=2),
         "Zica Flamethrower":          LocalWeapon(816, count=2),
-        "Side Ship":                  LocalWeapon(817, count=2, tags=['HasAmmo']),
+        "Side Ship":                  LocalWeapon(817, count=2, tags=["HasAmmo"]),
         "Companion Ship Warfly":      LocalWeapon(818, count=2),
-        "MicroSol FrontBlaster":      LocalWeapon(819, count=1, tags=['RightOnly']),
+        "MicroSol FrontBlaster":      LocalWeapon(819, count=1, tags=["RightOnly"]),
         "Companion Ship Gerund":      LocalWeapon(820, count=2),
-        "BattleShip-Class Firebomb":  LocalWeapon(821, count=1, tags=['RightOnly', 'HighDPS', 'Defensive']),
-        "Protron Cannon Indigo":      LocalWeapon(822, count=1, tags=['RightOnly']),
+        "BattleShip-Class Firebomb":  LocalWeapon(821, count=1, tags=["RightOnly", "HighDPS", "Defensive"]),
+        "Protron Cannon Indigo":      LocalWeapon(822, count=1, tags=["RightOnly"]),
         "Companion Ship Quicksilver": LocalWeapon(823, count=2),
-        "Protron Cannon Tangerine":   LocalWeapon(824, count=1, tags=['RightOnly', 'Defensive']),
-        "MicroSol FrontBlaster II":   LocalWeapon(825, count=1, tags=['RightOnly']),
-        "Beno Wallop Beam":           LocalWeapon(826, count=1, tags=['RightOnly', 'HighDPS']),
-        "Beno Protron System -B-":    LocalWeapon(827, count=1, tags=['RightOnly', 'Defensive']),
+        "Protron Cannon Tangerine":   LocalWeapon(824, count=1, tags=["RightOnly", "Defensive"]),
+        "MicroSol FrontBlaster II":   LocalWeapon(825, count=1, tags=["RightOnly"]),
+        "Beno Wallop Beam":           LocalWeapon(826, count=1, tags=["RightOnly", "HighDPS"]),
+        "Beno Protron System -B-":    LocalWeapon(827, count=1, tags=["RightOnly", "Defensive"]),
         "Tropical Cherry Companion":  LocalWeapon(828, count=2),
         "Satellite Marlo":            LocalWeapon(829, count=2),
         # ---------- TYRIAN 2000 LINE ----------
-        "Bubble Gum-Gun":             LocalWeapon(830, count=0, tags=['HasAmmo']),
-        "Flying Punch":               LocalWeapon(831, count=0, tags=['HasAmmo']),
+        "Bubble Gum-Gun":             LocalWeapon(830, count=0, tags=["HasAmmo"]),
+        "Flying Punch":               LocalWeapon(831, count=0, tags=["HasAmmo"]),
     }
 
     # ----------------------------------------------------------------------------------------------------------------
@@ -264,7 +265,8 @@ class LocalItemData:
         "Standard MicroFusion":  LocalItem(902, item_class=IC.progression),
         "Advanced MicroFusion":  LocalItem(903, item_class=IC.progression),
         "Gravitron Pulse-Wave":  LocalItem(904, item_class=IC.progression),
-        "Progressive Generator": LocalItem(905, count=5,  item_class=IC.progression),
+        "Progressive Generator": LocalItem(905, item_class=IC.progression),
+
         "Maximum Power Up":      LocalItem(906, count=10, item_class=IC.progression), # Starts at 1, caps at 11
         "Armor Up":              LocalItem(907, count=9,  item_class=IC.progression), # Starts at 5, caps at 14
         "Shield Up":             LocalItem(908, count=9,  item_class=IC.useful), # Starts at 5, caps at 14
@@ -362,58 +364,58 @@ class LocalItemData:
         # (0x, 1x, 4x, 10x, 20x, 35x, 56x, 84x, 120x, 165x, 220x)
 
         # Original is the values from the original game.
-        # Balanced places the Pulse-Cannon at 800, and everything balanced around compared usefulness to that.
+        # Balanced places the Pulse-Cannon at 700, and everything balanced around compared usefulness to that.
 
         # Front ports
-        "Pulse-Cannon":           UpgradeCost(original=500,  balanced=800),
-        "Multi-Cannon":           UpgradeCost(original=750,  balanced=700),
-        "Mega Cannon":            UpgradeCost(original=1000, balanced=1000),
-        "Laser":                  UpgradeCost(original=900,  balanced=2000),
-        "Zica Laser":             UpgradeCost(original=1100, balanced=1950),
-        "Protron Z":              UpgradeCost(original=900,  balanced=1300),
-        "Vulcan Cannon":          UpgradeCost(original=600,  balanced=600),
-        "Lightning Cannon":       UpgradeCost(original=1000, balanced=1600),
-        "Protron":                UpgradeCost(original=600,  balanced=1050),
-        "Missile Launcher":       UpgradeCost(original=850,  balanced=650),
-        "Mega Pulse":             UpgradeCost(original=900,  balanced=1100),
-        "Heavy Missile Launcher": UpgradeCost(original=1000, balanced=1050),
-        "Banana Blast":           UpgradeCost(original=950,  balanced=1200),
-        "HotDog":                 UpgradeCost(original=1100, balanced=950),
-        "Hyper Pulse":            UpgradeCost(original=1050, balanced=850),
-        "Guided Bombs":           UpgradeCost(original=800,  balanced=900),
-        "Shuruiken Field":        UpgradeCost(original=850,  balanced=1250),
-        "Poison Bomb":            UpgradeCost(original=800,  balanced=1850),
-        "Protron Wave":           UpgradeCost(original=750,  balanced=950),
-        "The Orange Juicer":      UpgradeCost(original=900,  balanced=1100),
-        "NortShip Super Pulse":   UpgradeCost(original=1100, balanced=1350),
-        "Atomic RailGun":         UpgradeCost(original=1101, balanced=1750), # Yes, that's not a typo
-        "Widget Beam":            UpgradeCost(original=950,  balanced=600),
-        "Sonic Impulse":          UpgradeCost(original=1000, balanced=1150),
-        "RetroBall":              UpgradeCost(original=1000, balanced=650),
+        "Pulse-Cannon":                   UpgradeCost(original=500,  balanced=700),
+        "Multi-Cannon (Front)":           UpgradeCost(original=750,  balanced=600),
+        "Mega Cannon":                    UpgradeCost(original=1000, balanced=1000),
+        "Laser":                          UpgradeCost(original=900,  balanced=1800),
+        "Zica Laser":                     UpgradeCost(original=1100, balanced=1750),
+        "Protron Z":                      UpgradeCost(original=900,  balanced=1200),
+        "Vulcan Cannon (Front)":          UpgradeCost(original=600,  balanced=500),
+        "Lightning Cannon":               UpgradeCost(original=1000, balanced=1500),
+        "Protron (Front)":                UpgradeCost(original=600,  balanced=900),
+        "Missile Launcher":               UpgradeCost(original=850,  balanced=600),
+        "Mega Pulse (Front)":             UpgradeCost(original=900,  balanced=1200),
+        "Heavy Missile Launcher (Front)": UpgradeCost(original=1000, balanced=1000),
+        "Banana Blast (Front)":           UpgradeCost(original=950,  balanced=1000),
+        "HotDog (Front)":                 UpgradeCost(original=1100, balanced=950),
+        "Hyper Pulse":                    UpgradeCost(original=1050, balanced=800),
+        "Guided Bombs":                   UpgradeCost(original=800,  balanced=900),
+        "Shuruiken Field":                UpgradeCost(original=850,  balanced=1400),
+        "Poison Bomb":                    UpgradeCost(original=800,  balanced=1800),
+        "Protron Wave":                   UpgradeCost(original=750,  balanced=750),
+        "The Orange Juicer":              UpgradeCost(original=900,  balanced=1000),
+        "NortShip Super Pulse":           UpgradeCost(original=1100, balanced=1250),
+        "Atomic RailGun":                 UpgradeCost(original=1101, balanced=1750), # Yes, that's not a typo
+        "Widget Beam":                    UpgradeCost(original=950,  balanced=500),
+        "Sonic Impulse":                  UpgradeCost(original=1000, balanced=700), # Too fast to pierce well
+        "RetroBall":                      UpgradeCost(original=1000, balanced=600),
 
         # Rear ports
-        "Starburst":                     UpgradeCost(original=900,  balanced=950),
-        "Multi-Cannon (Rear)":           UpgradeCost(original=750,  balanced=700),
-        "Sonic Wave":                    UpgradeCost(original=950,  balanced=1000),
-        "Protron (Rear)":                UpgradeCost(original=650,  balanced=700),
-        "Wild Ball":                     UpgradeCost(original=800,  balanced=650),
-        "Vulcan Cannon (Rear)":          UpgradeCost(original=500,  balanced=550),
-        "Fireball":                      UpgradeCost(original=1000, balanced=700),
-        "Heavy Missile Launcher (Rear)": UpgradeCost(original=1000, balanced=1100),
+        "Starburst":                     UpgradeCost(original=900,  balanced=800),
+        "Multi-Cannon (Rear)":           UpgradeCost(original=750,  balanced=600),
+        "Sonic Wave":                    UpgradeCost(original=950,  balanced=950),
+        "Protron (Rear)":                UpgradeCost(original=650,  balanced=750),
+        "Wild Ball":                     UpgradeCost(original=800,  balanced=600),
+        "Vulcan Cannon (Rear)":          UpgradeCost(original=500,  balanced=500),
+        "Fireball":                      UpgradeCost(original=1000, balanced=600),
+        "Heavy Missile Launcher (Rear)": UpgradeCost(original=1000, balanced=1000),
         "Mega Pulse (Rear)":             UpgradeCost(original=900,  balanced=1200),
-        "Banana Blast (Rear)":           UpgradeCost(original=1100, balanced=1300),
-        "HotDog (Rear)":                 UpgradeCost(original=1100, balanced=950),
-        "Guided Micro Bombs":            UpgradeCost(original=1100, balanced=850),
+        "Banana Blast (Rear)":           UpgradeCost(original=1100, balanced=1400),
+        "HotDog (Rear)":                 UpgradeCost(original=1100, balanced=900),
+        "Guided Micro Bombs":            UpgradeCost(original=1100, balanced=800),
         "Heavy Guided Bombs":            UpgradeCost(original=1000, balanced=800),
-        "Scatter Wave":                  UpgradeCost(original=900,  balanced=700),
-        "NortShip Spreader":             UpgradeCost(original=1100, balanced=1350),
-        "NortShip Spreader B":           UpgradeCost(original=1100, balanced=1500),
+        "Scatter Wave":                  UpgradeCost(original=900,  balanced=600),
+        "NortShip Spreader":             UpgradeCost(original=1100, balanced=1500),
+        "NortShip Spreader B":           UpgradeCost(original=1100, balanced=1250),
 
         # Tyrian 2000 stuff -- Original prices of 50 have been changed to 1000.
-        "Needle Laser":    UpgradeCost(original=600,  balanced=800),
-        "Pretzel Missile": UpgradeCost(original=1000, balanced=1050),
-        "Dragon Frost":    UpgradeCost(original=700,  balanced=950),
-        "Dragon Flame":    UpgradeCost(original=1000, balanced=1200),
+        "Needle Laser":    UpgradeCost(original=600,  balanced=700),
+        "Pretzel Missile": UpgradeCost(original=1000, balanced=900),
+        "Dragon Frost":    UpgradeCost(original=700,  balanced=900),
+        "Dragon Flame":    UpgradeCost(original=1000, balanced=1100),
 
         "People Pretzels": UpgradeCost(original=1000, balanced=900),
     }
