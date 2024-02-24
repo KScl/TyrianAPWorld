@@ -723,8 +723,8 @@ class TyrianWorld(World):
             json.dump(self.get_slot_data(local_mode=True), f)
 
     def write_spoiler(self, spoiler_handle: TextIO):
-        for shop in [loc for loc in self.multiworld.get_locations(self.player) if loc.name.startswith(f"Shop (")]:
-            print(f"{shop.name}: {shop.shop_price}")
+        #for shop in [loc for loc in self.multiworld.get_locations(self.player) if loc.name.startswith(f"Shop (")]:
+        #    print(f"{shop.name}: {shop.shop_price}")
 
         precollected_names = [item.name for item in self.multiworld.precollected_items[self.player]]
 
@@ -746,5 +746,4 @@ class TyrianWorld(World):
 
     def fill_slot_data(self) -> dict:
         slot_data = self.get_slot_data()
-        print(slot_data)
         return slot_data
