@@ -254,7 +254,7 @@ class LocalItemData:
         "Satellite Marlo":            LocalWeapon(829, count=2),
         # ---------- TYRIAN 2000 LINE ----------
         "Bubble Gum-Gun":             LocalWeapon(830, count=0, tags=["HasAmmo"]),
-        "Flying Punch":               LocalWeapon(831, count=0, tags=["HasAmmo"]),
+        "Flying Punch":               LocalWeapon(831, count=0, tags=["HasAmmo", "Pierces"]),
     }
 
     # ----------------------------------------------------------------------------------------------------------------

@@ -89,10 +89,10 @@ class LevelLocationData:
             "TYRIAN (Episode 1) - Early Spinner Formation": None,
             "TYRIAN (Episode 1) - Lander near BUBBLES Rock": None,
             "TYRIAN (Episode 1) - BUBBLES Warp Rock": None,
-            "TYRIAN (Episode 1) - HOLES Warp Orb": RequirementList(obscure=True),
+            "TYRIAN (Episode 1) - HOLES Warp Orb": None,
             "TYRIAN (Episode 1) - Ships Between Platforms": None,
             "TYRIAN (Episode 1) - First Line of Tanks": None,
-            "TYRIAN (Episode 1) - Ships at End of Platforms": None,
+            "TYRIAN (Episode 1) - Tank Turn-and-fire Secret": RequirementList(obscure=True),
             "TYRIAN (Episode 1) - SOH JIN Warp Orb": None,
             "TYRIAN (Episode 1) - Boss": None,
         }, completion_reqs=None,
@@ -168,13 +168,10 @@ class LevelLocationData:
             "ASTEROID? (Episode 1) - Boss Launcher": RequirementList(["Power4", "Generator2"]),
             "ASTEROID? (Episode 1) - WINDY Warp Orb": RequirementList(["Power4", "Generator2"], obscure=True),
 
-            # These two checks require you to:
-            # - Destroy the correct enemies to spawn the WINDY orb, and
-            # - Destroy the specific ships after the WINDY orb within two seconds of them spawning
-            "ASTEROID? (Episode 1) - Secret Ship Quick Shot 1": RequirementList(
-                  ["FrontHighDPS", "Power7", "Generator3"], obscure=True),
-            "ASTEROID? (Episode 1) - Secret Ship Quick Shot 2": RequirementList(
-                  ["FrontHighDPS", "Power7", "Generator3"], obscure=True)
+            "ASTEROID? (Episode 1) - Quick Shot 1": RequirementList(
+                  ["FrontHighDPS", "Power7", "Generator3"]),
+            "ASTEROID? (Episode 1) - Quick Shot 2": RequirementList(
+                  ["FrontHighDPS", "Power7", "Generator3"])
         }, completion_reqs=RequirementList(["Power4", "Generator2"]),
         shop_setups=["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P"]),
 
@@ -208,9 +205,10 @@ class LevelLocationData:
             "SAVARA (Episode 1) - Green Plane Line": None, # Needs conditions
             "SAVARA (Episode 1) - Brown Plane Breaking Formation": None, # Needs conditions
             "SAVARA (Episode 1) - Large Plane Speeding By": None, # Needs conditions
-            "SAVARA (Episode 1) - Vulcan Planes": None, # Needs conditions
+            "SAVARA (Episode 1) - Vulcan Plane Group": None, # Needs conditions
             "SAVARA (Episode 1) - Boss": None, # Needs conditions
-        }, completion_reqs=None),
+        }, completion_reqs=None,
+        shop_setups=["E", "H", "L", "P"]),
 
         "SAVARA II (Episode 1)": LevelRegion(base_id=100, locations={
             # This is the variant of Savara on Hard or above.
@@ -221,11 +219,13 @@ class LevelLocationData:
             "SAVARA II (Episode 1) - Launched Planes 2": None, # Needs conditions
             "SAVARA II (Episode 1) - Green Plane Sequence 2": None, # Needs conditions
             "SAVARA II (Episode 1) - Boss": None, # Needs conditions
-        }, completion_reqs=None),
+        }, completion_reqs=None,
+        shop_setups=["E", "H", "L", "P"]),
 
         "BONUS (Episode 1)": LevelRegion(base_id=110, locations={
             # Nothing here to give checks for.
-        }, completion_reqs=RequirementList(["Power4"], ["AnyHighDPS", "Power2"], ["AnyDefensive", "Power2"]) ),
+        }, completion_reqs=RequirementList(["Power4"], ["AnyHighDPS", "Power2"], ["AnyDefensive", "Power2"]),
+        shop_setups=["J", "J", "J", "K", "K", "L"]),
 
         "MINES (Episode 1)": LevelRegion(base_id=120, locations={
             "MINES (Episode 1) - Regular Spinning Orbs": RequirementList(
@@ -237,7 +237,8 @@ class LevelLocationData:
                   ["Power3", "FrontHighDPS"], ["SideHighDPS"], ["SpecialHighDPS"], ["AnyPierces"]),
             "MINES (Episode 1) - Absolutely Free": None, # Literally just out in the open at the end of the level
             "MINES (Episode 1) - But Wait There's More": None, # See above
-        }, completion_reqs=None),
+        }, completion_reqs=None,
+        shop_setups=["E", "F", "G", "H", "J"]),
 
         "DELIANI (Episode 1)": LevelRegion(base_id=130, locations={
             "DELIANI (Episode 1) - Turret Wave 1": RequirementList(
@@ -261,13 +262,14 @@ class LevelLocationData:
                   ["Power7"], ["AnyHighDPS"], require_all=["Armor6", "Power4"]),
             "DELIANI (Episode 1) - Boss": RequirementList(
                   ["Power7"], ["AnyHighDPS"], require_all=["Armor6", "Power4"]),
-        }, completion_reqs="Boss"),
+        }, completion_reqs="Boss",
+        shop_setups=["K", "M", "O", "P", "Q"]),
 
         "SAVARA V (Episode 1)": LevelRegion(base_id=140, locations={
-            "SAVARA V (Episode 1) - First Set of Green Planes": RequirementList(["Power5"]),
-            "SAVARA V (Episode 1) - Formation Between Blimps": RequirementList(["Power5"]),
-            "SAVARA V (Episode 1) - First Set of Brown Planes": RequirementList(["Power5"]),
-            "SAVARA V (Episode 1) - Formation Alongside Green Planes": RequirementList(["Power5"]),
+            "SAVARA V (Episode 1) - Green Plane Sequence": RequirementList(["Power5"]),
+            "SAVARA V (Episode 1) - Flying Between Blimps": RequirementList(["Power5"]),
+            "SAVARA V (Episode 1) - Brown Plane Sequence": RequirementList(["Power5"]),
+            "SAVARA V (Episode 1) - Flying Alongside Green Planes": RequirementList(["Power5"]),
 
             # This is the blimp that spams bubbles at an abnormally fast rate
             "SAVARA V (Episode 1) - Super Blimp": RequirementList(["AnyHighDPS", "Power8", "Generator3"]),
@@ -277,9 +279,9 @@ class LevelLocationData:
             "SAVARA V (Episode 1) - Mid-Boss": RequirementList(["Power5"]),
 
             # This boss heals if you wait too long to kill it. Power 5 is about the sweet spot.
-            # You can also wait a really long time and it'll stop healing, but... why?
             "SAVARA V (Episode 1) - Boss": RequirementList(["Power5"])
-        }, completion_reqs="Boss"),
+        }, completion_reqs="Boss",
+        shop_setups=["E", "H", "L", "P"]),
 
         "ASSASSIN (Episode 1)": LevelRegion(base_id=150, locations={
             "ASSASSIN (Episode 1) - Boss": RequirementList(
@@ -332,7 +334,16 @@ class LevelLocationData:
         }, completion_reqs=None),
 
         "MISTAKES (Episode 2)": LevelRegion(base_id=230, locations={
-            # TODO This level is path split hell.
+            "MISTAKES (Episode 2) - Start - Trigger Enemy 1": None,
+            "MISTAKES (Episode 2) - Start - Trigger Enemy 2": None,
+            "MISTAKES (Episode 2) - Orbsnakes - Trigger Enemy 1": None,
+            "MISTAKES (Episode 2) - Orbsnakes - Trigger Enemy 2": RequirementList(obscure=True),
+            "MISTAKES (Episode 2) - Claws - Trigger Enemy 1": None,
+            "MISTAKES (Episode 2) - Claws - Trigger Enemy 2": RequirementList(obscure=True),
+            "MISTAKES (Episode 2) - Drills - Trigger Enemy 1": None,
+            "MISTAKES (Episode 2) - Drills - Trigger Enemy 2": None,
+            "MISTAKES (Episode 2) - Super Bubble Spawner": RequirementList(obscure=True),
+            "MISTAKES (Episode 2) - Anti-Softlock": RequirementList(obscure=True),
         }, completion_reqs=None,
         shop_setups=["B", "D", "J", "K", "L", "O", "V", "Z!"]),
 
@@ -360,6 +371,15 @@ class LevelLocationData:
         }, completion_reqs="Boss"),
 
         "GRYPHON (Episode 2)": LevelRegion(base_id=270, locations={
+            "GRYPHON (Episode 2) - Pulse-Turret Wave Mid-Spikes": None,
+            "GRYPHON (Episode 2) - Swooping Pulse-Turrets": None,
+            "GRYPHON (Episode 2) - Sweeping Pulse-Turrets": None,
+            "GRYPHON (Episode 2) - Spike From Behind": None,
+            "GRYPHON (Episode 2) - Breaking Formation 1": None,
+            "GRYPHON (Episode 2) - Breaking Formation 2": None,
+            "GRYPHON (Episode 2) - Breaking Formation 3": None,
+            "GRYPHON (Episode 2) - Breaking Formation 4": None,
+            "GRYPHON (Episode 2) - Breaking Formation 5": None,
             "GRYPHON (Episode 2) - Boss": None,
         }, completion_reqs="Boss"),
         # Event: "Episode 2 (Treachery) Complete"
@@ -428,6 +448,7 @@ class LevelLocationData:
             "TYRIAN X (Episode 3) - Side-flying Ship Near Landers": None, # Needs conditions
             "TYRIAN X (Episode 3) - Platform Spinner Sequence": None, # Needs conditions
             "TYRIAN X (Episode 3) - Tank Near Purple Structure": None, # Needs conditions
+            "TYRIAN X (Episode 3) - Tank Turn-and-fire Secret": None, # Needs conditions
             "TYRIAN X (Episode 3) - Boss": None, # Needs conditions
         }, completion_reqs=None),
 
@@ -436,16 +457,18 @@ class LevelLocationData:
         }, completion_reqs=None),
 
         "NEW DELI (Episode 3)": LevelRegion(base_id=380, locations={
-            "NEW DELI (Episode 3) - First Turret Line": None, # Needs conditions
-            "NEW DELI (Episode 3) - Second Turret Line": None, # Needs conditions
-            "NEW DELI (Episode 3) - Third Turret Line": None, # Needs conditions
-            "NEW DELI (Episode 3) - Fourth Turret Line": None, # Needs conditions
-            "NEW DELI (Episode 3) - Fifth Turret Line": None, # Needs conditions
-            "NEW DELI (Episode 3) - Sixth Turret Line": None, # Needs conditions
+            "NEW DELI (Episode 3) - Turret Wave 1": None, # Needs conditions
+            "NEW DELI (Episode 3) - Turret Wave 2": None, # Needs conditions
+            "NEW DELI (Episode 3) - Turret Wave 3": None, # Needs conditions
+            "NEW DELI (Episode 3) - Turret Wave 4": None, # Needs conditions
+            "NEW DELI (Episode 3) - Turret Wave 5": None, # Needs conditions
+            "NEW DELI (Episode 3) - Turret Wave 6": None, # Needs conditions
             "NEW DELI (Episode 3) - Boss": None, # Needs conditions
         }, completion_reqs="Boss"),
 
         "FLEET (Episode 3)": LevelRegion(base_id=390, locations={
+            "FLEET (Episode 3) - Attractor Crane 1": None, # Needs conditions
+            "FLEET (Episode 3) - Attractor Crane 2": None, # Needs conditions
             "FLEET (Episode 3) - Boss": None, # Needs conditions
         }, completion_reqs="Boss"),
         # Event: "Episode 3 (Mission: Suicide) Complete"
@@ -598,6 +621,11 @@ class LevelLocationData:
         # =============================================================================================
 
         "ASTEROIDS (Episode 5)": LevelRegion(base_id=580, locations={
+            "ASTEROIDS (Episode 5) - Ship 1": None,
+            "ASTEROIDS (Episode 5) - Railgunner 1": None,
+            "ASTEROIDS (Episode 5) - Ship": None,
+            "ASTEROIDS (Episode 5) - Railgunner 2": None,
+            "ASTEROIDS (Episode 5) - Ship 2": None,
             "ASTEROIDS (Episode 5) - Boss": None,
         }, completion_reqs=None),
 
@@ -609,6 +637,12 @@ class LevelLocationData:
         }, completion_reqs=None),
 
         "SAVARA (Episode 5)": LevelRegion(base_id=610, locations={
+            "SAVARA (Episode 5) - Green Vulcan Plane 1": None,
+            "SAVARA (Episode 5) - Large Plane Formation": None,
+            "SAVARA (Episode 5) - Surrounded Vulcan Plane": None,
+            "SAVARA (Episode 5) - Unknown 1": None,
+            "SAVARA (Episode 5) - Unknown 2": None,
+            "SAVARA (Episode 5) - Boss": None,
         }, completion_reqs=None),
 
         "CORAL (Episode 5)": LevelRegion(base_id=620, locations={
@@ -616,10 +650,20 @@ class LevelLocationData:
         }, completion_reqs=None),
 
         "STATION (Episode 5)": LevelRegion(base_id=630, locations={
+            "STATION (Episode 5) - Pulse-Turret 1": None,
+            "STATION (Episode 5) - Pulse-Turret 2": None,
+            "STATION (Episode 5) - Pulse-Turret 3": None,
+            "STATION (Episode 5) - Spike from Rear Corner 1": None,
+            "STATION (Episode 5) - Pulse-Turret 4": None,
+            "STATION (Episode 5) - Spike from Rear Corner 2": None,
+            "STATION (Episode 5) - Repulsor Crane": None,
+            "STATION (Episode 5) - Pulse-Turret 5": None,
+            "STATION (Episode 5) - Pulse-Turret 6": None,
             "STATION (Episode 5) - Boss": None,
         }, completion_reqs=None),
 
         "FRUIT (Episode 5)": LevelRegion(base_id=640, locations={
+            "FRUIT (Episode 5) - Apple UFO Wave": None,
             "FRUIT (Episode 5) - Boss": None,
         }, completion_reqs=None),
         # Event: "Episode 5 (Hazudra Fodder) Complete" - Isn't this episode short???
@@ -651,11 +695,15 @@ class LevelLocationData:
         "TYRIAN (Episode 1) - First U-Ship Secret": """
             Wait for the first U-Ship in the level to start heading upwards.
         """,
-        "TYRIAN (Episode 1) - HOLES Orb": """
+        "TYRIAN (Episode 1) - HOLES Warp Orb": """
             Destroy every wave of U-Ships at the start of the level.
             The first spinner formation after you approach the enemy platforms will then yield this item.
         """,
-        "TYRIAN (Episode 1) - SOH JIN Orb": """
+        "TYRIAN (Episode 1) - Tank Turn-and-fire Secret": """
+            At the section with four tanks driving across two parallel strips of road, wait for the rightmost tank
+            to get into position, turn, and start firing.
+        """,
+        "TYRIAN (Episode 1) - SOH JIN Warp Orb": """
             Destry none of the U-Ships at the start of the level, except for the one that drops the
             "First U-Ship Secret" item.
             Just before the boss flies in, there will be an additional ship that will give this item.
@@ -671,16 +719,13 @@ class LevelLocationData:
             As you're approaching the Tank Assault section, destroy the rightmost tank as it turns onto the
             rightmost road, but before it goes offscreen and turns around to fire at you.
         """,
-        "ASTEROID? (Episode 1) - WINDY Orb": """
+        "ASTEROID? (Episode 1) - WINDY Warp Orb": """
             Destroy the platform on the left side of the screen next to the four "welcoming" launchers,
             then destroy the two heavy missile launchers that spawn afterwards.
             After the miniboss launcher, an additional tank will spawn containing this item.
-
-            If this isn't done properly, some of the ground buildings before the miniboss launcher won't spawn in.
         """,
-        "ASTEROID? (Episode 1) - Secret Ship Quick Shot 1": """
-            Follow the instructions to spawn the WINDY Orb item. Two more extra ships will appear;
-            each must be killed within about 1 1/2 seconds of them spawning for them to drop their items.
+        "ASTEROID? (Episode 1) - Quick Shot 1": """
+            Destroy the two ships after the miniboss launcher within 1 1/2 seconds of them spawning.
         """,
         "TORM (Episode 2) - Ship Fleeing Dragon Secret": """
             One plane will stick around long enough for a dragon to fly towards it. Shoot it as it starts to flee.
@@ -695,7 +740,7 @@ class LevelLocationData:
         "TYRIAN X (Episode 3) - Second Secret, Same as the First": """
             As with the first U-Ship secret, wait for the second pair of U-Ship formations to start heading upwards.
         """,
-        "SURFACE (Episode 4) - WINDY Orb": """
+        "SURFACE (Episode 4) - WINDY Warp Orb": """
             Destroy all four waves of ships flying in a V formation at the start of the level.
             One of the ships flying through arches later on will then yield this item.
         """,
