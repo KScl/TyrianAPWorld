@@ -4,7 +4,7 @@
 # and is released under the terms of the zlib license.
 # See "LICENSE" for more details.
 
-from typing import List, Dict, NamedTuple
+from typing import List, Dict, NamedTuple, Set
 from enum import IntEnum
 
 from BaseClasses import ItemClassification as IC
@@ -19,12 +19,14 @@ class Episode(IntEnum):
 class LocalItem:
     local_id: int
     count: int
+    tossable: bool
     item_class: IC
 
-    def __init__(self, local_id: int, count: int = 0, item_class: IC = IC.filler):
+    def __init__(self, local_id: int, count: int = 0, item_class: IC = IC.filler, tossable: bool = False):
         self.local_id = local_id
         self.count = count
         self.item_class = item_class
+        self.tossable = (item_class != IC.progression)
 
 class LocalLevel(LocalItem):
     episode: Episode
@@ -34,15 +36,19 @@ class LocalLevel(LocalItem):
         self.count = 1
         self.item_class = IC.progression
         self.episode = episode
+        self.tossable = False
 
 class LocalWeapon(LocalItem):
     tags: List[str]
 
-    def __init__(self, local_id: int, tags: List[str] = [], count: int = 1, item_class: IC = IC.filler):
+    def __init__(self, local_id: int, tags: List[str] = [], count: int = 1):
         self.local_id = local_id
         self.count = count
-        self.item_class = item_class
         self.tags = tags
+        self.tossable = ("Untossable" not in tags)
+        if "Progression" in tags: self.item_class = IC.progression
+        elif "Useful" in tags:    self.item_class = IC.useful
+        else:                     self.item_class = IC.filler
 
 class UpgradeCost(NamedTuple):
     original: int
@@ -126,94 +132,88 @@ class LocalItemData:
 
     # ----------------------------------------------------------------------------------------------------------------
 
-    # Tags are as follows
-    # "Pierces": Goes through enemies to hit others, also hits enemies that can't normally be hit from the front
-    # "HighDPS": Self-explanatory (Concentrated fire harmful to all enemy life)
-    # "Sideways": Can reliably hit things horizontally adjacent to you (required for some bosses)
-    # "HasAmmo": Sidekicks with limited ammo (they replenish slowly, but still limits firing)
-    # "RightOnly": Distinguishes sidekicks that can only be on the right (so only one in pool)
-    # "FullScreen": Distinguishes specials that can deal damage anywhere on the screen
-    # "Defensive": Anything that provides some level of all-around defense
+    # All Front and Rear port weapons are progression, some specific specials are too
+    # All other specials and sidekicks are useful at most
     front_ports: Dict[str, LocalWeapon] = {
-        "Pulse-Cannon":                   LocalWeapon(500), # Default start
-        "Multi-Cannon (Front)":           LocalWeapon(501),
-        "Mega Cannon":                    LocalWeapon(502, tags=["Pierces"]),
-        "Laser":                          LocalWeapon(503, tags=["HighDPS"], item_class=IC.useful),
-        "Zica Laser":                     LocalWeapon(504, tags=["HighDPS"], item_class=IC.useful),
-        "Protron Z":                      LocalWeapon(505, tags=["HighDPS"]),
-        "Vulcan Cannon (Front)":          LocalWeapon(506),
-        "Lightning Cannon":               LocalWeapon(507, tags=["HighDPS"]),
-        "Protron (Front)":                LocalWeapon(508),
-        "Missile Launcher":               LocalWeapon(509),
-        "Mega Pulse (Front)":             LocalWeapon(510, tags=["HighDPS"]),
-        "Heavy Missile Launcher (Front)": LocalWeapon(511, tags=["HighDPS"]),
-        "Banana Blast (Front)":           LocalWeapon(512),
-        "HotDog (Front)":                 LocalWeapon(513),
-        "Hyper Pulse":                    LocalWeapon(514),
-        "Guided Bombs":                   LocalWeapon(515),
-        "Shuruiken Field":                LocalWeapon(516, tags=["HighDPS"]),
-        "Poison Bomb":                    LocalWeapon(517, tags=["HighDPS"]),
-        "Protron Wave":                   LocalWeapon(518),
-        "The Orange Juicer":              LocalWeapon(519), # Requires suicidal flying for max DPS
-        "NortShip Super Pulse":           LocalWeapon(520, tags=["HighDPS"]),
-        "Atomic RailGun":                 LocalWeapon(521, tags=["HighDPS"], item_class=IC.useful),
-        "Widget Beam":                    LocalWeapon(522),
-        "Sonic Impulse":                  LocalWeapon(523, tags=["Pierces"]),
-        "RetroBall":                      LocalWeapon(524),
+        "Pulse-Cannon":                   LocalWeapon(500, tags=["Progression"]), # Default starting weapon
+        "Multi-Cannon (Front)":           LocalWeapon(501, tags=["Progression"]),
+        "Mega Cannon":                    LocalWeapon(502, tags=["Progression", "Untossable", "Pierces"]),
+        "Laser":                          LocalWeapon(503, tags=["Progression"]),
+        "Zica Laser":                     LocalWeapon(504, tags=["Progression"]),
+        "Protron Z":                      LocalWeapon(505, tags=["Progression"]),
+        "Vulcan Cannon (Front)":          LocalWeapon(506, tags=["Progression"]),
+        "Lightning Cannon":               LocalWeapon(507, tags=["Progression"]),
+        "Protron (Front)":                LocalWeapon(508, tags=["Progression"]),
+        "Missile Launcher":               LocalWeapon(509, tags=["Progression"]),
+        "Mega Pulse (Front)":             LocalWeapon(510, tags=["Progression"]),
+        "Heavy Missile Launcher (Front)": LocalWeapon(511, tags=["Progression"]),
+        "Banana Blast (Front)":           LocalWeapon(512, tags=["Progression"]),
+        "HotDog (Front)":                 LocalWeapon(513, tags=["Progression"]),
+        "Hyper Pulse":                    LocalWeapon(514, tags=["Progression"]),
+        "Guided Bombs":                   LocalWeapon(515, tags=["Progression"]),
+        "Shuruiken Field":                LocalWeapon(516, tags=["Progression"]),
+        "Poison Bomb":                    LocalWeapon(517, tags=["Progression"]),
+        "Protron Wave":                   LocalWeapon(518, tags=["Progression"]),
+        "The Orange Juicer":              LocalWeapon(519, tags=["Progression"]),
+        "NortShip Super Pulse":           LocalWeapon(520, tags=["Progression"]),
+        "Atomic RailGun":                 LocalWeapon(521, tags=["Progression"]),
+        "Widget Beam":                    LocalWeapon(522, tags=["Progression"]),
+        "Sonic Impulse":                  LocalWeapon(523, tags=["Progression", "Pierces"]),
+        "RetroBall":                      LocalWeapon(524, tags=["Progression"]),
         # ---------- TYRIAN 2000 LINE ----------
-        "Needle Laser":                   LocalWeapon(525, count=0, tags=["Pierces"]),
-        "Pretzel Missile":                LocalWeapon(526, count=0, tags=["HighDPS"]),
-        "Dragon Frost":                   LocalWeapon(527, count=0),
-        "Dragon Flame":                   LocalWeapon(528, count=0), # Pierces at 9, 10, 11 only
+        "Needle Laser":                   LocalWeapon(525, count=0, tags=["Progression", "Pierces"]),
+        "Pretzel Missile":                LocalWeapon(526, count=0, tags=["Progression"]),
+        "Dragon Frost":                   LocalWeapon(527, count=0, tags=["Progression"]),
+        "Dragon Flame":                   LocalWeapon(528, count=0, tags=["Progression"]),
     }
 
     rear_ports: Dict[str, LocalWeapon] = {
-        "Starburst":                     LocalWeapon(600, tags=["Sideways"]),
-        "Multi-Cannon (Rear)":           LocalWeapon(601, tags=["Sideways"]),
-        "Sonic Wave":                    LocalWeapon(602, tags=["Sideways"]),
-        "Protron (Rear)":                LocalWeapon(603, tags=["Sideways"]),
-        "Wild Ball":                     LocalWeapon(604),
-        "Vulcan Cannon (Rear)":          LocalWeapon(605),
-        "Fireball":                      LocalWeapon(606),
-        "Heavy Missile Launcher (Rear)": LocalWeapon(607),
-        "Mega Pulse (Rear)":             LocalWeapon(608, tags=["Sideways"]),
-        "Banana Blast (Rear)":           LocalWeapon(609),
-        "HotDog (Rear)":                 LocalWeapon(610),
-        "Guided Micro Bombs":            LocalWeapon(611),
-        "Heavy Guided Bombs":            LocalWeapon(612),
-        "Scatter Wave":                  LocalWeapon(613, tags=["Sideways"]),
-        "NortShip Spreader":             LocalWeapon(614), # Sideways at some levels?
-        "NortShip Spreader B":           LocalWeapon(615, tags=["Pierces"]), # Pierces but awkward to use
+        "Starburst":                     LocalWeapon(600, tags=["Progression", "Sideways"]),
+        "Multi-Cannon (Rear)":           LocalWeapon(601, tags=["Progression", "Sideways"]),
+        "Sonic Wave":                    LocalWeapon(602, tags=["Progression", "Untossable", "Sideways"]),
+        "Protron (Rear)":                LocalWeapon(603, tags=["Progression", "Sideways"]),
+        "Wild Ball":                     LocalWeapon(604, tags=["Progression"]),
+        "Vulcan Cannon (Rear)":          LocalWeapon(605, tags=["Progression"]),
+        "Fireball":                      LocalWeapon(606, tags=["Progression"]),
+        "Heavy Missile Launcher (Rear)": LocalWeapon(607, tags=["Progression"]),
+        "Mega Pulse (Rear)":             LocalWeapon(608, tags=["Progression", "Sideways"]),
+        "Banana Blast (Rear)":           LocalWeapon(609, tags=["Progression"]),
+        "HotDog (Rear)":                 LocalWeapon(610, tags=["Progression"]),
+        "Guided Micro Bombs":            LocalWeapon(611, tags=["Progression"]),
+        "Heavy Guided Bombs":            LocalWeapon(612, tags=["Progression"]),
+        "Scatter Wave":                  LocalWeapon(613, tags=["Progression", "Sideways"]),
+        "NortShip Spreader":             LocalWeapon(614, tags=["Progression"]),
+        "NortShip Spreader B":           LocalWeapon(615, tags=["Progression", "Pierces"]),
         # ---------- TYRIAN 2000 LINE ----------
-        "People Pretzels":               LocalWeapon(616, count=0),
+        "People Pretzels":               LocalWeapon(616, count=0, tags=["Progression"]),
     }
 
     special_weapons: Dict[str, LocalWeapon] = {
-        "Repulsor":          LocalWeapon(700, item_class=IC.progression), # Specifically required for some checks
+        "Repulsor":          LocalWeapon(700, tags=["Progression", "Untossable"]), # Specifically required for checks
         "Pearl Wind":        LocalWeapon(701),
-        "Soul of Zinglon":   LocalWeapon(702), # Pierces, but doesn't normally do damage
+        "Soul of Zinglon":   LocalWeapon(702),
         "Attractor":         LocalWeapon(703),
         "Ice Beam":          LocalWeapon(704),
-        "Flare":             LocalWeapon(705, tags=["FullScreen"]),
+        "Flare":             LocalWeapon(705),
         "Blade Field":       LocalWeapon(706),
-        "SandStorm":         LocalWeapon(707, tags=["FullScreen"]),
-        "MineField":         LocalWeapon(708, tags=["FullScreen"]),
+        "SandStorm":         LocalWeapon(707),
+        "MineField":         LocalWeapon(708),
         "Dual Vulcan":       LocalWeapon(709),
-        "Banana Bomb":       LocalWeapon(710, tags=["HighDPS"]),
+        "Banana Bomb":       LocalWeapon(710),
         "Protron Dispersal": LocalWeapon(711),
-        "Astral Zone":       LocalWeapon(712, tags=["FullScreen"]),
-        "Xega Ball":         LocalWeapon(713, tags=["Defensive"]),
-        "MegaLaser Dual":    LocalWeapon(714, tags=["HighDPS"]),
+        "Astral Zone":       LocalWeapon(712),
+        "Xega Ball":         LocalWeapon(713),
+        "MegaLaser Dual":    LocalWeapon(714),
         "Orange Shield":     LocalWeapon(715),
         "Pulse Blast":       LocalWeapon(716),
-        "MegaLaser":         LocalWeapon(717, tags=["Pierces"]),
+        "MegaLaser":         LocalWeapon(717),
         "Missile Pod":       LocalWeapon(718),
-        "Invulnerability":   LocalWeapon(719, item_class=IC.progression),
+        "Invulnerability":   LocalWeapon(719, tags=["Progression", "Untossable"]), # Specifically required for checks
         "Lightning Zone":    LocalWeapon(720),
-        "SDF Main Gun":      LocalWeapon(721, tags=["Pierces", "HighDPS"], item_class=IC.useful),
-        "Protron Field":     LocalWeapon(722, tags=["HighDPS"]),
+        "SDF Main Gun":      LocalWeapon(721, tags=["Useful"]),
+        "Protron Field":     LocalWeapon(722),
         # ---------- TYRIAN 2000 LINE ----------
-        "Super Pretzel":     LocalWeapon(723, count=0, tags=["Pierces"]),
+        "Super Pretzel":     LocalWeapon(723, count=0),
         "Dragon Lightning":  LocalWeapon(724, count=0),
     }
 
@@ -223,38 +223,34 @@ class LocalItemData:
         "Charge Cannon":              LocalWeapon(802, count=2),
         "Vulcan Shot Option":         LocalWeapon(803, count=2),
         "Wobbley":                    LocalWeapon(804, count=2),
-        "MegaMissile":                LocalWeapon(805, count=2, tags=["HasAmmo", "HighDPS"],
-              item_class=IC.useful),
-        "Atom Bombs":                 LocalWeapon(806, count=2, tags=["HasAmmo", "HighDPS"],
-              item_class=IC.useful),
-        "Phoenix Device":             LocalWeapon(807, count=2, tags=["HasAmmo", "HighDPS", "Defensive"],
-              item_class=IC.useful),
-        "Plasma Storm":               LocalWeapon(808, count=1, tags=["HasAmmo", "HighDPS"],
-              item_class=IC.useful), # Too OP for two sidekicks, reduced to just one (still pretty good)
-        "Mini-Missile":               LocalWeapon(809, count=2, tags=["HasAmmo"]),
-        "Buster Rocket":              LocalWeapon(810, count=2, tags=["HasAmmo"]),
+        "MegaMissile":                LocalWeapon(805, count=2, tags=["Useful"]),
+        "Atom Bombs":                 LocalWeapon(806, count=2, tags=["Useful"]),
+        "Phoenix Device":             LocalWeapon(807, count=2, tags=["Useful"]),
+        "Plasma Storm":               LocalWeapon(808, count=2, tags=["Useful"]),
+        "Mini-Missile":               LocalWeapon(809, count=2),
+        "Buster Rocket":              LocalWeapon(810, count=2),
         "Zica Supercharger":          LocalWeapon(811, count=2),
-        "MicroBomb":                  LocalWeapon(812, count=2, tags=["HasAmmo"]),
-        "8-Way MicroBomb":            LocalWeapon(813, count=2, tags=["HasAmmo", "Defensive"]),
-        "Post-It Mine":               LocalWeapon(814, count=2, tags=["HasAmmo"]),
+        "MicroBomb":                  LocalWeapon(812, count=2),
+        "8-Way MicroBomb":            LocalWeapon(813, count=2, tags=["Useful"]),
+        "Post-It Mine":               LocalWeapon(814, count=2),
         "Mint-O-Ship":                LocalWeapon(815, count=2),
         "Zica Flamethrower":          LocalWeapon(816, count=2),
-        "Side Ship":                  LocalWeapon(817, count=2, tags=["HasAmmo"]),
+        "Side Ship":                  LocalWeapon(817, count=2),
         "Companion Ship Warfly":      LocalWeapon(818, count=2),
-        "MicroSol FrontBlaster":      LocalWeapon(819, count=1, tags=["RightOnly"]),
+        "MicroSol FrontBlaster":      LocalWeapon(819, count=1), # Right-only (limited to 1)
         "Companion Ship Gerund":      LocalWeapon(820, count=2),
-        "BattleShip-Class Firebomb":  LocalWeapon(821, count=1, tags=["RightOnly", "HighDPS", "Defensive"]),
-        "Protron Cannon Indigo":      LocalWeapon(822, count=1, tags=["RightOnly"]),
+        "BattleShip-Class Firebomb":  LocalWeapon(821, count=1, tags=["Useful"]), # Right-only (limited to 1)
+        "Protron Cannon Indigo":      LocalWeapon(822, count=1), # Right-only (limited to 1)
         "Companion Ship Quicksilver": LocalWeapon(823, count=2),
-        "Protron Cannon Tangerine":   LocalWeapon(824, count=1, tags=["RightOnly", "Defensive"]),
-        "MicroSol FrontBlaster II":   LocalWeapon(825, count=1, tags=["RightOnly"]),
-        "Beno Wallop Beam":           LocalWeapon(826, count=1, tags=["RightOnly", "HighDPS"]),
-        "Beno Protron System -B-":    LocalWeapon(827, count=1, tags=["RightOnly", "Defensive"]),
+        "Protron Cannon Tangerine":   LocalWeapon(824, count=1, tags=["Useful"]), # Right-only (limited to 1)
+        "MicroSol FrontBlaster II":   LocalWeapon(825, count=1), # Right-only (limited to 1)
+        "Beno Wallop Beam":           LocalWeapon(826, count=1), # Right-only (limited to 1)
+        "Beno Protron System -B-":    LocalWeapon(827, count=1, tags=["Useful"]), # Right-only (limited to 1)
         "Tropical Cherry Companion":  LocalWeapon(828, count=2),
         "Satellite Marlo":            LocalWeapon(829, count=2),
         # ---------- TYRIAN 2000 LINE ----------
-        "Bubble Gum-Gun":             LocalWeapon(830, count=0, tags=["HasAmmo"]),
-        "Flying Punch":               LocalWeapon(831, count=0, tags=["HasAmmo", "Pierces"]),
+        "Bubble Gum-Gun":             LocalWeapon(830, count=0),
+        "Flying Punch":               LocalWeapon(831, count=0, tags=["Useful"]),
     }
 
     # ----------------------------------------------------------------------------------------------------------------
@@ -267,9 +263,9 @@ class LocalItemData:
         "Gravitron Pulse-Wave":  LocalItem(904, item_class=IC.progression),
         "Progressive Generator": LocalItem(905, item_class=IC.progression),
 
-        "Maximum Power Up":      LocalItem(906, count=10, item_class=IC.progression), # Starts at 1, caps at 11
-        "Armor Up":              LocalItem(907, count=9,  item_class=IC.progression), # Starts at 5, caps at 14
-        "Shield Up":             LocalItem(908, count=9,  item_class=IC.useful), # Starts at 5, caps at 14
+        "Maximum Power Up":      LocalItem(906, count=10, item_class=IC.progression), # 1 -> 11
+        "Armor Up":              LocalItem(907, count=9,  item_class=IC.progression), # 5 -> 14
+        "Shield Up":             LocalItem(908, count=9,  item_class=IC.useful), # 5 -> 14
         "Solar Shields":         LocalItem(909, count=1,  item_class=IC.useful),
 
         "SuperBomb":             LocalItem(910, count=1), # More can be added in junk fill
@@ -346,6 +342,19 @@ class LocalItemData:
         all_items.update({name: (base_id + item.local_id) for (name, item) in cls.sidekicks.items()})
         all_items.update({name: (base_id + item.local_id) for (name, item) in cls.other_items.items()})
         return all_items
+
+    @classmethod
+    def get_item_groups(cls) -> Dict[str, Set[str]]:
+        return {
+            "Levels": {name for name in cls.levels.keys()},
+            "Front Weapons": {name for name in cls.front_ports.keys()},
+            "Rear Weapons": {name for name in cls.rear_ports.keys()},
+            "Specials": {name for name in cls.special_weapons.keys()},
+            "Sidekicks": {name for name in cls.sidekicks.keys()},
+            "Generators": {"Progressive Generator", "Advanced MR-12", "Gencore Custom MR-12", "Standard MicroFusion",
+                  "Advanced MicroFusion", "Gravitron Pulse-Wave"},
+            "Credits": {name for name in cls.other_items.keys() if name.endswith(" Credits")}
+        }
 
     @classmethod
     def get(cls, name: str) -> LocalItem:

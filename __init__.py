@@ -8,15 +8,15 @@ import json
 import logging
 import math
 import os
-from typing import TextIO, Optional, List, Dict, Set, Any
+from typing import TextIO, Optional, List, Dict, Set, Callable, Any
 
 from BaseClasses import Item, Location, Region
 from BaseClasses import ItemClassification as IC
 from BaseClasses import LocationProgressType as LP
 
-from .Items import LocalItemData, LocalItem
+from .Items import LocalItemData, LocalItem, Episode
 from .Locations import LevelLocationData, LevelRegion
-from .Logic import RequirementList, TyrianLogic
+from .Logic import set_level_rules
 from .Options import TyrianOptions
 
 from ..AutoWorld import World, WebWorld
@@ -26,15 +26,14 @@ class TyrianItem(Item):
 
 class TyrianLocation(Location):
     game = "Tyrian"
+    all_access_rules: List[Callable]
 
-    requirement_list: Optional[RequirementList]
     shop_price: Optional[int] # None if not a shop, price in credits if it is
 
-    def __init__(self, player: int, name: str, address: Optional[int], parent: Region,
-          requirement_list: Optional[RequirementList] = None):
+    def __init__(self, player: int, name: str, address: Optional[int], parent: Region):
         super().__init__(player, name, address, parent)
-        self.requirement_list = requirement_list
-        self.shop_price = 0 if name.startswith("Shop ") else None
+        self.shop_price = 0 if name.startswith("Shop - ") else None
+        self.all_access_rules = []
 
 class TyrianWorld(World):
     """
@@ -47,7 +46,9 @@ class TyrianWorld(World):
 
     base_id = 20031000
     item_name_to_id = LocalItemData.get_item_name_to_id(base_id)
+    item_name_groups = LocalItemData.get_item_groups()
     location_name_to_id = LevelLocationData.get_location_name_to_id(base_id)
+    location_name_groups = LevelLocationData.get_location_groups()
 
     location_descriptions = LevelLocationData.secret_descriptions
 
@@ -58,11 +59,10 @@ class TyrianWorld(World):
 
     goal_episodes: Set[int] = set() # Require these episodes for goal (1, 2, 3, 4, 5)
     play_episodes: Set[int] = set() # Add levels from these episodes (1, 2, 3, 4, 5)
-    starting_level: str = "" # Level we start on, gets precollected automatically
+    default_start_level: str = "" # Level we start on, gets precollected automatically
 
     all_levels: List[str] = [] # List of all levels available in seed
     local_itempool: List[str] = [] # Item pool for just us. Forced progression items start with !
-    level_locations: List[str] = [] # Only locations in levels
 
     single_special_weapon: Optional[str] = None # For output to spoiler log only
     #twiddles: List[Twiddle] = []
@@ -75,20 +75,11 @@ class TyrianWorld(World):
     # ================================================================================================================
 
     def create_item(self, name: str) -> TyrianItem:
-        name = name[1:] if (force_progression := name.startswith("!")) else name
-
         pool_data = LocalItemData.get(name)
-        item_class = IC.progression if force_progression else pool_data.item_class
+        return TyrianItem(name, pool_data.item_class, self.item_name_to_id[name], self.player)
 
-        return TyrianItem(name, item_class, self.item_name_to_id[name], self.player)
-
-    def create_level_location(self, name: str, region: Region,
-          requirement_list: Optional[RequirementList] = None) -> TyrianLocation:
-        loc = TyrianLocation(self.player, name, self.location_name_to_id[name], region, requirement_list)
-
-        if self.options.exclude_obscure_checks and isinstance(requirement_list, RequirementList):
-            loc.progress_type = LP.EXCLUDED if requirement_list.obscure else LP.DEFAULT
-        # Otherwise, always set to LP.DEFAULT by default
+    def create_level_location(self, name: str, region: Region) -> TyrianLocation:
+        loc = TyrianLocation(self.player, name, self.location_name_to_id[name], region)
 
         region.locations.append(loc)
         return loc
@@ -96,12 +87,6 @@ class TyrianWorld(World):
     def create_shop_location(self, name: str, region: Region, region_data: LevelRegion) -> TyrianLocation:
         loc = TyrianLocation(self.player, name, self.location_name_to_id[name], region)
         region_data.set_random_shop_price(self, loc)
-
-        # If completion is obscure, exclude the entirety of the shop
-        if self.options.exclude_obscure_checks \
-              and isinstance(region_data.completion_reqs, RequirementList) \
-              and region_data.completion_reqs.obscure:
-            loc.progress_type = LP.EXCLUDED
 
         region.locations.append(loc)
         return loc
@@ -185,6 +170,14 @@ class TyrianWorld(World):
         else:
             return {key: int(self.options.base_weapon_cost.current_key)
                   for key in LocalItemData.default_upgrade_costs.keys()}
+
+    def get_starting_weapon(self) -> str:
+        if not self.options.random_starting_weapon:
+            return "Pulse-Cannon"
+
+        # TODO More logic here, based on logic difficulty
+        possible_choices = [item for item in self.local_itempool if item in LocalItemData.front_ports]
+        return self.random.choice(possible_choices)
 
     # ================================================================================================================
     # Slot Data / File Output
@@ -391,11 +384,11 @@ class TyrianWorld(World):
                             f"Tyrian world. Defaulting to all playable pisodes.")
             self.goal_episodes = self.play_episodes
 
-        if 1 in self.play_episodes:   self.starting_level = "TYRIAN (Episode 1)"
-        elif 2 in self.play_episodes: self.starting_level = "TORM (Episode 2)"
-        elif 3 in self.play_episodes: self.starting_level = "GAUNTLET (Episode 3)"
-        elif 4 in self.play_episodes: self.starting_level = "SURFACE (Episode 4)"
-        else:                         self.starting_level = "ASTEROIDS (Episode 5)"
+        if 1 in self.play_episodes:   self.default_start_level = "TYRIAN (Episode 1)"
+        elif 2 in self.play_episodes: self.default_start_level = "TORM (Episode 2)"
+        elif 3 in self.play_episodes: self.default_start_level = "GAUNTLET (Episode 3)"
+        elif 4 in self.play_episodes: self.default_start_level = "SURFACE (Episode 4)"
+        else:                         self.default_start_level = "ASTEROIDS (Episode 5)"
 
         self.weapon_costs = self.get_weapon_costs()
         self.total_money_needed = max(self.weapon_costs.values()) * 220
@@ -412,18 +405,12 @@ class TyrianWorld(World):
         # === Levels ===
         # ==============
 
-        for (name, location_list) in LevelLocationData.level_regions.items():
-            region_item_data = LocalItemData.get(name) # Unlocking items have the same name as the region
-            if region_item_data.episode not in self.play_episodes:
+        for (name, region_info) in LevelLocationData.level_regions.items():
+            if region_info.episode not in self.play_episodes:
                 continue
 
             self.all_levels.append(name)
-
-            if self.starting_level == name:
-                # World needs a starting point, give the item for the starting level immediately
-                self.multiworld.push_precollected(self.create_item(name))
-            else:
-                self.local_itempool.append(name)
+            self.local_itempool.append(name)
 
             # Create the region for the level and connect it to the hub
             level_region = Region(name, self.player, self.multiworld)
@@ -432,14 +419,13 @@ class TyrianWorld(World):
 
             # Create the shop region immediately, and connect it to the level (treat completion as an entrance)
             # We don't particularly care if shops are even enabled, and we'll fill in shop checks afterward
-            shop_region = Region(f"Shop ({name})", self.player, self.multiworld)
+            shop_region = Region(f"Shop - {name}", self.player, self.multiworld)
             level_region.connect(shop_region, f"Can shop at {name}")
             self.multiworld.regions.append(shop_region)
 
             # Make all locations listed for this region
-            for (location_name, location_reqs) in location_list.items():
-                self.level_locations.append(location_name) # Saves us time generating rules
-                self.create_level_location(location_name, level_region, location_reqs)
+            for location_name in region_info.locations:
+                self.create_level_location(location_name, level_region)
 
         # =============
         # === Shops ===
@@ -476,14 +462,11 @@ class TyrianWorld(World):
 
             for level in self.all_levels:
                 # Just get the shop region we made earlier
-                shop_region = self.multiworld.get_region(f"Shop ({level})", self.player)
-                self.multiworld.regions.append(shop_region)
-
-                # Get region data; if completion requirements exist and are marked obscure, all shop checks are too
+                shop_region = self.multiworld.get_region(f"Shop - {level}", self.player)
                 region_data = LevelLocationData.level_regions[level]
 
                 for i in range(items_per_shop[level]):
-                    shop_loc_name = f"Shop ({level}) - Item {i + 1}"
+                    shop_loc_name = f"Shop - {level} - Item {i + 1}"
                     new_location = self.create_shop_location(shop_loc_name, shop_region, region_data)
                     self.total_money_needed += new_location.shop_price
 
@@ -518,18 +501,10 @@ class TyrianWorld(World):
             if item_name in self.local_itempool: # Regular item
                 self.local_itempool.remove(item_name)
                 return item_name
-            item_name = f"!{item_name}"
-            if item_name in self.local_itempool: # Item promoted to progression
-                self.local_itempool.remove(item_name)
-                return item_name
             return None
 
-        def pool_item_to_progression(item_name) -> bool:
-            if item_name in self.local_itempool:
-                self.local_itempool.remove(item_name)
-                self.local_itempool.append(f"!{item_name}")
-                return True
-            return False
+        precollected_level_exists = False
+        precollected_weapon_exists = False
 
         # ----------------------------------------------------------------------------------------
 
@@ -549,50 +524,38 @@ class TyrianWorld(World):
 
         # Remove precollected (starting inventory) items from the pool.
         for precollect in self.multiworld.precollected_items[self.player]:
-            pop_from_pool(precollect.name)
+            name = pop_from_pool(precollect.name)
+            if name in LocalItemData.levels: # Allow starting level override (dangerous logic-wise, but whatever)
+                precollected_level_exists = True
+            elif name in LocalItemData.front_ports: # Allow default weapon override
+                precollected_weapon_exists = True
 
-        # Pull the weapon we start with out of the pool.
-        starting_weapon = pop_from_pool("Pulse-Cannon")
-        self.multiworld.push_precollected(self.create_item(starting_weapon))
+        # Remove items we've been requested to remove from the pool.
+        for (removed_item, remove_count) in self.options.remove_from_item_pool.items():
+            if removed_item in LocalItemData.levels:
+                raise Exception(f"Cannot remove levels from the item pool (tried to remove '{removed_item}')")
+            for i in range(remove_count):
+                pop_from_pool(removed_item)
+
+        if not precollected_level_exists:
+            # Precollect the default starting level and pop it from the item pool.
+            start_level = pop_from_pool(self.default_start_level)
+            self.multiworld.push_precollected(self.create_item(start_level))
+
+        if not precollected_weapon_exists:
+            # Pick a starting weapon and pull it from the pool.
+            start_weapon = pop_from_pool(self.get_starting_weapon())
+            self.multiworld.push_precollected(self.create_item(start_weapon))
 
         if self.options.specials == 1: # Get a random special, no others
             self.single_special_weapon = self.random.choice(sorted(LocalItemData.special_weapons))
-
-            # Force it to be considered progression, just in case we get something that can be used as such.
-            self.multiworld.push_precollected(self.create_item(f"!{self.single_special_weapon}"))
+            self.multiworld.push_precollected(self.create_item(self.single_special_weapon))
 
         # If requested, pull max power upgrades from the pool and give them to the player.
         for i in range(1, self.options.starting_max_power):
             max_power_item = pop_from_pool("Maximum Power Up")
             if max_power_item is not None:
                 self.multiworld.push_precollected(self.create_item(max_power_item))
-
-        # ----------------------------------------------------------------------------------------
-
-        # Promote some weapons to progression based on tags.
-        for weapon in self.random.sample(LocalItemData.front_ports_by_tag("HighDPS"), 2):
-            pool_item_to_progression(weapon)
-        for weapon in self.random.sample(LocalItemData.front_ports_by_tag("Pierces"), 1):
-            pool_item_to_progression(weapon)
-
-        for weapon in self.random.sample(LocalItemData.rear_ports_by_tag("Sideways"), 1):
-            pool_item_to_progression(weapon)
-
-        for weapon in self.random.sample(LocalItemData.sidekicks_by_tag("HighDPS"), 1):
-            pool_item_to_progression(weapon)
-        for weapon in self.random.sample(LocalItemData.sidekicks_by_tag("Defensive"), 1):
-            pool_item_to_progression(weapon)
-
-        if self.options.specials == 2: # Specials as MultiWorld items
-            # Promote some specials to progression, as well.
-            for weapon in self.random.sample(LocalItemData.specials_by_tag("Pierces"), 1):
-                pool_item_to_progression(weapon)
-
-        if self.options.contact_bypasses_shields:
-            # This can hit the same sidekick that was previously promoted to progressive, and that's fine.
-            defensive_sidekick = self.random.choice(LocalItemData.sidekicks_by_tag("Defensive"))
-            pool_item_to_progression(defensive_sidekick)
-            self.multiworld.early_items[self.player][defensive_sidekick] = 1
 
         # ----------------------------------------------------------------------------------------
 
@@ -624,7 +587,7 @@ class TyrianWorld(World):
         minimum_needed_item_count = math.ceil(self.total_money_needed / 50000)
         if rest_item_count < minimum_needed_item_count:
             tossable_items = [name for name in self.local_itempool if not name.startswith("!")
-                  and LocalItemData.get(name).item_class == IC.filler]
+                  and LocalItemData.get(name).tossable]
             need_to_toss = minimum_needed_item_count - rest_item_count
 
             if need_to_toss > len(tossable_items):
@@ -651,63 +614,40 @@ class TyrianWorld(World):
 
     def set_rules(self):
 
-        # ==========================
-        # === Region-level rules ===
-        # ==========================
+        set_level_rules(self)
+
+        # ==============================
+        # === Automatic (base) rules ===
+        # ==============================
 
         def create_level_unlock_rule(level_name: str):
             entrance = self.multiworld.get_entrance(f"Open {level_name}", self.player)
             entrance.access_rule = lambda state: state.has(level_name, self.player)
 
-        def create_shop_rule(level_name: str):
-            entrance = self.multiworld.get_entrance(f"Can shop at {level_name}", self.player)
-            # Shop region is connected to the level region, so it's inherently locked by the level unlock rule
-            region_access = LevelLocationData.level_regions[level].completion_reqs
-            if region_access == "Boss":
-                entrance.access_rule = lambda state: state.can_reach(f"{level_name} - Boss", "Location", self.player)
-            else:
-                entrance.access_rule = lambda state: state._tyrian_requirement_satisfied(self.player, region_access)
-
         for level in self.all_levels:
             create_level_unlock_rule(level)
-            if self.options.shop_mode != "none":
-                create_shop_rule(level)
 
-        # ============================
-        # === Location-level rules ===
-        # ============================
-
-        def create_location_rule(location_name: str):
-            location = self.multiworld.get_location(location_name, self.player)
-            location.access_rule = lambda state: \
-                  state._tyrian_requirement_satisfied(self.player, location.requirement_list)
-
-        for check in self.level_locations:
-            create_location_rule(check)
-
-        # ===================
-        # === Event rules ===
-        # ===================
+        # ------------------------------
 
         def create_episode_complete_rule(event_name, location_name):
             event = self.multiworld.find_item(event_name, self.player)
             event.access_rule = lambda state: state.can_reach(location_name, "Location", self.player)
 
-        episode_num = 0
         for (event_name, level_name) in LevelLocationData.events.items():
-            episode_num += 1
-            if episode_num not in self.goal_episodes:
+            region_data = LevelLocationData.level_regions[level_name]
+            if (region_data.episode not in self.goal_episodes):
                 continue
 
-            create_episode_complete_rule(event_name, f"{level_name} - Boss")
+            create_episode_complete_rule(event_name, region_data.locations[-1])
 
             # If only one episode is goal, exclude anything in the shop behind the goal level.
             if len(self.goal_episodes) == 1:
                 shop_locations = [loc for loc in self.multiworld.get_locations(self.player)
-                      if loc.name.startswith(f"Shop ({level_name})")]
+                      if loc.name.startswith(f"Shop - {level_name} - ")]
 
                 for location in shop_locations:
                     location.progress_type = LP.EXCLUDED
+
 
 #   def post_fill(self):
 #       from Utils import visualize_regions
@@ -723,16 +663,14 @@ class TyrianWorld(World):
             json.dump(self.get_slot_data(local_mode=True), f)
 
     def write_spoiler(self, spoiler_handle: TextIO):
-        #for shop in [loc for loc in self.multiworld.get_locations(self.player) if loc.name.startswith(f"Shop (")]:
+        #for shop in [loc for loc in self.multiworld.get_locations(self.player) if loc.name.startswith(f"Shop - ")]:
         #    print(f"{shop.name}: {shop.shop_price}")
 
         precollected_names = [item.name for item in self.multiworld.precollected_items[self.player]]
 
         spoiler_handle.write(f"\n\nLevel locations ({self.multiworld.player_name[self.player]}):\n\n")
         for level in self.all_levels:
-            if self.starting_level == level:
-                spoiler_handle.write(f"{level}: Start\n")
-            elif level in precollected_names:
+            if level in precollected_names:
                 spoiler_handle.write(f"{level}: Start\n")               
             else:
                 level_item_location = self.multiworld.find_item(level, self.player)

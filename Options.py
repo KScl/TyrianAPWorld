@@ -7,7 +7,9 @@
 from dataclasses import dataclass
 
 from BaseClasses import PlandoOptions
-from Options import PerGameCommonOptions, Toggle, DefaultOnToggle, Choice, Range, NamedRange, TextChoice, DeathLink
+from Options import PerGameCommonOptions, Toggle, DefaultOnToggle, Choice, Range, NamedRange, TextChoice, ItemDict, \
+      DeathLink
+
 from ..AutoWorld import World
 
 # ===================
@@ -76,9 +78,9 @@ class GoalEpisode5(Choice):
     option_off = 0
     default = 0
 
-# ==========================
-# === Starting inventory ===
-# ==========================
+# ==================================
+# === Itempool / Start Inventory ===
+# ==================================
 
 class StartingMoney(Range):
     """Change the amount of money you start the seed with."""
@@ -96,6 +98,26 @@ class StartingMaxPower(Range):
     range_start = 1
     range_end = 11
     default = 1
+
+class RandomStartingWeapon(Toggle):
+    """
+    Choose whether you start with the default Pulse-Cannon or something random; how random depends on logic difficulty
+    settings, among other things. In particular, adding generators to your start inventory may result in a better
+    selection for lower logic difficulties.
+
+    Note: If your start inventory contains a front weapon, you will not receive another starting weapon (and therefore,
+    this option will be ignored).
+    """
+    display_name = "Random Starting Weapon"
+
+class RemoveFromItemPool(ItemDict):
+    """
+    Allows customizing the item pool by removing unwanted items from it.
+
+    Note: Items in starting inventory are automatically removed from the pool; you don't need to remove them here too.
+    """
+    display_name = "Remove From Item Pool"
+    verify_item_name = True
 
 # =======================
 # === Shops and Money ===
@@ -146,7 +168,7 @@ class MoneyPoolScale(Range):
     Change the amount of money in the pool, as a percentage.
 
     At 100 (100%), the total amount of money in the pool will be equal to the cost of upgrading the most expensive
-    weapon to the maximum level, plus the cost of purchasing all items from every shop.
+    front weapon to the maximum level, plus the cost of purchasing all items from every shop.
     """
     display_name = "Money Pool Scaling"
     range_start = 50
@@ -187,9 +209,9 @@ class ProgressiveItems(DefaultOnToggle):
     """
     How items with multiple tiers (in this game, only generators) should be rewarded.
 
-    If 'on', each item can be independently picked up, letting you skip tiers. Picking up an item of a lower tier
+    If 'off', each item can be independently picked up, letting you skip tiers. Picking up an item of a lower tier
     after an item of a higher tier does nothing.
-    If 'off', each "Progressive" item will move you up to the next tier, regardless of which one you find.
+    If 'on', each "Progressive" item will move you up to the next tier, regardless of which one you find.
     """
     display_name = "Progressive Items"
 
@@ -227,25 +249,38 @@ class Twiddles(Choice):
 # === Difficulty ===
 # ==================
 
-class Difficulty(Choice):
+class LogicDifficulty(Choice):
+    """
+    Select how difficult the logic will be.
+
+    If 'beginner', most secret locations will be excluded by default, and additional leeway will be provided when
+    calculating damage to ensure you can destroy things required to obtain checks.
+    If 'standard', only a few incredibly obscure locations will be excluded by default. There will always logically be
+    a weapon loadout you can use to obtain checks that your current generator can handle (shields notwithstanding).
+    If 'expert', all locations will be in logic, and it will be expected that you can manage a weapon loadout that
+    creates a power drain on your current generator.
+    If 'master', logic will be as in 'expert' but you will also be expected to know technical things like specific
+    triggers for secrets and other minute details, and little to no leeway will be provided with damage calculation.
+    """
+    display_name = "Logic Difficulty"
+    option_beginner = 1
+    option_standard = 2
+    option_expert = 3
+    option_master = 4
+    default = 2
+
+class GameDifficulty(Choice):
     """
     Select the base difficulty of the game. Anything beyond Impossible is VERY STRONGLY not recommended unless you
     know what you're doing.
     """
-    display_name = "Difficulty"
-    # For future reference... In addition to other changes difficulty makes, it scales enemy health by this amount:
-    # Easy: 75%
-    # Normal: 100%
-    # Hard: 120%
-    # Impossible: 150%
-    # Suicide: 200%
-    # Lord of Game: 400%
-    option_easy = 1
-    option_normal = 2
-    option_hard = 3
-    option_impossible = 4
-    option_suicide = 6
-    option_lord_of_game = 8
+    display_name = "Game Difficulty"
+    option_easy = 1 # 75% enemy health
+    option_normal = 2 # 100% enemy health
+    option_hard = 3 # 120% enemy health
+    option_impossible = 4 # 150% enemy health, fast firing and bullet speeds
+    option_suicide = 6 # 200% enemy health, fast firing and bullet speeds
+    option_lord_of_game = 8 # 400% enemy health, incredibly fast firing and bullet speeds
     alias_lord_of_the_game = option_lord_of_game
     alias_zinglon = option_lord_of_game
     default = 2
@@ -255,25 +290,28 @@ class HardContact(Toggle):
     Direct contact with an enemy or anything else will completely power down your shields and deal armor damage.
 
     Note that this makes the game significantly harder. Additional "Enemy approaching from behind" callouts will be
-    given if this is enabled, and some defensive sidekicks will be considered progression and placed early in the seed.
+    given throughout the game if this is enabled.
     """
     display_name = "Contact Bypasses Shields"
 
 class ExcessArmor(DefaultOnToggle):
-    """
-    Twiddles, pickups, etc. can cause your ship to have more armor than its maximum armor rating."""
+    """Twiddles, pickups, etc. can cause your ship to have more armor than its maximum armor rating."""
     display_name = "Allow Excess Armor"
 
-class ObscurityExclusions(DefaultOnToggle):
-    """
-    Automatically exclude some checks that are deemed to require obscure game knowledge or are otherwise difficult
-    to obtain in a casual setting.
-    """
-    display_name = "Exclude Obscure Checks"
+# ======================================
+# === Visual tweaks and other things ===
+# ======================================
 
-# =====================
-# === Visual Tweaks ===
-# =====================
+class ForceGameSpeed(Choice):
+    """Force the game to stay at a specific speed setting, or "off" to allow it to be freely chosen."""
+    display_name = "Force Game Speed"
+    option_off = -1
+    option_slug_mode = 0
+    option_slower = 1
+    option_slow = 2
+    option_normal = 3
+    option_turbo = 4
+    default = -1
 
 class ShowTwiddleInputs(DefaultOnToggle):
     """If twiddles are enabled, show their inputs in "Ship Info" next to the name of each twiddle."""
@@ -291,6 +329,8 @@ class Christmas(Toggle):
 
 @dataclass
 class TyrianOptions(PerGameCommonOptions):
+    remove_from_item_pool: RemoveFromItemPool
+
     enable_tyrian_2000_support: EnableTyrian2000Support
     episode_1: GoalEpisode1
     episode_2: GoalEpisode2
@@ -300,6 +340,7 @@ class TyrianOptions(PerGameCommonOptions):
 
     starting_money: StartingMoney
     starting_max_power: StartingMaxPower
+    random_starting_weapon: RandomStartingWeapon
 
     shop_mode: ShopMode
     shop_item_count: ShopItemCount
@@ -309,11 +350,12 @@ class TyrianOptions(PerGameCommonOptions):
     specials: Specials
     twiddles: Twiddles
 
-    difficulty: Difficulty
+    logic_difficulty: LogicDifficulty
+    difficulty: GameDifficulty
     contact_bypasses_shields: HardContact
     allow_excess_armor: ExcessArmor
-    exclude_obscure_checks: ObscurityExclusions
 
+    force_game_speed: ForceGameSpeed
     show_twiddle_inputs: ShowTwiddleInputs
     archipelago_radar: ArchipelagoRadar
     christmas_mode: Christmas
