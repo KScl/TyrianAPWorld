@@ -102,7 +102,9 @@ class LevelLocationData:
             "HOLES (Episode 1) - U-Ship Formation 1",
             "HOLES (Episode 1) - U-Ship Formation 2",
             "HOLES (Episode 1) - Lander after Spinners",
-            "HOLES (Episode 1) - U-Ships after Wandering Boss",
+            "HOLES (Episode 1) - Boss Ship Fly-By 1",
+            "HOLES (Episode 1) - U-Ships after Boss Fly-By",
+            "HOLES (Episode 1) - Boss Ship Fly-By 2",
             "HOLES (Episode 1) - Before Speed Up Section",
         ], shop_setups=["C", "D", "D", "E", "F", "F", "H"]),
 
@@ -165,8 +167,8 @@ class LevelLocationData:
             "SAVARA (Episode 1) - White Formation Leader 2",
             "SAVARA (Episode 1) - Green Plane Line",
             "SAVARA (Episode 1) - Brown Plane Breaking Formation",
-            "SAVARA (Episode 1) - Large Plane Speeding By",
-            "SAVARA (Episode 1) - Vulcan Plane Group",
+            "SAVARA (Episode 1) - Huge Plane, Speeds By",
+            "SAVARA (Episode 1) - Vulcan Plane",
             "SAVARA (Episode 1) - Boss",
         ], shop_setups=["E", "H", "L", "P"]),
 
@@ -224,7 +226,13 @@ class LevelLocationData:
         # =============================================================================================
 
         "TORM (Episode 2)": LevelRegion(episode=Episode.Treachery, base_id=160, locations=[
+            "TORM (Episode 2) - Jungle Ship V Formation 1",
             "TORM (Episode 2) - Ship Fleeing Dragon Secret",
+            "TORM (Episode 2) - Excuse Me, You Dropped This",
+            "TORM (Episode 2) - Jungle Ship V Formation 2",
+            "TORM (Episode 2) - Jungle Ship V Formation 3",
+            "TORM (Episode 2) - Undocking Jungle Ship",
+            "TORM (Episode 2) - Boss Ship Fly-By",
             "TORM (Episode 2) - Boss",
         ]),
 
@@ -232,7 +240,6 @@ class LevelLocationData:
             "GYGES (Episode 2) - Circled Shapeshifting Turret 1",
             "GYGES (Episode 2) - Wide Waving Worm",
             "GYGES (Episode 2) - Orbsnake",
-            "GYGES (Episode 2) - Afterburner Shapeshifters",
             "GYGES (Episode 2) - GEM WAR Warp Orb",
             "GYGES (Episode 2) - Circled Shapeshifting Turret 2",
             "GYGES (Episode 2) - Last Set of Worms",

@@ -16,7 +16,7 @@ from BaseClasses import LocationProgressType as LP
 
 from .Items import LocalItemData, LocalItem, Episode
 from .Locations import LevelLocationData, LevelRegion
-from .Logic import set_level_rules
+from .Logic import DamageTables, set_level_rules
 from .Options import TyrianOptions
 
 from ..AutoWorld import World, WebWorld
@@ -69,6 +69,8 @@ class TyrianWorld(World):
 
     weapon_costs: Dict[str, int] = {} # Costs of each weapon's upgrades (see LocalItemData.default_upgrade_costs)
     total_money_needed: int = 0 # Sum total of shop prices and max upgrades, used to calculate filler items
+
+    damage_tables: DamageTables # Used for rule generation
 
     # ================================================================================================================
     # Item / Location Helpers
@@ -393,6 +395,8 @@ class TyrianWorld(World):
         self.weapon_costs = self.get_weapon_costs()
         self.total_money_needed = max(self.weapon_costs.values()) * 220
 
+        self.damage_tables = DamageTables(self.options.logic_difficulty)
+
     def create_regions(self):
         menu_region = Region("Menu", self.player, self.multiworld)
         self.multiworld.regions.append(menu_region)
@@ -595,12 +599,8 @@ class TyrianWorld(World):
                 need_to_toss = len(tossable_items)
 
             tossed = [pop_from_pool(i) for i in self.random.sample(tossable_items, need_to_toss)]
-            logging.warning(f"Tossing {need_to_toss} item{'' if need_to_toss == 1 else 's'} "
-                            f"from {self.multiworld.get_player_name(self.player)}'s Tyrian world "
-                            f"due to insufficient available locations.")
-            logging.warning("This is expected if only one episode is enabled, but otherwise you might want "
-                            "to check your settings.")
-            logging.warning(f"Tossed: {tossed}")
+            logging.warning(f"Trimming {need_to_toss} item{'' if need_to_toss == 1 else 's'} "
+                            f"from {self.multiworld.get_player_name(self.player)}'s Tyrian world.")
 
             rest_item_count = len(self.multiworld.get_unfilled_locations(self.player)) - len(self.local_itempool)
 
@@ -647,7 +647,6 @@ class TyrianWorld(World):
 
                 for location in shop_locations:
                     location.progress_type = LP.EXCLUDED
-
 
 #   def post_fill(self):
 #       from Utils import visualize_regions

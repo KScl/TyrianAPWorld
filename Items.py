@@ -308,31 +308,6 @@ class LocalItemData:
         cls.sidekicks["Flying Punch"].count = 2
 
     @classmethod
-    def front_ports_by_tag(cls, tag: str) -> List[str]:
-        return [name for (name, weapon) in cls.front_ports.items() if tag in weapon.tags and weapon.count > 0]
-
-    @classmethod
-    def rear_ports_by_tag(cls, tag: str) -> List[str]:
-        return [name for (name, weapon) in cls.rear_ports.items() if tag in weapon.tags and weapon.count > 0]
-
-    @classmethod
-    def specials_by_tag(cls, tag: str) -> List[str]:
-        return [name for (name, weapon) in cls.special_weapons.items() if tag in weapon.tags and weapon.count > 0]
-
-    @classmethod
-    def sidekicks_by_tag(cls, tag: str) -> List[str]:
-        return [name for (name, weapon) in cls.sidekicks.items() if tag in weapon.tags and weapon.count > 0]
-
-    @classmethod
-    def all_by_tag(cls, tag: str) -> List[str]:
-        all_weapons = []
-        all_weapons.extend(cls.front_ports_by_tag(tag))
-        all_weapons.extend(cls.rear_ports_by_tag(tag))
-        all_weapons.extend(cls.specials_by_tag(tag))
-        all_weapons.extend(cls.sidekicks_by_tag(tag))
-        return all_weapons
-
-    @classmethod
     def get_item_name_to_id(cls, base_id: int) -> Dict[str, int]:
         all_items = {}
         all_items.update({name: (base_id + item.local_id) for (name, item) in cls.levels.items()})
@@ -379,46 +354,46 @@ class LocalItemData:
         "Pulse-Cannon":                   UpgradeCost(original=500,  balanced=700),
         "Multi-Cannon (Front)":           UpgradeCost(original=750,  balanced=600),
         "Mega Cannon":                    UpgradeCost(original=1000, balanced=1000),
-        "Laser":                          UpgradeCost(original=900,  balanced=1800),
-        "Zica Laser":                     UpgradeCost(original=1100, balanced=1750),
+        "Laser":                          UpgradeCost(original=900,  balanced=1750),
+        "Zica Laser":                     UpgradeCost(original=1100, balanced=1800),
         "Protron Z":                      UpgradeCost(original=900,  balanced=1200),
         "Vulcan Cannon (Front)":          UpgradeCost(original=600,  balanced=500),
         "Lightning Cannon":               UpgradeCost(original=1000, balanced=1500),
         "Protron (Front)":                UpgradeCost(original=600,  balanced=900),
         "Missile Launcher":               UpgradeCost(original=850,  balanced=600),
-        "Mega Pulse (Front)":             UpgradeCost(original=900,  balanced=1200),
+        "Mega Pulse (Front)":             UpgradeCost(original=900,  balanced=1100),
         "Heavy Missile Launcher (Front)": UpgradeCost(original=1000, balanced=1000),
         "Banana Blast (Front)":           UpgradeCost(original=950,  balanced=1000),
         "HotDog (Front)":                 UpgradeCost(original=1100, balanced=950),
-        "Hyper Pulse":                    UpgradeCost(original=1050, balanced=800),
+        "Hyper Pulse":                    UpgradeCost(original=1050, balanced=750),
         "Guided Bombs":                   UpgradeCost(original=800,  balanced=900),
-        "Shuruiken Field":                UpgradeCost(original=850,  balanced=1400),
-        "Poison Bomb":                    UpgradeCost(original=800,  balanced=1800),
-        "Protron Wave":                   UpgradeCost(original=750,  balanced=750),
+        "Shuruiken Field":                UpgradeCost(original=850,  balanced=1000),
+        "Poison Bomb":                    UpgradeCost(original=800,  balanced=1700),
+        "Protron Wave":                   UpgradeCost(original=750,  balanced=600),
         "The Orange Juicer":              UpgradeCost(original=900,  balanced=1000),
-        "NortShip Super Pulse":           UpgradeCost(original=1100, balanced=1250),
-        "Atomic RailGun":                 UpgradeCost(original=1101, balanced=1750), # Yes, that's not a typo
+        "NortShip Super Pulse":           UpgradeCost(original=1100, balanced=1100),
+        "Atomic RailGun":                 UpgradeCost(original=1101, balanced=1800), # Yes, that's not a typo
         "Widget Beam":                    UpgradeCost(original=950,  balanced=500),
-        "Sonic Impulse":                  UpgradeCost(original=1000, balanced=700), # Too fast to pierce well
+        "Sonic Impulse":                  UpgradeCost(original=1000, balanced=1000),
         "RetroBall":                      UpgradeCost(original=1000, balanced=600),
 
         # Rear ports
-        "Starburst":                     UpgradeCost(original=900,  balanced=800),
-        "Multi-Cannon (Rear)":           UpgradeCost(original=750,  balanced=600),
-        "Sonic Wave":                    UpgradeCost(original=950,  balanced=950),
+        "Starburst":                     UpgradeCost(original=900,  balanced=900),
+        "Multi-Cannon (Rear)":           UpgradeCost(original=750,  balanced=700),
+        "Sonic Wave":                    UpgradeCost(original=950,  balanced=1000),
         "Protron (Rear)":                UpgradeCost(original=650,  balanced=750),
         "Wild Ball":                     UpgradeCost(original=800,  balanced=600),
         "Vulcan Cannon (Rear)":          UpgradeCost(original=500,  balanced=500),
-        "Fireball":                      UpgradeCost(original=1000, balanced=600),
+        "Fireball":                      UpgradeCost(original=1000, balanced=700),
         "Heavy Missile Launcher (Rear)": UpgradeCost(original=1000, balanced=1000),
         "Mega Pulse (Rear)":             UpgradeCost(original=900,  balanced=1200),
-        "Banana Blast (Rear)":           UpgradeCost(original=1100, balanced=1400),
-        "HotDog (Rear)":                 UpgradeCost(original=1100, balanced=900),
+        "Banana Blast (Rear)":           UpgradeCost(original=1100, balanced=1500),
+        "HotDog (Rear)":                 UpgradeCost(original=1100, balanced=700),
         "Guided Micro Bombs":            UpgradeCost(original=1100, balanced=800),
-        "Heavy Guided Bombs":            UpgradeCost(original=1000, balanced=800),
-        "Scatter Wave":                  UpgradeCost(original=900,  balanced=600),
-        "NortShip Spreader":             UpgradeCost(original=1100, balanced=1500),
-        "NortShip Spreader B":           UpgradeCost(original=1100, balanced=1250),
+        "Heavy Guided Bombs":            UpgradeCost(original=1000, balanced=1000),
+        "Scatter Wave":                  UpgradeCost(original=900,  balanced=750),
+        "NortShip Spreader":             UpgradeCost(original=1100, balanced=1100),
+        "NortShip Spreader B":           UpgradeCost(original=1100, balanced=1100),
 
         # Tyrian 2000 stuff -- Original prices of 50 have been changed to 1000.
         "Needle Laser":    UpgradeCost(original=600,  balanced=700),
