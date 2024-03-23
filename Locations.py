@@ -274,6 +274,11 @@ class LevelLocationData:
         ]),
 
         "MARKERS (Episode 2)": LevelRegion(episode=Episode.Treachery, base_id=220, locations=[
+            "MARKERS (Episode 2) - Right Path Turret",
+            "MARKERS (Episode 2) - Persistent Mine-Layer",
+            "MARKERS (Episode 2) - Car Destroyer Secret",
+            "MARKERS (Episode 2) - Left Path Turret",
+            "MARKERS (Episode 2) - End Section Turret",
         ]),
 
         "MISTAKES (Episode 2)": LevelRegion(episode=Episode.Treachery, base_id=230, locations=[
@@ -334,8 +339,8 @@ class LevelLocationData:
 
         "BONUS (Episode 3)": LevelRegion(episode=Episode.MissionSuicide, base_id=300, locations=[
             "BONUS (Episode 3) - Lone Turret 1",
-            "BONUS (Episode 3) - Behind First Onslaught",
-            "BONUS (Episode 3) - Behind Second Onslaught",
+            "BONUS (Episode 3) - Behind Onslaught 1",
+            "BONUS (Episode 3) - Behind Onslaught 2",
             "BONUS (Episode 3) - Lone Turret 2",
             "BONUS (Episode 3) - Sonic Wave Hell Turret",
         ], shop_setups=["G", "G"]),

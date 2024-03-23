@@ -325,6 +325,12 @@ def has_generator_level(state: "CollectionState", player: int, gen_level: int):
 def has_twiddle(state: "CollectionState", player: int, action: str):
     return False # TODO NYI
 
+def has_invulnerability(state: "CollectionState", player: int):
+    return state.has("Invulnerability", player) or has_twiddle(state, player, "Invulnerability")
+
+def has_repulsor(state: "CollectionState", player: int):
+    return state.has("Repulsor", player) or has_twiddle(state, player, "Repulsor")
+
 # =================================================================================================
 
 def all_rules_of(state: "CollectionState", location: "TyrianLocation"):
@@ -507,13 +513,25 @@ def episode_1_rules(world: "TyrianWorld"):
     if (world.options.logic_difficulty <= LogicDifficulty.option_standard):
         logic_location_exclude(world, "WINDY (Episode 1) - Central Question Mark")
 
+    logic_location_rule(world, "WINDY (Episode 1) - Central Question Mark", lambda state:
+          has_invulnerability(state, world.player) or has_armor_level(state, world.player, 14))
+
     enemy_health = scale_health(world, 20) # Question mark block health
     logic_location_rule(world, "WINDY (Episode 1) - Central Question Mark", lambda state, health=enemy_health:
-          can_deal_damage(state, world.player, world.damage_tables, dps=health/1.8))
-    logic_location_rule(world, "WINDY (Episode 1) - Central Question Mark", lambda state:
-          state.has("Invulnerability", world.player)
-          or has_twiddle(state, world.player, "Invulnerability")
-          or has_armor_level(state, world.player, 14))
+          can_deal_damage(state, world.player, world.damage_tables, dps=health/1.4))
+
+    if (world.options.contact_bypasses_shields):
+        logic_location_rule(world, "WINDY (Episode 1) - Central Question Mark", lambda state:
+              has_armor_level(state, world.player, 7))
+
+    enemy_health = scale_health(world, 10) # Regular block health
+    if (world.options.contact_bypasses_shields):
+        logic_entrance_rule(world, "Can shop at WINDY (Episode 1)", lambda state, health=enemy_health:
+              has_armor_level(state, world.player, 7)
+              and can_deal_damage(state, world.player, world.damage_tables, dps=health/1.4))
+    else:
+        logic_entrance_rule(world, "Can shop at WINDY (Episode 1)", lambda state, health=enemy_health:
+              can_deal_damage(state, world.player, world.damage_tables, dps=health/1.4))
 
     # ===== SAVARA ============================================================
     if (not boss_timeout_in_logic(world)):
@@ -624,7 +642,7 @@ def episode_1_rules(world: "TyrianWorld"):
           has_armor_level(state, world.player, 9) and has_generator_level(state, world.player, 3))
 
     logic_location_rule(world, "ASSASSIN (Episode 1) - Boss", lambda state:
-          can_deal_damage(state, world.player, world.damage_tables, 762/20.0))
+          can_deal_damage(state, world.player, world.damage_tables, 25.0))
 
 # -----------------------------------------------------------------------------
 
@@ -684,6 +702,31 @@ def episode_2_rules(world: "TyrianWorld"):
     # ===== GEM WAR ===========================================================
 
     # ===== MARKERS ===========================================================
+    if (world.options.logic_difficulty == LogicDifficulty.option_beginner):
+        logic_location_exclude(world, "MARKERS (Episode 2) - Car Destroyer Secret")
+
+    # Flying through this stage is relatively easy *unless* HardContact is turned on.
+    if (world.options.contact_bypasses_shields):
+        logic_all_locations_rule(world, "MARKERS (Episode 2)", lambda state:
+              has_armor_level(state, world.player, 8))
+        logic_entrance_rule(world, "Can shop at MARKERS (Episode 2)", lambda state:
+              has_armor_level(state, world.player, 8))
+
+    enemy_health = scale_health(world, 30) + (scale_health(world, 6) * 4) # Minelayer + estimated 4 mines
+    logic_location_rule(world, "MARKERS (Episode 2) - Persistent Mine-Layer", lambda state, health=enemy_health:
+          can_deal_damage(state, world.player, world.damage_tables, health/7.1))
+
+    enemy_health = scale_health(world, 20) # Turrets
+    logic_location_rule(world, "MARKERS (Episode 2) - Right Path Turret", lambda state, health=enemy_health:
+          can_deal_damage(state, world.player, world.damage_tables, health/3.8))
+    logic_location_rule(world, "MARKERS (Episode 2) - Left Path Turret", lambda state, health=enemy_health:
+          can_deal_damage(state, world.player, world.damage_tables, health/3.8))
+    logic_location_rule(world, "MARKERS (Episode 2) - End Section Turret", lambda state, health=enemy_health:
+          can_deal_damage(state, world.player, world.damage_tables, health/3.8))
+
+    enemy_health = scale_health(world, 10) # Cars
+    logic_location_rule(world, "MARKERS (Episode 2) - Car Destroyer Secret", lambda state, health=enemy_health:
+          can_deal_damage(state, world.player, world.damage_tables, health/3.0))
 
     # ===== MISTAKES ==========================================================
     if (world.options.logic_difficulty == LogicDifficulty.option_beginner):
@@ -719,14 +762,17 @@ def episode_2_rules(world: "TyrianWorld"):
 
     logic_all_locations_rule(world, "BOTANY B (Episode 2)", lambda state:
           has_armor_level(state, world.player, 9)
-          and has_generator_level(state, world.player, 3))
+          and has_generator_level(state, world.player, 3)
+          and can_deal_damage(state, world.player, world.damage_tables, 18.0))
 
     # ===== GRYPHON ===========================================================
     logic_entrance_behind_location(world, "Can shop at GRYPHON (Episode 2)", "GRYPHON (Episode 2) - Boss")
 
     logic_all_locations_rule(world, "GRYPHON (Episode 2)", lambda state:
           has_armor_level(state, world.player, 10)
-          and has_generator_level(state, world.player, 3))
+          and has_generator_level(state, world.player, 3)
+          and can_deal_damage(state, world.player, world.damage_tables, 22.0)
+          and can_deal_passive_damage(state, world.player, world.damage_tables, 16.0))
 
 # -----------------------------------------------------------------------------
 
@@ -748,49 +794,64 @@ def episode_3_rules(world: "TyrianWorld"):
     # Turrets have only one health; they die to any damage, but are guarded from front and back.
     if (world.options.logic_difficulty <= LogicDifficulty.option_expert):
         logic_location_rule(world, "BONUS (Episode 3) - Lone Turret 1", lambda state:
-            can_deal_passive_damage(state, world.player, world.damage_tables, 0.2)
-            or can_deal_piercing_damage(state, world.player, world.damage_tables, 0.2))
-    logic_location_rule(world, "BONUS (Episode 3) - Lone Turret 2", lambda state:
-        can_deal_passive_damage(state, world.player, world.damage_tables, 0.2)
-        or can_deal_piercing_damage(state, world.player, world.damage_tables, 0.2))
+            can_deal_passive_damage(state, world.player, world.damage_tables, dps=0.2)
+            or can_deal_piercing_damage(state, world.player, world.damage_tables, dps=0.2))
+        logic_location_rule(world, "BONUS (Episode 3) - Sonic Wave Hell Turret", lambda state:
+            can_deal_passive_damage(state, world.player, world.damage_tables, dps=0.2)
+            or can_deal_piercing_damage(state, world.player, world.damage_tables, dps=0.2))
 
+    # Doesn't sway left/right like the other two
+    logic_location_rule(world, "BONUS (Episode 3) - Lone Turret 2", lambda state:
+        can_deal_passive_damage(state, world.player, world.damage_tables, dps=0.2)
+        or can_deal_piercing_damage(state, world.player, world.damage_tables, dps=0.2))
+
+    # To pass the turret onslaught
     logic_location_rule(world, "BONUS (Episode 3) - Behind Onslaught 1", lambda state:
-          has_armor_level(state, world.player, 8))
+          has_armor_level(state, world.player, 8) and has_generator_level(state, world.player, 3))
     logic_location_rule(world, "BONUS (Episode 3) - Behind Onslaught 2", lambda state:
-          has_armor_level(state, world.player, 8))
+          has_armor_level(state, world.player, 8) and has_generator_level(state, world.player, 3))
     logic_location_rule(world, "BONUS (Episode 3) - Lone Turret 2", lambda state:
-          has_armor_level(state, world.player, 8))
-    logic_location_rule(world, "BONUS (Episode 3) - Sonic Wave Hell Turret", lambda state:
-          has_armor_level(state, world.player, 8))
+          has_armor_level(state, world.player, 8) and has_generator_level(state, world.player, 3))
 
-    enemy_health = scale_health(world, 20) + scale_health(world, 2) # Two-tile wide turret ships, plus item ship
-    logic_location_rule(world, "BONUS (Episode 3) - Behind Onslaught 1", lambda state, health=enemy_health:
-          can_deal_damage(state, world.player, world.damage_tables, health/1.8))
-    logic_location_rule(world, "BONUS (Episode 3) - Behind Onslaught 2", lambda state, health=enemy_health:
-          can_deal_damage(state, world.player, world.damage_tables, health/1.8))
+    enemy_health = ((scale_health(world, 25) - 10) * 4) # Two-wide turret, to take down to damaged (non-firing) state
+    logic_location_rule(world, "BONUS (Episode 3) - Lone Turret 2", lambda state, health=enemy_health:
+          has_repulsor(state, world.player)
+          or can_deal_damage(state, world.player, world.damage_tables, dps=health/3.6))
 
     # Do you have knowledge of the safe spot through this section? Master assumes you do, anything else doesn't.
+    # For Master logic apply the above to Sonic Wave Hell Turret too.
     if (world.options.logic_difficulty == LogicDifficulty.option_master):
         logic_location_rule(world, "BONUS (Episode 3) - Sonic Wave Hell Turret", lambda state:
-              state.has("Repulsor", world.player)
-              or has_twiddle(state, world.player, "Repulsor")
-              or can_deal_sideways_damage(state, world.player, world.damage_tables, 4.0))
-    else:
+              has_armor_level(state, world.player, 8) and has_generator_level(state, world.player, 3))
+        logic_location_rule(world, "BONUS (Episode 3) - Sonic Wave Hell Turret", lambda state, health=enemy_health:
+              has_repulsor(state, world.player)
+              or can_deal_damage(state, world.player, world.damage_tables, dps=health/3.6))
+    else: # We need the repulsor or a sideways damage source and a lot of health.
         logic_location_rule(world, "BONUS (Episode 3) - Sonic Wave Hell Turret", lambda state:
-              state.has("Repulsor", world.player)
-              or has_twiddle(state, world.player, "Repulsor")
-              or (
-                  has_armor_level(state, world.player, 13)
-                  and has_generator_level(state, world.player, 3)
-                  and can_deal_sideways_damage(state, world.player, world.damage_tables, 4.0))
-              )
+              has_generator_level(state, world.player, 3))
+        logic_location_rule(world, "BONUS (Episode 3) - Sonic Wave Hell Turret", lambda state, health=enemy_health:
+              (
+                  has_repulsor(state, world.player)
+                  and has_armor_level(state, world.player, 8)
+              ) or (
+                  has_armor_level(state, world.player, 12)
+                  and can_deal_damage(state, world.player, world.damage_tables, dps=health/3.6)
+                  and can_deal_sideways_damage(state, world.player, world.damage_tables, dps=4.0)
+              ))
+
+    # To actually get the items from turret onslaught
+    enemy_health = scale_health(world, 25) + scale_health(world, 3) # Single two-tile turret, plus item ship
+    logic_location_rule(world, "BONUS (Episode 3) - Behind Onslaught 1", lambda state, health=enemy_health:
+          can_deal_damage(state, world.player, world.damage_tables, dps=health/1.8))
+    logic_location_rule(world, "BONUS (Episode 3) - Behind Onslaught 2", lambda state, health=enemy_health:
+          can_deal_damage(state, world.player, world.damage_tables, dps=health/1.8))
 
     # ===== STARGATE ==========================================================
     logic_entrance_behind_location(world, "Can shop at STARGATE (Episode 3)",
         "STARGATE (Episode 3) - Super Bubble Spawner")
 
     # Just need some way of combating the bubble spam that happens after the last normal location
-    logic_location_rule(world, "STARGATE (Episode 3) - Super Bubble Spawner",
+    logic_location_rule(world, "STARGATE (Episode 3) - Super Bubble Spawner", lambda state:
         can_deal_passive_damage(state, world.player, world.damage_tables, 7.0))
 
     # ===== AST. CITY =========================================================
@@ -827,9 +888,9 @@ def episode_3_rules(world: "TyrianWorld"):
     logic_entrance_behind_location(world, "Can shop at FLEET (Episode 3)", "FLEET (Episode 3) - Boss")
 
     logic_location_rule(world, "FLEET (Episode 3) - Boss", lambda state:
-          has_armor_level(state, world.player, 11) and has_generator_level(state, world.player, 5))
+          has_armor_level(state, world.player, 12) and has_generator_level(state, world.player, 4))
     logic_location_rule(world, "FLEET (Episode 3) - Boss", lambda state:
-          can_deal_damage(state, world.player, world.damage_tables, dps=40.0))
+          can_deal_damage(state, world.player, world.damage_tables, dps=50.0))
 
 # -----------------------------------------------------------------------------
 
