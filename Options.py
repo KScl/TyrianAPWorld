@@ -78,6 +78,13 @@ class GoalEpisode5(Choice):
     option_off = 0
     default = 0
 
+class BossWeaknesses(Toggle):
+    """
+    If true, the boss of the last level of each goal episode will only be weak to one specific weapon.
+    A "Data Cube" item will be added for each boss modified this way, that tells you what weapon you need to use.
+    """
+    display_name = "Boss Weaknesses"
+
 # ==================================
 # === Itempool / Start Inventory ===
 # ==================================
@@ -147,7 +154,7 @@ class ShopItemCount(NamedRange):
     """
     display_name = "Shop Item Count"
     range_start = 1
-    range_end = 325
+    range_end = 330
     special_range_names = {
         "always_one":   -1,
         "always_two":   -2,
@@ -171,8 +178,8 @@ class MoneyPoolScale(Range):
     front weapon to the maximum level, plus the cost of purchasing all items from every shop.
     """
     display_name = "Money Pool Scaling"
-    range_start = 50
-    range_end = 500
+    range_start = 20
+    range_end = 400
     default = 100
 
 class BaseWeaponCost(TextChoice):
@@ -337,6 +344,7 @@ class TyrianOptions(PerGameCommonOptions):
     episode_3: GoalEpisode3
     episode_4: GoalEpisode4
     episode_5: GoalEpisode5
+    boss_weaknesses: BossWeaknesses
 
     starting_money: StartingMoney
     starting_max_power: StartingMaxPower

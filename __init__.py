@@ -71,6 +71,7 @@ class TyrianWorld(World):
     total_money_needed: int = 0 # Sum total of shop prices and max upgrades, used to calculate filler items
 
     damage_tables: DamageTables # Used for rule generation
+    all_boss_weaknesses: Dict[int, str] = {} # Required weapon to use for each boss
 
     # ================================================================================================================
     # Item / Location Helpers
@@ -172,6 +173,10 @@ class TyrianWorld(World):
         else:
             return {key: int(self.options.base_weapon_cost.current_key)
                   for key in LocalItemData.default_upgrade_costs.keys()}
+
+    def get_random_weapon(self) -> str:
+        possible_choices = [item for item in self.local_itempool if item in LocalItemData.front_ports]
+        return self.random.choice(possible_choices)
 
     def get_starting_weapon(self) -> str:
         if not self.options.random_starting_weapon:
@@ -294,6 +299,11 @@ class TyrianWorld(World):
               for location in self.multiworld.get_locations(self.player)
               if getattr(location, 'shop_price', None) is not None}
 
+    # Boss weapon/weakness list (local and/or remote, if the option is enabled)
+    def output_boss_weaknesses(self) -> Dict[int, int]:
+        return {episode: self.item_name_to_id[weapon_name] - self.base_id
+              for (episode, weapon_name) in self.all_boss_weaknesses.items()}
+
     # --------------------------------------------------------------------------------------------
 
     def obfuscate_object(self, input_obj: Any) -> str:
@@ -339,6 +349,8 @@ class TyrianWorld(World):
 
         if self.options.twiddles:
             slot_data["TwiddleData"]: self.obfuscate_object(self.output_twiddles())
+        if self.options.boss_weaknesses:
+            slot_data["BossWeaknesses"]: self.obfuscate_object(self.output_boss_weaknesses())
 
         if local_mode: # Local mode: Output all location contents
             slot_data["LocationData"] = self.obfuscate_object(self.output_all_locations())
@@ -513,7 +525,6 @@ class TyrianWorld(World):
         # ----------------------------------------------------------------------------------------
 
         # Based on progressive items and starting inventory, add generators to the pool.
-
         generator_pool = ["Gravitron Pulse-Wave",
                           "Advanced MicroFusion",
                           "Standard MicroFusion",
@@ -560,6 +571,17 @@ class TyrianWorld(World):
             max_power_item = pop_from_pool("Maximum Power Up")
             if max_power_item is not None:
                 self.multiworld.push_precollected(self.create_item(max_power_item))
+
+        # ----------------------------------------------------------------------------------------
+
+        # Set boss weaknesses based on weapons that are in the pool and haven't been removed.
+
+        if self.options.boss_weaknesses:
+            for episode in self.goal_episodes:
+                self.all_boss_weaknesses[episode] = self.get_random_weapon()
+
+                # Add data cubes to the pool, too. They're considered logically required.
+                self.local_itempool.append(f"Data Cube (Episode {episode})")
 
         # ----------------------------------------------------------------------------------------
 

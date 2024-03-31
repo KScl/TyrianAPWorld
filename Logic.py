@@ -306,6 +306,21 @@ def can_deal_mixed_damage(state: "CollectionState", player: int, damage_tables: 
     # weapon + power level combinations that simultaneously satisfies all, so we can't just take their maximums.
     return False # TODO NYI
 
+def can_damage_with_weapon(state: "CollectionState", player: int, damage_tables: DamageTables,
+      weapon: str, dps: float):
+    if not state.has(weapon, player):
+        return False
+
+    # Workaround: We assume power 11 can defeat any boss instead of just using DPS numbers in that case
+    # It may be slower than we like but it should still be possible
+    power_level_max = state.count("Maximum Power Up", player) + 1
+    if power_level_max == 11:
+        return True
+
+    total_damage = max_or_threshold(dps,
+          (data.active for data in damage_tables.avail_shot_types([weapon], power_level_max)))
+    return total_damage >= dps
+
 def has_armor_level(state: "CollectionState", player: int, armor_level: int):
     return True if armor_level <= 5 else state.has("Armor Up", player, armor_level - 5)
 
@@ -641,8 +656,13 @@ def episode_1_rules(world: "TyrianWorld"):
     logic_all_locations_rule(world, "ASSASSIN (Episode 1)", lambda state:
           has_armor_level(state, world.player, 9) and has_generator_level(state, world.player, 3))
 
-    logic_location_rule(world, "ASSASSIN (Episode 1) - Boss", lambda state:
-          can_deal_damage(state, world.player, world.damage_tables, 25.0))
+    if Episode.Escape in world.all_boss_weaknessses:
+        logic_location_rule(world, "ASSASSIN (Episode 1) - Boss", lambda state:
+              state.has("Data Cube (Episode 1)", world.player)
+              and can_damage_with_weapon(state, world.player, world.damage_tables, world.all_boss_weaknessses[1], 25.0))
+    else:
+        logic_location_rule(world, "ASSASSIN (Episode 1) - Boss", lambda state:
+              can_deal_damage(state, world.player, world.damage_tables, 25.0))
 
 # -----------------------------------------------------------------------------
 
@@ -774,6 +794,11 @@ def episode_2_rules(world: "TyrianWorld"):
           and can_deal_damage(state, world.player, world.damage_tables, 22.0)
           and can_deal_passive_damage(state, world.player, world.damage_tables, 16.0))
 
+    if Episode.Treachery in world.all_boss_weaknessses:
+        logic_location_rule(world, "GRYPHON (Episode 2) - Boss", lambda state:
+              state.has("Data Cube (Episode 2)", world.player)
+              and can_damage_with_weapon(state, world.player, world.damage_tables, world.all_boss_weaknessses[2], 22.0))
+
 # -----------------------------------------------------------------------------
 
 def episode_3_rules(world: "TyrianWorld"):
@@ -891,6 +916,11 @@ def episode_3_rules(world: "TyrianWorld"):
           has_armor_level(state, world.player, 12) and has_generator_level(state, world.player, 4))
     logic_location_rule(world, "FLEET (Episode 3) - Boss", lambda state:
           can_deal_damage(state, world.player, world.damage_tables, dps=50.0))
+
+    if Episode.MissionSuicide in world.all_boss_weaknessses:
+        logic_location_rule(world, "FLEET (Episode 3) - Boss", lambda state:
+              state.has("Data Cube (Episode 3)", world.player)
+              and can_damage_with_weapon(state, world.player, world.damage_tables, world.all_boss_weaknessses[3], 30.0))
 
 # -----------------------------------------------------------------------------
 

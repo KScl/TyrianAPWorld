@@ -26,7 +26,7 @@ class LocalItem:
         self.local_id = local_id
         self.count = count
         self.item_class = item_class
-        self.tossable = (item_class != IC.progression)
+        self.tossable = (item_class != IC.progression and item_class != IC.progression_skip_balancing)
 
 class LocalLevel(LocalItem):
     episode: Episode
@@ -264,6 +264,13 @@ class LocalItemData:
         "Solar Shields":         LocalItem(909, count=1,  item_class=IC.useful),
 
         "SuperBomb":             LocalItem(910, count=1), # More can be added in junk fill
+
+        # Items for Boss Weaknesses
+        "Data Cube (Episode 1)": LocalItem(911, item_class=IC.progression),
+        "Data Cube (Episode 2)": LocalItem(912, item_class=IC.progression),
+        "Data Cube (Episode 3)": LocalItem(913, item_class=IC.progression),
+        "Data Cube (Episode 4)": LocalItem(914, item_class=IC.progression),
+        "Data Cube (Episode 5)": LocalItem(915, item_class=IC.progression),
 
         # All Credits items have their count set dynamically.
         "50 Credits":            LocalItem(980),
