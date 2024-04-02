@@ -143,6 +143,8 @@ class ShopMode(Choice):
     option_none = 0
     option_standard = 1
     option_hidden = 2
+    alias_true = 1
+    alias_false = 0
     default = 1
 
 class ShopItemCount(NamedRange):
@@ -316,13 +318,16 @@ class ExcessArmor(DefaultOnToggle):
 class ForceGameSpeed(Choice):
     """Force the game to stay at a specific speed setting, or "off" to allow it to be freely chosen."""
     display_name = "Force Game Speed"
-    option_off = -1
-    option_slug_mode = 0
-    option_slower = 1
-    option_slow = 2
-    option_normal = 3
-    option_turbo = 4
-    default = -1
+    option_off = 0
+    option_slug_mode = 1
+    option_slower = 2
+    option_slow = 3
+    option_normal = 4
+    option_turbo = 5
+    #option_unbounded = 6
+    alias_true = 4
+    alias_false = 0
+    default = 0
 
 class ShowTwiddleInputs(DefaultOnToggle):
     """If twiddles are enabled, show their inputs in "Ship Info" next to the name of each twiddle."""

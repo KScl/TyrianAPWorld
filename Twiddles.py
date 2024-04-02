@@ -63,9 +63,9 @@ class Twiddle:
         self.action = action
         self.command = command
 
-        if   shield_cost == "all":    self.cost = 99
-        elif shield_cost == "half":   self.cost = 98
-        elif shield_cost is not None: self.cost = max(97, int(shield_cost))
+        if   shield_cost == "all":    self.cost = 98
+        elif shield_cost == "half":   self.cost = 99
+        elif shield_cost is not None: self.cost = shield_cost
         elif armor_cost is not None:  self.cost = 100 + armor_cost
         else:                         self.cost = 0
 
@@ -73,8 +73,8 @@ class Twiddle:
         return ", ".join(cmd.name for cmd in self.command)
 
     def spoiler_cost(self) -> str:
-        if   self.cost == 99: return "All Shield"
-        elif self.cost == 98: return "Half Shield"
+        if   self.cost == 99: return "Half Shield"
+        elif self.cost == 98: return "All Shield"
         elif self.cost <= 97: return f"{self.cost} Shield"
         elif self.cost != 0:  return f"{self.cost - 100} Armor"
         return "Nothing"
