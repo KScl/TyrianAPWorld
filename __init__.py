@@ -54,7 +54,7 @@ class TyrianWorld(World):
     location_descriptions = LevelLocationData.secret_descriptions
 
     # Raise this to force outdated clients to update.
-    aptyrian_net_version = 2
+    aptyrian_net_version = 3
 
     # --------------------------------------------------------------------------------------------
 
@@ -203,6 +203,7 @@ class TyrianWorld(World):
             "SpecialMenu": (self.options.specials == 2),
             "HardContact": bool(self.options.contact_bypasses_shields),
             "ExcessArmor": bool(self.options.allow_excess_armor),
+            "GameSpeed": int(self.options.force_game_speed),
             "ShowTwiddles": bool(self.options.show_twiddle_inputs),
             "APRadar": bool(self.options.archipelago_radar),
             "Christmas": bool(self.options.christmas_mode),
