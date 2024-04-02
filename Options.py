@@ -234,6 +234,8 @@ class Specials(Choice):
     option_on = 1
     option_as_items = 2
     option_off = 0
+    alias_true = 1
+    alias_false = 0
     default = 2
 
 class Twiddles(Choice):
@@ -250,6 +252,8 @@ class Twiddles(Choice):
     option_on = 1
     option_chaos = 2
     option_off = 0
+    alias_true = 1
+    alias_false = 0
     default = 1
 
 # ==================

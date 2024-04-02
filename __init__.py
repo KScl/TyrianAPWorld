@@ -18,6 +18,7 @@ from .Items import LocalItemData, LocalItem, Episode
 from .Locations import LevelLocationData, LevelRegion
 from .Logic import DamageTables, set_level_rules
 from .Options import TyrianOptions
+from .Twiddles import Twiddle, generate_twiddles
 
 from ..AutoWorld import World, WebWorld
 
@@ -65,7 +66,7 @@ class TyrianWorld(World):
     local_itempool: List[str] = [] # Item pool for just us. Forced progression items start with !
 
     single_special_weapon: Optional[str] = None # For output to spoiler log only
-    #twiddles: List[Twiddle] = []
+    twiddles: List[Twiddle] = []
 
     weapon_costs: Dict[str, int] = {} # Costs of each weapon's upgrades (see LocalItemData.default_upgrade_costs)
     total_money_needed: int = 0 # Sum total of shop prices and max upgrades, used to calculate filler items
@@ -259,8 +260,8 @@ class TyrianWorld(World):
         return {self.item_name_to_id[key] - self.base_id: value for (key, value) in self.weapon_costs.items()}
 
     # Twiddle inputs, costs, etc.
-    def output_twiddles(self) -> list:
-        return []
+    def output_twiddles(self) -> List[Dict[str, Any]]:
+        return [twiddle.to_json() for twiddle in self.twiddles]
 
     # Which locations are progression (used for multiworld slot data)
     def output_progression_data(self) -> List[int]:
@@ -348,9 +349,9 @@ class TyrianWorld(World):
         }
 
         if self.options.twiddles:
-            slot_data["TwiddleData"]: self.obfuscate_object(self.output_twiddles())
+            slot_data["TwiddleData"] = self.obfuscate_object(self.output_twiddles())
         if self.options.boss_weaknesses:
-            slot_data["BossWeaknesses"]: self.obfuscate_object(self.output_boss_weaknesses())
+            slot_data["BossWeaknesses"] = self.obfuscate_object(self.output_boss_weaknesses())
 
         if local_mode: # Local mode: Output all location contents
             slot_data["LocationData"] = self.obfuscate_object(self.output_all_locations())
@@ -408,6 +409,10 @@ class TyrianWorld(World):
         self.total_money_needed = max(self.weapon_costs.values()) * 220
 
         self.damage_tables = DamageTables(self.options.logic_difficulty)
+
+        # May as well generate twiddles now, if the options are set.
+        if self.options.twiddles:
+            self.twiddles = generate_twiddles(self, self.options.twiddles == "chaos")
 
     def create_regions(self):
         menu_region = Region("Menu", self.player, self.multiworld)
@@ -684,11 +689,7 @@ class TyrianWorld(World):
             json.dump(self.get_slot_data(local_mode=True), f)
 
     def write_spoiler(self, spoiler_handle: TextIO):
-        #for shop in [loc for loc in self.multiworld.get_locations(self.player) if loc.name.startswith(f"Shop - ")]:
-        #    print(f"{shop.name}: {shop.shop_price}")
-
         precollected_names = [item.name for item in self.multiworld.precollected_items[self.player]]
-
         spoiler_handle.write(f"\n\nLevel locations ({self.multiworld.player_name[self.player]}):\n\n")
         for level in self.all_levels:
             if level in precollected_names:
@@ -701,7 +702,11 @@ class TyrianWorld(World):
         spoiler_handle.write(f"{self.single_special_weapon}\n")
 
         spoiler_handle.write(f"\n\nTwiddles ({self.multiworld.player_name[self.player]}):\n")
-        spoiler_handle.write("None\n")
+        if len(self.twiddles) == 0:
+            spoiler_handle.write("None\n")
+        else:
+            for twiddle in self.twiddles:
+                spoiler_handle.write(twiddle.spoiler_str())
 
     def fill_slot_data(self) -> dict:
         slot_data = self.get_slot_data()

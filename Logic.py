@@ -11,6 +11,7 @@ from BaseClasses import LocationProgressType as LP
 
 from .Items import Episode, LocalItemData
 from .Options import LogicDifficulty, GameDifficulty
+from .Twiddles import SpecialValues
 
 if TYPE_CHECKING:
     from BaseClasses import CollectionState
@@ -52,7 +53,7 @@ class DamageTables:
             "Banana Blast (Front)":           [ 7.8,  7.8,  9.3,  6.2, 14.0,  5.6,  9.3, 14.0,  15.8,  18.7,  23.5],
             "HotDog (Front)":                 [11.6, 15.6, 18.7, 23.4, 28.0, 35.2, 28.0, 23.3,  23.8,  20.0,  26.7],
             "Hyper Pulse":                    [ 7.8,  5.8,  7.8, 11.8, 15.4, 23.3, 17.5, 23.3,  14.0,  18.7,  17.5],
-            "Shuruiken Field":                [ 9.3,  9.3,  9.3,  9.3,  9.3,  9.3,  9.3,  9.3,  18.7,  18.7,  37.3],
+            "Shuriken Field":                 [ 9.3,  9.3,  9.3,  9.3,  9.3,  9.3,  9.3,  9.3,  18.7,  18.7,  37.3],
             "Poison Bomb":                    [14.2, 17.2, 20.6, 20.6, 26.7, 26.7, 23.6, 37.4,  38.0,  58.0,  90.5],
             "Protron Wave":                   [ 4.7,  5.9,  6.7,  6.7,  6.7,  6.7, 13.3, 13.3,  13.3,  13.3,  13.3],
             "Guided Bombs":                   [10.7,  6.7,  5.3, 13.3, 13.3, 11.0,  7.8,  7.8,  15.0,  10.0,  15.0],
@@ -116,7 +117,7 @@ class DamageTables:
             "Banana Blast (Front)":           [   0,  7.8,  9.3, 12.7, 14.0, 17.5, 28.0, 41.8,  47.6,  56.0,  69.6],
             "HotDog (Front)":                 [   0,    0,    0,    0,    0,    0, 18.6, 23.3,  23.8,  26.7,  26.7],
             "Hyper Pulse":                    [   0,  5.8,  7.8,  5.8,  7.8,  7.8, 11.7, 11.7,  23.3,  23.3,  34.9],
-            "Shuruiken Field":                [   0,  9.3, 18.6, 28.0, 37.3, 46.7, 56.0, 46.7,  46.7,  56.0,  37.3],
+            "Shuriken Field":                 [   0,  9.3, 18.6, 28.0, 37.3, 46.7, 56.0, 46.7,  46.7,  56.0,  37.3],
             "Poison Bomb":                    [   0,    0,    0, 21.3, 26.7, 53.3, 31.1, 47.8,  62.1,  62.1,  62.1],
             "Protron Wave":                   [   0,    0,    0,  6.7,  6.7, 13.3,  6.7, 13.3,  13.3,  26.7,  33.3],
             "Guided Bombs":                   [   0,  6.7,  9.0, 13.3, 16.0,  8.0, 12.3, 10.3,  12.3,  16.3,  16.3],
@@ -304,7 +305,7 @@ def can_deal_mixed_damage(state: "CollectionState", player: int, damage_tables: 
 
     # For multiple simultaneous types of DPS, our search is complicated by the fact that we need to find a set of
     # weapon + power level combinations that simultaneously satisfies all, so we can't just take their maximums.
-    return False # TODO NYI
+    raise NotImplementedError
 
 def can_damage_with_weapon(state: "CollectionState", player: int, damage_tables: DamageTables,
       weapon: str, dps: float):
@@ -337,14 +338,15 @@ def has_generator_level(state: "CollectionState", player: int, gen_level: int):
 
     return gen_level <= base_gen_level or state.has("Progressive Generator", player, gen_level - base_gen_level)
 
-def has_twiddle(state: "CollectionState", player: int, action: str):
-    return False # TODO NYI
+def has_twiddle(state: "CollectionState", player: int, action: SpecialValues):
+    world = state.multiworld.worlds[player]
+    return action in [twiddle.action for twiddle in world.twiddles]
 
 def has_invulnerability(state: "CollectionState", player: int):
-    return state.has("Invulnerability", player) or has_twiddle(state, player, "Invulnerability")
+    return state.has("Invulnerability", player) or has_twiddle(state, player, SpecialValues.Invulnerability)
 
 def has_repulsor(state: "CollectionState", player: int):
-    return state.has("Repulsor", player) or has_twiddle(state, player, "Repulsor")
+    return state.has("Repulsor", player) or has_twiddle(state, player, SpecialValues.Repulsor)
 
 # =================================================================================================
 
@@ -656,10 +658,10 @@ def episode_1_rules(world: "TyrianWorld"):
     logic_all_locations_rule(world, "ASSASSIN (Episode 1)", lambda state:
           has_armor_level(state, world.player, 9) and has_generator_level(state, world.player, 3))
 
-    if Episode.Escape in world.all_boss_weaknessses:
+    if Episode.Escape in world.all_boss_weaknesses:
         logic_location_rule(world, "ASSASSIN (Episode 1) - Boss", lambda state:
               state.has("Data Cube (Episode 1)", world.player)
-              and can_damage_with_weapon(state, world.player, world.damage_tables, world.all_boss_weaknessses[1], 25.0))
+              and can_damage_with_weapon(state, world.player, world.damage_tables, world.all_boss_weaknesses[1], 25.0))
     else:
         logic_location_rule(world, "ASSASSIN (Episode 1) - Boss", lambda state:
               can_deal_damage(state, world.player, world.damage_tables, 25.0))
@@ -794,10 +796,10 @@ def episode_2_rules(world: "TyrianWorld"):
           and can_deal_damage(state, world.player, world.damage_tables, 22.0)
           and can_deal_passive_damage(state, world.player, world.damage_tables, 16.0))
 
-    if Episode.Treachery in world.all_boss_weaknessses:
+    if Episode.Treachery in world.all_boss_weaknesses:
         logic_location_rule(world, "GRYPHON (Episode 2) - Boss", lambda state:
               state.has("Data Cube (Episode 2)", world.player)
-              and can_damage_with_weapon(state, world.player, world.damage_tables, world.all_boss_weaknessses[2], 22.0))
+              and can_damage_with_weapon(state, world.player, world.damage_tables, world.all_boss_weaknesses[2], 22.0))
 
 # -----------------------------------------------------------------------------
 
@@ -917,10 +919,10 @@ def episode_3_rules(world: "TyrianWorld"):
     logic_location_rule(world, "FLEET (Episode 3) - Boss", lambda state:
           can_deal_damage(state, world.player, world.damage_tables, dps=50.0))
 
-    if Episode.MissionSuicide in world.all_boss_weaknessses:
+    if Episode.MissionSuicide in world.all_boss_weaknesses:
         logic_location_rule(world, "FLEET (Episode 3) - Boss", lambda state:
               state.has("Data Cube (Episode 3)", world.player)
-              and can_damage_with_weapon(state, world.player, world.damage_tables, world.all_boss_weaknessses[3], 30.0))
+              and can_damage_with_weapon(state, world.player, world.damage_tables, world.all_boss_weaknesses[3], 30.0))
 
 # -----------------------------------------------------------------------------
 

@@ -60,7 +60,7 @@ class LevelRegion:
 
     # Gets a random price based on this level's shop setups, and assigns it to the locaton.
     # Also changes location to prioritized/excluded automatically based on the setup rolled.
-    def set_random_shop_price(self, world, location: Location) -> None:
+    def set_random_shop_price(self, world: "TyrianWorld", location: Location) -> None:
         setup_choice = world.random.choice(self.shop_setups)
         if len(setup_choice) > 1:
             location.progress_type = LP.PRIORITY if setup_choice[-1] == "!" else LP.EXCLUDED
