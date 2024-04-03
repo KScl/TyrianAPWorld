@@ -298,7 +298,7 @@ class LocalItemData:
     # ----------------------------------------------------------------------------------------------------------------
 
     @classmethod
-    def enable_tyrian_2000_items(cls):
+    def enable_tyrian_2000_items(cls) -> None:
         cls.front_ports["Needle Laser"].count = 1
         cls.front_ports["Pretzel Missile"].count = 1
         cls.front_ports["Dragon Frost"].count = 1

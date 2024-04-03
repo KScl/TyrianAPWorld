@@ -4,14 +4,14 @@
 # and is released under the terms of the zlib license.
 # See "LICENSE" for more details.
 
-from typing import TYPE_CHECKING, Callable, Any, Union, List, Dict, NamedTuple, Optional
+from typing import TYPE_CHECKING, Callable, Any, Union, List, Dict, Tuple, NamedTuple, Optional
 from collections.abc import Iterable
 
 from BaseClasses import LocationProgressType as LP
 
-from .Items import Episode, LocalItemData
-from .Options import LogicDifficulty, GameDifficulty
-from .Twiddles import SpecialValues
+from .items import Episode, LocalItemData
+from .options import LogicDifficulty, GameDifficulty
+from .twiddles import SpecialValues
 
 if TYPE_CHECKING:
     from BaseClasses import CollectionState
@@ -241,7 +241,7 @@ def scale_health(world: "TyrianWorld", health: int, adjust_difficulty: int = 0) 
     difficulty = min(max(1, world.options.difficulty + adjust_difficulty), 10)
     return health_scale[difficulty](health)
 
-def max_or_threshold(threshold: float, iterator):
+def max_or_threshold(threshold: float, iterator) -> float:
     if threshold < 0.0:
         return 0.0
     cur_max = 0.0
@@ -252,7 +252,7 @@ def max_or_threshold(threshold: float, iterator):
             cur_max = result
     return cur_max
 
-def get_owned_weapon_state(state: "CollectionState", player: int):
+def get_owned_weapon_state(state: "CollectionState", player: int) -> Tuple[List[str], List[str], int]:
     return (
         [name for name in LocalItemData.front_ports if state.has(name, player)],
         [name for name in LocalItemData.rear_ports if state.has(name, player)],

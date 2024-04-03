@@ -4,8 +4,11 @@
 # and is released under the terms of the zlib license.
 # See "LICENSE" for more details.
 
-from typing import List, Dict, Any
+from typing import TYPE_CHECKING, List, Dict, Any
 from enum import IntEnum
+
+if TYPE_CHECKING:
+    from . import TyrianWorld
 
 class SpecialValues(IntEnum):
     # These are specials that can be used as twiddles, with their associated internal numbers.

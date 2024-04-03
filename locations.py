@@ -4,12 +4,15 @@
 # and is released under the terms of the zlib license.
 # See "LICENSE" for more details.
 
-from typing import Optional, Dict, Union, List, Set
+from typing import TYPE_CHECKING, Optional, Dict, Union, List, Set, Tuple
 
 from BaseClasses import Location
 from BaseClasses import LocationProgressType as LP
 
-from .Items import Episode
+from .items import Episode
+
+if TYPE_CHECKING:
+    from . import TyrianWorld
 
 class LevelRegion:
     # I don't really like the distribution I was getting from just doing random.triangular, so
@@ -17,7 +20,7 @@ class LevelRegion:
     # which one we want randomly (based on the level we're generating it for).
     # Appending an "!" makes the shop location prioritized.
     # Appending a "#" makes the shop location excluded.
-    base_shop_setup_list = {
+    base_shop_setup_list: Dict[str, Tuple[int, int, int]] = {
         "A": (   50,   501,   1),
         "B": (  100,  1001,   1),
         "C": (  200,  2001,   2),

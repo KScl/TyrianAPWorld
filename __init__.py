@@ -14,13 +14,13 @@ from BaseClasses import Item, Location, Region
 from BaseClasses import ItemClassification as IC
 from BaseClasses import LocationProgressType as LP
 
-from .Items import LocalItemData, LocalItem, Episode
-from .Locations import LevelLocationData, LevelRegion
-from .Logic import DamageTables, set_level_rules
-from .Options import TyrianOptions
-from .Twiddles import Twiddle, generate_twiddles
+from .items import LocalItemData, LocalItem, Episode
+from .locations import LevelLocationData, LevelRegion
+from .logic import DamageTables, set_level_rules
+from .options import TyrianOptions
+from .twiddles import Twiddle, generate_twiddles
 
-from ..AutoWorld import World, WebWorld
+from worlds.AutoWorld import World, WebWorld
 
 class TyrianItem(Item):
     game = "Tyrian"
@@ -63,7 +63,7 @@ class TyrianWorld(World):
     default_start_level: str = "" # Level we start on, gets precollected automatically
 
     all_levels: List[str] = [] # List of all levels available in seed
-    local_itempool: List[str] = [] # Item pool for just us. Forced progression items start with !
+    local_itempool: List[str] = [] # String-based item pool for us, becomes multiworld item pool after create_items
 
     single_special_weapon: Optional[str] = None # For output to spoiler log only
     twiddles: List[Twiddle] = []
@@ -214,18 +214,18 @@ class TyrianWorld(World):
     def output_start_state(self) -> Dict[str, Any]:
         start_state = {}
 
-        def increase_state(option: str):
+        def increase_state(option: str) -> None:
             nonlocal start_state
             start_state[option] = start_state.get(option, 0) + 1
 
-        def append_state(option: str, value: str):
+        def append_state(option: str, value: str) -> None:
             nonlocal start_state
             if option not in start_state:
                 start_state[option] = []
             # May as well give the game the ID number it's already expecting if it saves 5+ bytes to do so
             start_state[option].append(self.item_name_to_id[value] - self.base_id)
 
-        def add_credits(value: str):
+        def add_credits(value: str) -> None:
             nonlocal start_state
             credit_count = int(name.removesuffix(" Credits"))
             start_state["Credits"] = start_state.get("Credits", 0) + credit_count
@@ -327,7 +327,7 @@ class TyrianWorld(World):
                 offset += (ord(in_chr) & 0xF) + 1
             except ValueError:
                 idx = input_chars.index("?") + offset
-                offset += (ord(in_chr) & 0xF) + 1
+                offset += (ord("?") & 0xF) + 1
             finally:
                 if idx >= 87:
                     idx -= 87
@@ -369,7 +369,7 @@ class TyrianWorld(World):
     # Main Generation Steps
     # ================================================================================================================
 
-    def generate_early(self):
+    def generate_early(self) -> None:
         if not self.options.enable_tyrian_2000_support:
             self.options.episode_5.value = 0
         else:
@@ -415,7 +415,7 @@ class TyrianWorld(World):
         if self.options.twiddles:
             self.twiddles = generate_twiddles(self, self.options.twiddles == "chaos")
 
-    def create_regions(self):
+    def create_regions(self) -> None:
         menu_region = Region("Menu", self.player, self.multiworld)
         self.multiworld.regions.append(menu_region)
 
@@ -509,7 +509,7 @@ class TyrianWorld(World):
         # Victory condition
         self.multiworld.completion_condition[self.player] = lambda state: state.has_all(all_events, self.player)
 
-    def create_items(self):
+    def create_items(self) -> None:
         # Level items are added into the pool in create_regions.
         self.local_itempool.extend(self.get_dict_contents_as_items(LocalItemData.front_ports))
         self.local_itempool.extend(self.get_dict_contents_as_items(LocalItemData.rear_ports))
@@ -640,8 +640,8 @@ class TyrianWorld(World):
         # We're finally done, dump everything we've got into the itempool
         self.multiworld.itempool.extend(self.create_item(item) for item in self.local_itempool)
 
-    def set_rules(self):
-
+    def set_rules(self) -> None:
+        # Pass off rule generation to logic.py
         set_level_rules(self)
 
         # ==============================
@@ -676,11 +676,7 @@ class TyrianWorld(World):
                 for location in shop_locations:
                     location.progress_type = LP.EXCLUDED
 
-#   def post_fill(self):
-#       from Utils import visualize_regions
-#       visualize_regions(self.multiworld.get_region("Menu", self.player), "my_world.puml")
-
-    def generate_output(self, output_directory: str):
+    def generate_output(self, output_directory: str) -> None:
         if self.multiworld.players != 1:
             return
 
@@ -689,7 +685,7 @@ class TyrianWorld(World):
         with open(os.path.join(output_directory, local_play_filename), 'w') as f:
             json.dump(self.get_slot_data(local_mode=True), f)
 
-    def write_spoiler(self, spoiler_handle: TextIO):
+    def write_spoiler(self, spoiler_handle: TextIO) -> None:
         precollected_names = [item.name for item in self.multiworld.precollected_items[self.player]]
         spoiler_handle.write(f"\n\nLevel locations ({self.multiworld.player_name[self.player]}):\n\n")
         for level in self.all_levels:
@@ -709,6 +705,5 @@ class TyrianWorld(World):
             for twiddle in self.twiddles:
                 spoiler_handle.write(twiddle.spoiler_str())
 
-    def fill_slot_data(self) -> dict:
-        slot_data = self.get_slot_data()
-        return slot_data
+    def fill_slot_data(self) -> Dict[str, Any]:
+        return self.get_slot_data(local_mode=False)
