@@ -58,21 +58,21 @@ class TyrianWorld(World):
 
     # --------------------------------------------------------------------------------------------
 
-    goal_episodes: Set[int] = set() # Require these episodes for goal (1, 2, 3, 4, 5)
-    play_episodes: Set[int] = set() # Add levels from these episodes (1, 2, 3, 4, 5)
-    default_start_level: str = "" # Level we start on, gets precollected automatically
+    goal_episodes: Set[int] # Require these episodes for goal (1, 2, 3, 4, 5)
+    play_episodes: Set[int] # Add levels from these episodes (1, 2, 3, 4, 5)
 
-    all_levels: List[str] = [] # List of all levels available in seed
-    local_itempool: List[str] = [] # String-based item pool for us, becomes multiworld item pool after create_items
+    default_start_level: str # Level we start on, gets precollected automatically
+    all_levels: List[str] # List of all levels available in seed
+    local_itempool: List[str] # String-based item pool for us, becomes multiworld item pool after create_items
 
-    single_special_weapon: Optional[str] = None # For output to spoiler log only
-    twiddles: List[Twiddle] = []
+    single_special_weapon: Optional[str] # For output to spoiler log only
+    twiddles: List[Twiddle] # Twiddle/SF Code inputs and their results.
 
-    weapon_costs: Dict[str, int] = {} # Costs of each weapon's upgrades (see LocalItemData.default_upgrade_costs)
-    total_money_needed: int = 0 # Sum total of shop prices and max upgrades, used to calculate filler items
+    weapon_costs: Dict[str, int] # Costs of each weapon's upgrades (see LocalItemData.default_upgrade_costs)
+    total_money_needed: int # Sum total of shop prices and max upgrades, used to calculate filler items
 
+    all_boss_weaknesses: Dict[int, str] # Required weapon to use for each boss
     damage_tables: DamageTables # Used for rule generation
-    all_boss_weaknesses: Dict[int, str] = {} # Required weapon to use for each boss
 
     # ================================================================================================================
     # Item / Location Helpers
@@ -186,6 +186,11 @@ class TyrianWorld(World):
         # TODO More logic here, based on logic difficulty
         possible_choices = [item for item in self.local_itempool if item in LocalItemData.front_ports]
         return self.random.choice(possible_choices)
+
+    def get_filler_item_name(self) -> str:
+        filler_items = ["50 Credits",  "75 Credits",  "100 Credits", "150 Credits",
+                        "200 Credits", "300 Credits", "375 Credits", "500 Credits"]
+        return self.random.choice(filler_items)
 
     # ================================================================================================================
     # Slot Data / File Output
@@ -372,15 +377,15 @@ class TyrianWorld(World):
     def generate_early(self) -> None:
         if not self.options.enable_tyrian_2000_support:
             self.options.episode_5.value = 0
-        else:
-            LocalItemData.enable_tyrian_2000_items()
 
+        self.goal_episodes = set()
         self.goal_episodes.add(1) if self.options.episode_1 == 2 else None
         self.goal_episodes.add(2) if self.options.episode_2 == 2 else None
         self.goal_episodes.add(3) if self.options.episode_3 == 2 else None
         self.goal_episodes.add(4) if self.options.episode_4 == 2 else None
         self.goal_episodes.add(5) if self.options.episode_5 == 2 else None
 
+        self.play_episodes = set()
         self.play_episodes.add(1) if self.options.episode_1 != 0 else None
         self.play_episodes.add(2) if self.options.episode_2 != 0 else None
         self.play_episodes.add(3) if self.options.episode_3 != 0 else None
@@ -414,6 +419,13 @@ class TyrianWorld(World):
         # May as well generate twiddles now, if the options are set.
         if self.options.twiddles:
             self.twiddles = generate_twiddles(self, self.options.twiddles == "chaos")
+        else:
+            self.twiddles = []
+
+        self.single_special_weapon = None
+        self.all_levels = []
+        self.local_itempool = []
+        self.all_boss_weaknesses = {}
 
     def create_regions(self) -> None:
         menu_region = Region("Menu", self.player, self.multiworld)
@@ -510,14 +522,6 @@ class TyrianWorld(World):
         self.multiworld.completion_condition[self.player] = lambda state: state.has_all(all_events, self.player)
 
     def create_items(self) -> None:
-        # Level items are added into the pool in create_regions.
-        self.local_itempool.extend(self.get_dict_contents_as_items(LocalItemData.front_ports))
-        self.local_itempool.extend(self.get_dict_contents_as_items(LocalItemData.rear_ports))
-        self.local_itempool.extend(self.get_dict_contents_as_items(LocalItemData.sidekicks))
-        self.local_itempool.extend(self.get_dict_contents_as_items(LocalItemData.other_items))
-
-        if self.options.specials == 2: # Specials as MultiWorld items
-            self.local_itempool.extend(self.get_dict_contents_as_items(LocalItemData.special_weapons))
 
         def pop_from_pool(item_name) -> Optional[str]:
             if item_name in self.local_itempool: # Regular item
@@ -525,23 +529,30 @@ class TyrianWorld(World):
                 return item_name
             return None
 
+        # ----------------------------------------------------------------------------------------
+        # Add base items to the pool.
+
+        LocalItemData.set_tyrian_2000_items(self.options.enable_tyrian_2000_support)
+
+        # Level items are added into the pool in create_regions.
+        self.local_itempool.extend(self.get_dict_contents_as_items(LocalItemData.front_ports))
+        self.local_itempool.extend(self.get_dict_contents_as_items(LocalItemData.rear_ports))
+        self.local_itempool.extend(self.get_dict_contents_as_items(LocalItemData.sidekicks))
+        self.local_itempool.extend(self.get_dict_contents_as_items(LocalItemData.other_items))
+
+        if self.options.specials == "as_items":
+            self.local_itempool.extend(self.get_dict_contents_as_items(LocalItemData.special_weapons))
+
+        if self.options.progressive_items:
+            self.local_itempool.extend(self.get_dict_contents_as_items(LocalItemData.progressive_items))
+        else:
+            self.local_itempool.extend(self.get_dict_contents_as_items(LocalItemData.nonprogressive_items))
+
+        # ----------------------------------------------------------------------------------------
+        # Handle pre-collected items, remove requests, other options.
+
         precollected_level_exists = False
         precollected_weapon_exists = False
-
-        # ----------------------------------------------------------------------------------------
-
-        # Based on progressive items and starting inventory, add generators to the pool.
-        generator_pool = ["Gravitron Pulse-Wave",
-                          "Advanced MicroFusion",
-                          "Standard MicroFusion",
-                          "Gencore Custom MR-12",
-                          "Advanced MR-12"]
-        if self.options.progressive_items:
-            generator_pool = ["Progressive Generator"] * 5
-
-        self.local_itempool.extend(generator_pool)
-
-        # ----------------------------------------------------------------------------------------
 
         # Remove precollected (starting inventory) items from the pool.
         for precollect in self.multiworld.precollected_items[self.player]:
@@ -568,7 +579,7 @@ class TyrianWorld(World):
             start_weapon = pop_from_pool(self.get_starting_weapon())
             self.multiworld.push_precollected(self.create_item(start_weapon))
 
-        if self.options.specials == 1: # Get a random special, no others
+        if self.options.specials == "on": # Get a random special, no others
             self.single_special_weapon = self.random.choice(sorted(LocalItemData.special_weapons))
             self.multiworld.push_precollected(self.create_item(self.single_special_weapon))
 
@@ -579,7 +590,6 @@ class TyrianWorld(World):
                 self.multiworld.push_precollected(self.create_item(max_power_item))
 
         # ----------------------------------------------------------------------------------------
-
         # Set boss weaknesses based on weapons that are in the pool and haven't been removed.
 
         if self.options.boss_weaknesses:
@@ -590,15 +600,7 @@ class TyrianWorld(World):
                 self.local_itempool.append(f"Data Cube (Episode {episode})")
 
         # ----------------------------------------------------------------------------------------
-
-        # I had the idea of filling the world with "Dynamic Junk" that we would go back through in post_fill and
-        # replace when we have knowledge of the contents of every shop (and more importantly, their costs).
-        # But infuriatingly, post_fill is run before progression balancing, and more to the point, there's
-        # (seemingly deliberately) no way to have anything affect the pool after progression balancing.
-
-        # So instead, we pre-determine all shop prices (no accounting for what winds up there), and just fill
-        # the item pool immediately based on that. It's still an over-estimate because we zero out the cost
-        # of "X Credits" items if they land on a shop (they just become 'Free Money!'), but good enough.
+        # Automatically fill the pool with junk Credits items, enough to reach total_money_needed.
 
         # Subtract what we start with.
         self.total_money_needed -= self.options.starting_money.value
@@ -618,8 +620,7 @@ class TyrianWorld(World):
         # (or, hell, if rest_item_count is negative in the first place), we'll toss stuff from the pool to make space.
         minimum_needed_item_count = math.ceil(self.total_money_needed / 50000)
         if rest_item_count < minimum_needed_item_count:
-            tossable_items = [name for name in self.local_itempool if not name.startswith("!")
-                  and LocalItemData.get(name).tossable]
+            tossable_items = [name for name in self.local_itempool if LocalItemData.get(name).tossable]
             need_to_toss = minimum_needed_item_count - rest_item_count
 
             if need_to_toss > len(tossable_items):

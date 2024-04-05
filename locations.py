@@ -612,11 +612,10 @@ class LevelLocationData:
 
     @classmethod
     def get_location_groups(cls) -> Dict[str, Set[str]]:
+        # Bring all locations in a level, shop included, into a region named after the level.
         all_groups = {level: {loc for loc in region.locations} for (level, region) in cls.level_regions.items()}
-
-        all_groups["Shop"] = set()
         for level in cls.shop_regions.keys():
-            all_groups["Shop"].update({f"Shop - {level} - Item {i + 1}" for i in range(5)})
+            all_groups[level].update({f"Shop - {level} - Item {i + 1}" for i in range(5)})
 
         return all_groups
 
@@ -659,7 +658,7 @@ class LevelLocationData:
         "TORM (Episode 2) - Ship Fleeing Dragon Secret": """
             One plane will stick around long enough for a dragon to fly towards it. Shoot it as it starts to flee.
         """,
-        "SAWBLADES (Episode 3) - FoodShip Nine Drop": """
+        "SAWBLADES (Episode 3) - SuperCarrot Drop": """
             Throughout the level, carrot-shaped ships will fly towards you.
             Destroy all of them, and the last will yield this item.
         """,

@@ -250,14 +250,19 @@ class LocalItemData:
 
     # ----------------------------------------------------------------------------------------------------------------
 
-    other_items: Dict[str, LocalItem] = {
-        "Advanced MR-12":        LocalItem(900, item_class=IC.progression),
-        "Gencore Custom MR-12":  LocalItem(901, item_class=IC.progression),
-        "Standard MicroFusion":  LocalItem(902, item_class=IC.progression),
-        "Advanced MicroFusion":  LocalItem(903, item_class=IC.progression),
-        "Gravitron Pulse-Wave":  LocalItem(904, item_class=IC.progression),
-        "Progressive Generator": LocalItem(905, item_class=IC.progression),
+    nonprogressive_items: Dict[str, LocalItem] = {
+        "Advanced MR-12":        LocalItem(900, count=1, item_class=IC.progression),
+        "Gencore Custom MR-12":  LocalItem(901, count=1, item_class=IC.progression),
+        "Standard MicroFusion":  LocalItem(902, count=1, item_class=IC.progression),
+        "Advanced MicroFusion":  LocalItem(903, count=1, item_class=IC.progression),
+        "Gravitron Pulse-Wave":  LocalItem(904, count=1, item_class=IC.progression),
+    }
 
+    progressive_items: Dict[str, LocalItem] = {
+        "Progressive Generator": LocalItem(905, count=5, item_class=IC.progression),
+    }
+
+    other_items: Dict[str, LocalItem] = {
         "Maximum Power Up":      LocalItem(906, count=10, item_class=IC.progression_skip_balancing), # 1 -> 11
         "Armor Up":              LocalItem(907, count=9,  item_class=IC.progression_skip_balancing), # 5 -> 14
         "Shield Up":             LocalItem(908, count=9,  item_class=IC.useful), # 5 -> 14
@@ -298,16 +303,17 @@ class LocalItemData:
     # ----------------------------------------------------------------------------------------------------------------
 
     @classmethod
-    def enable_tyrian_2000_items(cls) -> None:
-        cls.front_ports["Needle Laser"].count = 1
-        cls.front_ports["Pretzel Missile"].count = 1
-        cls.front_ports["Dragon Frost"].count = 1
-        cls.front_ports["Dragon Flame"].count = 1
-        cls.rear_ports["People Pretzels"].count = 1
-        cls.special_weapons["Super Pretzel"].count = 1
-        cls.special_weapons["Dragon Lightning"].count = 1
-        cls.sidekicks["Bubble Gum-Gun"].count = 2
-        cls.sidekicks["Flying Punch"].count = 2
+    def set_tyrian_2000_items(cls, enable: bool) -> List[str]:
+        # This feels like a kinda disgusting way to handle it, but it works...
+        cls.front_ports["Needle Laser"].count = (1 if enable else 0)
+        cls.front_ports["Pretzel Missile"].count = (1 if enable else 0)
+        cls.front_ports["Dragon Frost"].count = (1 if enable else 0)
+        cls.front_ports["Dragon Flame"].count = (1 if enable else 0)
+        cls.rear_ports["People Pretzels"].count = (1 if enable else 0)
+        cls.special_weapons["Super Pretzel"].count = (1 if enable else 0)
+        cls.special_weapons["Dragon Lightning"].count = (1 if enable else 0)
+        cls.sidekicks["Bubble Gum-Gun"].count = (2 if enable else 0)
+        cls.sidekicks["Flying Punch"].count = (2 if enable else 0)
 
     @classmethod
     def get_item_name_to_id(cls, base_id: int) -> Dict[str, int]:
@@ -317,6 +323,8 @@ class LocalItemData:
         all_items.update({name: (base_id + item.local_id) for (name, item) in cls.rear_ports.items()})
         all_items.update({name: (base_id + item.local_id) for (name, item) in cls.special_weapons.items()})
         all_items.update({name: (base_id + item.local_id) for (name, item) in cls.sidekicks.items()})
+        all_items.update({name: (base_id + item.local_id) for (name, item) in cls.nonprogressive_items.items()})
+        all_items.update({name: (base_id + item.local_id) for (name, item) in cls.progressive_items.items()})
         all_items.update({name: (base_id + item.local_id) for (name, item) in cls.other_items.items()})
         return all_items
 
@@ -335,12 +343,14 @@ class LocalItemData:
 
     @classmethod
     def get(cls, name: str) -> LocalItem:
-        if name in cls.levels:          return cls.levels[name]
-        if name in cls.front_ports:     return cls.front_ports[name]
-        if name in cls.rear_ports:      return cls.rear_ports[name]
-        if name in cls.special_weapons: return cls.special_weapons[name]
-        if name in cls.sidekicks:       return cls.sidekicks[name]
-        if name in cls.other_items:     return cls.other_items[name]
+        if name in cls.levels:               return cls.levels[name]
+        if name in cls.front_ports:          return cls.front_ports[name]
+        if name in cls.rear_ports:           return cls.rear_ports[name]
+        if name in cls.special_weapons:      return cls.special_weapons[name]
+        if name in cls.sidekicks:            return cls.sidekicks[name]
+        if name in cls.nonprogressive_items: return cls.nonprogressive_items[name]
+        if name in cls.progressive_items:    return cls.progressive_items[name]
+        if name in cls.other_items:          return cls.other_items[name]
         raise KeyError(f"Item {name} not found")
 
     # ================================================================================================================
@@ -398,10 +408,12 @@ class LocalItemData:
         "NortShip Spreader B":           UpgradeCost(original=1100, balanced=1100),
 
         # Tyrian 2000 stuff -- Original prices of 50 have been changed to 1000.
-        "Needle Laser":    UpgradeCost(original=600,  balanced=700),
-        "Pretzel Missile": UpgradeCost(original=1000, balanced=900),
-        "Dragon Frost":    UpgradeCost(original=700,  balanced=900),
-        "Dragon Flame":    UpgradeCost(original=1000, balanced=1100),
+        # Front ports
+        "Needle Laser":                  UpgradeCost(original=600,  balanced=700),
+        "Pretzel Missile":               UpgradeCost(original=1000, balanced=900),
+        "Dragon Frost":                  UpgradeCost(original=700,  balanced=900),
+        "Dragon Flame":                  UpgradeCost(original=1000, balanced=1100),
 
-        "People Pretzels": UpgradeCost(original=1000, balanced=900),
+        # Rear ports
+        "People Pretzels":               UpgradeCost(original=1000, balanced=900),
     }
