@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Callable, Any, Union, List, Dict, Tuple, Named
 from collections.abc import Iterable
 
 from BaseClasses import LocationProgressType as LP
+from worlds.generic.Rules import add_rule
 
 from .items import Episode, LocalItemData
 from .options import LogicDifficulty, GameDifficulty
@@ -350,35 +351,25 @@ def has_repulsor(state: "CollectionState", player: int):
 
 # =================================================================================================
 
-def all_rules_of(state: "CollectionState", location: "TyrianLocation"):
-    for rule in location.all_access_rules:
-        if not rule(state):
-            return False
-    return True
-
-# -----------------------------------------------------------------------------
-
-def logic_entrance_rule(world: "TyrianWorld", entrance_name: str, rule: Callable[["CollectionState"], bool]):
+def logic_entrance_rule(world: "TyrianWorld", entrance_name: str, rule: Callable):
     entrance = world.multiworld.get_entrance(entrance_name, world.player)
-    entrance.access_rule = rule
+    add_rule(entrance, rule)
 
 def logic_entrance_behind_location(world: "TyrianWorld", entrance_name: str, location_name: str):
     logic_entrance_rule(world, entrance_name, lambda state:
           state.can_reach(location_name, "Location", world.player))
 
-def logic_location_rule(world: "TyrianWorld", location_name: str, rule: Callable[["CollectionState"], bool]):
+def logic_location_rule(world: "TyrianWorld", location_name: str, rule: Callable):
     location = world.multiworld.get_location(location_name, world.player)
-    location.all_access_rules.append(rule)
-    location.access_rule = lambda state, location=location: all_rules_of(state, location)
+    add_rule(location, rule)
 
 def logic_location_exclude(world: "TyrianWorld", location_name: str):
     location = world.multiworld.get_location(location_name, world.player)
     location.progress_type = LP.EXCLUDED
 
-def logic_all_locations_rule(world: "TyrianWorld", location_name_base: str, rule: Callable[["CollectionState"], bool]):
+def logic_all_locations_rule(world: "TyrianWorld", location_name_base: str, rule: Callable):
     for location in [i for i in world.multiworld.get_locations(world.player) if i.name.startswith(location_name_base)]:
-        location.all_access_rules.append(rule)
-        location.access_rule = lambda state, location=location: all_rules_of(state, location)
+        add_rule(location, rule)
 
 def logic_all_locations_exclude(world: "TyrianWorld", location_name_base: str):
     for location in [i for i in world.multiworld.get_locations(world.player) if i.name.startswith(location_name_base)]:

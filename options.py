@@ -5,12 +5,14 @@
 # See "LICENSE" for more details.
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
-from BaseClasses import PlandoOptions
 from Options import PerGameCommonOptions, Toggle, DefaultOnToggle, Choice, Range, NamedRange, TextChoice, ItemDict, \
       DeathLink
 
-from ..AutoWorld import World
+if TYPE_CHECKING:
+    from BaseClasses import PlandoOptions
+    from worlds.AutoWorld import World
 
 # ===================
 # === Goals, etc. ===
@@ -202,7 +204,7 @@ class BaseWeaponCost(TextChoice):
     option_randomized = -3
     default = -1
 
-    def verify(self, world: World, player_name: str, plando_options: PlandoOptions) -> None:
+    def verify(self, world: type["World"], player_name: str, plando_options: "PlandoOptions") -> None:
         if isinstance(self.value, int):
             return
         try:

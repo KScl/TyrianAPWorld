@@ -8,7 +8,7 @@ import json
 import logging
 import math
 import os
-from typing import TextIO, Optional, List, Dict, Set, Callable, Any
+from typing import TYPE_CHECKING, TextIO, Optional, List, Dict, Mapping, Set, Callable, Any
 
 from BaseClasses import Item, Location, Region
 from BaseClasses import ItemClassification as IC
@@ -22,19 +22,20 @@ from .twiddles import Twiddle, generate_twiddles
 
 from worlds.AutoWorld import World, WebWorld
 
+if TYPE_CHECKING:
+    from BaseClasses import CollectionState
+
 class TyrianItem(Item):
     game = "Tyrian"
 
 class TyrianLocation(Location):
     game = "Tyrian"
-    all_access_rules: List[Callable]
 
     shop_price: Optional[int] # None if not a shop, price in credits if it is
 
     def __init__(self, player: int, name: str, address: Optional[int], parent: Region):
         super().__init__(player, name, address, parent)
         self.shop_price = 0 if name.startswith("Shop - ") else None
-        self.all_access_rules = []
 
 class TyrianWorld(World):
     """
@@ -95,7 +96,7 @@ class TyrianWorld(World):
         region.locations.append(loc)
         return loc
 
-    def create_event(self, name: str, region: Region) -> TyrianItem:
+    def create_event(self, name: str, region: Region) -> TyrianLocation:
         loc = TyrianLocation(self.player, name[0:9], None, region)
         loc.place_locked_item(TyrianItem(name, IC.progression, None, self.player))
 
@@ -106,7 +107,7 @@ class TyrianWorld(World):
     # Item Pool Methods
     # ================================================================================================================
 
-    def get_dict_contents_as_items(self, target_dict: Dict[str, LocalItem]) -> List[str]:
+    def get_dict_contents_as_items(self, target_dict: Mapping[str, LocalItem]) -> List[str]:
         itemList = []
 
         for (name, item) in target_dict.items():
@@ -217,7 +218,7 @@ class TyrianWorld(World):
 
     # Tell the game what we start with
     def output_start_state(self) -> Dict[str, Any]:
-        start_state = {}
+        start_state: Dict[str, Any] = {}
 
         def increase_state(option: str) -> None:
             nonlocal start_state
@@ -232,7 +233,7 @@ class TyrianWorld(World):
 
         def add_credits(value: str) -> None:
             nonlocal start_state
-            credit_count = int(name.removesuffix(" Credits"))
+            credit_count = int(value.removesuffix(" Credits"))
             start_state["Credits"] = start_state.get("Credits", 0) + credit_count
 
         if self.options.starting_money > 0:
@@ -280,7 +281,7 @@ class TyrianWorld(World):
         return len([loc for loc in self.multiworld.get_locations(self.player) if loc.address is not None])
 
     # The contents of every single location (local games only)
-    def output_all_locations(self) -> Dict[int, int]:
+    def output_all_locations(self) -> Dict[int, str]:
         assert self.multiworld.players == 1
 
         def get_location_item(location: Location) -> str:
@@ -414,7 +415,7 @@ class TyrianWorld(World):
         self.weapon_costs = self.get_weapon_costs()
         self.total_money_needed = max(self.weapon_costs.values()) * 220
 
-        self.damage_tables = DamageTables(self.options.logic_difficulty)
+        self.damage_tables = DamageTables(self.options.logic_difficulty.value)
 
         # May as well generate twiddles now, if the options are set.
         if self.options.twiddles:
@@ -475,13 +476,13 @@ class TyrianWorld(World):
             # Not enough items for one in every shop
             elif self.options.shop_item_count < len(self.all_levels):
                 items_per_shop = {name: 0 for name in self.all_levels}
-                for level in self.random.sample(self.all_levels, self.options.shop_item_count):
+                for level in self.random.sample(self.all_levels, self.options.shop_item_count.value):
                     items_per_shop[level] = 1
 
             # More than enough items to go around
             else:
                 # Silently correct too many items to just cap at the max
-                total_item_count = min(self.options.shop_item_count, len(self.all_levels) * 5)
+                total_item_count: int = min(self.options.shop_item_count.value, len(self.all_levels) * 5)
 
                 # First guarantee every shop has at least one
                 items_per_shop = {name: 1 for name in self.all_levels}
@@ -532,7 +533,7 @@ class TyrianWorld(World):
         # ----------------------------------------------------------------------------------------
         # Add base items to the pool.
 
-        LocalItemData.set_tyrian_2000_items(self.options.enable_tyrian_2000_support)
+        LocalItemData.set_tyrian_2000_items(bool(self.options.enable_tyrian_2000_support))
 
         # Level items are added into the pool in create_regions.
         self.local_itempool.extend(self.get_dict_contents_as_items(LocalItemData.front_ports))
@@ -572,15 +573,21 @@ class TyrianWorld(World):
         if not precollected_level_exists:
             # Precollect the default starting level and pop it from the item pool.
             start_level = pop_from_pool(self.default_start_level)
-            self.multiworld.push_precollected(self.create_item(start_level))
+            if start_level is not None: # Tautological because of above condition, but shuts mypy up
+                self.multiworld.push_precollected(self.create_item(start_level))
 
         if not precollected_weapon_exists:
             # Pick a starting weapon and pull it from the pool.
-            start_weapon = pop_from_pool(self.get_starting_weapon())
-            self.multiworld.push_precollected(self.create_item(start_weapon))
+            start_weapon_name = self.get_starting_weapon()
+            start_weapon = pop_from_pool(start_weapon_name)
+            if start_weapon is not None: # Not actually tautological, this can happen if someone removes every front weapon
+                self.multiworld.push_precollected(self.create_item(start_weapon))
+            else:
+                raise Exception(f"Starting weapon ({start_weapon_name}) not in pool")
 
         if self.options.specials == "on": # Get a random special, no others
-            self.single_special_weapon = self.random.choice(sorted(LocalItemData.special_weapons))
+            possible_specials = [weapon for weapon in LocalItemData.special_weapons if weapon.count > 0]
+            self.single_special_weapon = self.random.choice(possible_specials)
             self.multiworld.push_precollected(self.create_item(self.single_special_weapon))
 
         # If requested, pull max power upgrades from the pool and give them to the player.

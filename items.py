@@ -303,7 +303,7 @@ class LocalItemData:
     # ----------------------------------------------------------------------------------------------------------------
 
     @classmethod
-    def set_tyrian_2000_items(cls, enable: bool) -> List[str]:
+    def set_tyrian_2000_items(cls, enable: bool) -> None:
         # This feels like a kinda disgusting way to handle it, but it works...
         cls.front_ports["Needle Laser"].count = (1 if enable else 0)
         cls.front_ports["Pretzel Missile"].count = (1 if enable else 0)
