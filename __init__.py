@@ -419,9 +419,16 @@ class TyrianWorld(World):
         self.play_episodes.add(4) if self.options.episode_4 != 0 else None
         self.play_episodes.add(5) if self.options.episode_5 != 0 else None
 
-        # Beta: Don't allow seed generation for unfinished episodes
-        if 4 in self.play_episodes: raise NotImplementedError("Episode 4 (An End to Fate): NYI")
-        if 5 in self.play_episodes: raise NotImplementedError("Episode 5 (Hazudra Fodder): NYI")
+        # Beta: Warn on generating seeds with incomplete logic
+        def warn_incomplete_logic(episode_name: str) -> None:
+            logging.warning(f"{self.multiworld.get_player_name(self.player)}: "
+                            f"Logic for {episode_name} is not yet complete. "
+                            f"There will probably be issues, and the seed may be impossible as a result.")
+
+        if 2 in self.play_episodes: warn_incomplete_logic("Episode 2 (Treachery)")
+        if 3 in self.play_episodes: warn_incomplete_logic("Episode 3 (Mission: Suicide)")
+        if 4 in self.play_episodes: warn_incomplete_logic("Episode 4 (An End to Fate)")
+        if 5 in self.play_episodes: warn_incomplete_logic("Episode 5 (Hazudra Fodder)")
 
         # Default to at least playing episode 1
         if len(self.play_episodes) == 0:
