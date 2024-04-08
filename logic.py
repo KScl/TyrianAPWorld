@@ -4,7 +4,7 @@
 # and is released under the terms of the zlib license.
 # See "LICENSE" for more details.
 
-from typing import TYPE_CHECKING, Callable, Any, Union, List, Dict, Tuple, NamedTuple, Optional
+from typing import TYPE_CHECKING, Callable, List, Dict, Tuple, NamedTuple, Optional
 from collections.abc import Iterable
 
 from BaseClasses import LocationProgressType as LP
@@ -204,8 +204,8 @@ class DamageTables:
             self.sideways.update(self.base_sideways.get(difficulty, {}))
             self.piercing.update(self.base_piercing.get(difficulty, {}))
 
-        if logic_difficulty == LogicDifficulty.option_beginner:   self.logic_difficulty_multiplier = 1.4
-        elif logic_difficulty == LogicDifficulty.option_standard: self.logic_difficulty_multiplier = 1.2
+        if logic_difficulty == LogicDifficulty.option_beginner:   self.logic_difficulty_multiplier = 1.25
+        elif logic_difficulty == LogicDifficulty.option_standard: self.logic_difficulty_multiplier = 1.1
         elif logic_difficulty == LogicDifficulty.option_expert:   self.logic_difficulty_multiplier = 1.1
         else:                                                     self.logic_difficulty_multiplier = 1.0
 
@@ -227,7 +227,7 @@ class DamageTables:
 # =================================================================================================
 
 def scale_health(world: "TyrianWorld", health: int, adjust_difficulty: int = 0) -> int:
-    health_scale = {
+    health_scale: Dict[int, Callable[[int], int]] = {
         GameDifficulty.option_easy:         lambda x: int(x * 0.75) + 1,
         GameDifficulty.option_normal:       lambda x: x,
         GameDifficulty.option_hard:         lambda x: min(254, int(x * 1.2)),
@@ -242,7 +242,7 @@ def scale_health(world: "TyrianWorld", health: int, adjust_difficulty: int = 0) 
     difficulty = min(max(1, world.options.difficulty + adjust_difficulty), 10)
     return health_scale[difficulty](health)
 
-def max_or_threshold(threshold: float, iterator) -> float:
+def max_or_threshold(threshold: float, iterator: Iterable[float]) -> float:
     if threshold < 0.0:
         return 0.0
     cur_max = 0.0
@@ -262,7 +262,7 @@ def get_owned_weapon_state(state: "CollectionState", player: int) -> Tuple[List[
 
 # =================================================================================================
 
-def can_deal_damage(state: "CollectionState", player: int, damage_tables: DamageTables, dps: float):
+def can_deal_damage(state: "CollectionState", player: int, damage_tables: DamageTables, dps: float) -> bool:
     owned_front, owned_rear, power_level_max = get_owned_weapon_state(state, player)
 
     total_damage = max_or_threshold(dps,
@@ -271,7 +271,7 @@ def can_deal_damage(state: "CollectionState", player: int, damage_tables: Damage
           (data.active for data in damage_tables.avail_shot_types(owned_rear, power_level_max)))
     return total_damage >= dps
 
-def can_deal_passive_damage(state: "CollectionState", player: int, damage_tables: DamageTables, dps: float):
+def can_deal_passive_damage(state: "CollectionState", player: int, damage_tables: DamageTables, dps: float) -> bool:
     owned_front, owned_rear, power_level_max = get_owned_weapon_state(state, player)
 
     total_damage = max_or_threshold(dps,
@@ -280,7 +280,7 @@ def can_deal_passive_damage(state: "CollectionState", player: int, damage_tables
           (data.passive for data in damage_tables.avail_shot_types(owned_front, power_level_max)))
     return total_damage >= dps
 
-def can_deal_sideways_damage(state: "CollectionState", player: int, damage_tables: DamageTables, dps: float):
+def can_deal_sideways_damage(state: "CollectionState", player: int, damage_tables: DamageTables, dps: float) -> bool:
     owned_front, owned_rear, power_level_max = get_owned_weapon_state(state, player)
 
     total_damage = max_or_threshold(dps,
@@ -289,7 +289,7 @@ def can_deal_sideways_damage(state: "CollectionState", player: int, damage_table
           (data.sideways for data in damage_tables.avail_shot_types(owned_front, power_level_max)))
     return total_damage >= dps
 
-def can_deal_piercing_damage(state: "CollectionState", player: int, damage_tables: DamageTables, dps: float):
+def can_deal_piercing_damage(state: "CollectionState", player: int, damage_tables: DamageTables, dps: float) -> bool:
     owned_front, owned_rear, power_level_max = get_owned_weapon_state(state, player)
 
     total_damage = max_or_threshold(dps,
@@ -299,7 +299,9 @@ def can_deal_piercing_damage(state: "CollectionState", player: int, damage_table
     return total_damage >= dps
 
 def can_deal_mixed_damage(state: "CollectionState", player: int, damage_tables: DamageTables,
-      active_dps: Optional[float] = None, passive_dps: Optional[float] = None, sideways_dps: Optional[float] = None):
+      active_dps: Optional[float] = None,
+      passive_dps: Optional[float] = None,
+      sideways_dps: Optional[float] = None) -> bool:
     owned_front = [name for name in LocalItemData.front_ports if state.has(name, player)]
     owned_rear = [name for name in LocalItemData.rear_ports if state.has(name, player)]
     power_level_max = state.count("Maximum Power Up", player) + 1
@@ -309,7 +311,7 @@ def can_deal_mixed_damage(state: "CollectionState", player: int, damage_tables: 
     raise NotImplementedError
 
 def can_damage_with_weapon(state: "CollectionState", player: int, damage_tables: DamageTables,
-      weapon: str, dps: float):
+      weapon: str, dps: float) -> bool:
     if not state.has(weapon, player):
         return False
 
@@ -323,13 +325,13 @@ def can_damage_with_weapon(state: "CollectionState", player: int, damage_tables:
           (data.active for data in damage_tables.avail_shot_types([weapon], power_level_max)))
     return total_damage >= dps
 
-def has_armor_level(state: "CollectionState", player: int, armor_level: int):
+def has_armor_level(state: "CollectionState", player: int, armor_level: int) -> bool:
     return True if armor_level <= 5 else state.has("Armor Up", player, armor_level - 5)
 
-def has_power_level(state: "CollectionState", player: int, power_level: int):
+def has_power_level(state: "CollectionState", player: int, power_level: int) -> bool:
     return True if power_level <= 1 else state.has("Maximum Power Up", player, power_level - 1)
 
-def has_generator_level(state: "CollectionState", player: int, gen_level: int):
+def has_generator_level(state: "CollectionState", player: int, gen_level: int) -> bool:
     if state.has("Gravitron Pulse-Wave", player):   return True
     elif state.has("Advanced MicroFusion", player): base_gen_level = 5
     elif state.has("Standard MicroFusion", player): base_gen_level = 4
@@ -339,50 +341,52 @@ def has_generator_level(state: "CollectionState", player: int, gen_level: int):
 
     return gen_level <= base_gen_level or state.has("Progressive Generator", player, gen_level - base_gen_level)
 
-def has_twiddle(state: "CollectionState", player: int, action: SpecialValues):
+def has_twiddle(state: "CollectionState", player: int, action: SpecialValues) -> bool:
     world = state.multiworld.worlds[player]
     return action in [twiddle.action for twiddle in world.twiddles]
 
-def has_invulnerability(state: "CollectionState", player: int):
+def has_invulnerability(state: "CollectionState", player: int) -> bool:
     return state.has("Invulnerability", player) or has_twiddle(state, player, SpecialValues.Invulnerability)
 
-def has_repulsor(state: "CollectionState", player: int):
+def has_repulsor(state: "CollectionState", player: int) -> bool:
     return state.has("Repulsor", player) or has_twiddle(state, player, SpecialValues.Repulsor)
 
-# =================================================================================================
-
-def logic_entrance_rule(world: "TyrianWorld", entrance_name: str, rule: Callable):
-    entrance = world.multiworld.get_entrance(entrance_name, world.player)
-    add_rule(entrance, rule)
-
-def logic_entrance_behind_location(world: "TyrianWorld", entrance_name: str, location_name: str):
-    logic_entrance_rule(world, entrance_name, lambda state:
-          state.can_reach(location_name, "Location", world.player))
-
-def logic_location_rule(world: "TyrianWorld", location_name: str, rule: Callable):
-    location = world.multiworld.get_location(location_name, world.player)
-    add_rule(location, rule)
-
-def logic_location_exclude(world: "TyrianWorld", location_name: str):
-    location = world.multiworld.get_location(location_name, world.player)
-    location.progress_type = LP.EXCLUDED
-
-def logic_all_locations_rule(world: "TyrianWorld", location_name_base: str, rule: Callable):
-    for location in [i for i in world.multiworld.get_locations(world.player) if i.name.startswith(location_name_base)]:
-        add_rule(location, rule)
-
-def logic_all_locations_exclude(world: "TyrianWorld", location_name_base: str):
-    for location in [i for i in world.multiworld.get_locations(world.player) if i.name.startswith(location_name_base)]:
-        location.progress_type = LP.EXCLUDED
+# -----------------------------------------------------------------------------
 
 def boss_timeout_in_logic(world: "TyrianWorld") -> bool:
     # This is in a function because it may change in the future to be based on a different set of logic difficulties
     # or just depend on another option entirely
-    return world.options.logic_difficulty == LogicDifficulty.option_beginner
+    return world.options.logic_difficulty.value == LogicDifficulty.option_beginner
+
+# =================================================================================================
+
+def logic_entrance_rule(world: "TyrianWorld", entrance_name: str, rule: Callable[..., bool]) -> None:
+    entrance = world.multiworld.get_entrance(entrance_name, world.player)
+    add_rule(entrance, rule)
+
+def logic_entrance_behind_location(world: "TyrianWorld", entrance_name: str, location_name: str) -> None:
+    logic_entrance_rule(world, entrance_name, lambda state:
+          state.can_reach(location_name, "Location", world.player))
+
+def logic_location_rule(world: "TyrianWorld", location_name: str, rule: Callable[..., bool]) -> None:
+    location = world.multiworld.get_location(location_name, world.player)
+    add_rule(location, rule)
+
+def logic_location_exclude(world: "TyrianWorld", location_name: str) -> None:
+    location = world.multiworld.get_location(location_name, world.player)
+    location.progress_type = LP.EXCLUDED
+
+def logic_all_locations_rule(world: "TyrianWorld", location_name_base: str, rule: Callable[..., bool]) -> None:
+    for location in [i for i in world.multiworld.get_locations(world.player) if i.name.startswith(location_name_base)]:
+        add_rule(location, rule)
+
+def logic_all_locations_exclude(world: "TyrianWorld", location_name_base: str) -> None:
+    for location in [i for i in world.multiworld.get_locations(world.player) if i.name.startswith(location_name_base)]:
+        location.progress_type = LP.EXCLUDED
 
 # -----------------------------------------------------------------------------
 
-def episode_1_rules(world: "TyrianWorld"):
+def episode_1_rules(world: "TyrianWorld") -> None:
     # ===== TYRIAN ============================================================
     if (not boss_timeout_in_logic(world)):
         logic_entrance_behind_location(world, "Can shop at TYRIAN (Episode 1)", "TYRIAN (Episode 1) - Boss")
@@ -659,7 +663,7 @@ def episode_1_rules(world: "TyrianWorld"):
 
 # -----------------------------------------------------------------------------
 
-def episode_2_rules(world: "TyrianWorld"):
+def episode_2_rules(world: "TyrianWorld") -> None:
     # ===== TORM ==============================================================
     if (not boss_timeout_in_logic(world)):
         logic_entrance_behind_location(world, "Can shop at TORM (Episode 2)", "TORM (Episode 2) - Boss")
@@ -794,7 +798,7 @@ def episode_2_rules(world: "TyrianWorld"):
 
 # -----------------------------------------------------------------------------
 
-def episode_3_rules(world: "TyrianWorld"):
+def episode_3_rules(world: "TyrianWorld") -> None:
     # ===== GAUNTLET ==========================================================
 
     # ===== IXMUCANE ==========================================================
@@ -917,17 +921,17 @@ def episode_3_rules(world: "TyrianWorld"):
 
 # -----------------------------------------------------------------------------
 
-def episode_4_rules(world: "TyrianWorld"):
+def episode_4_rules(world: "TyrianWorld") -> None:
     pass
 
 # -----------------------------------------------------------------------------
 
-def episode_5_rules(world: "TyrianWorld"):
+def episode_5_rules(world: "TyrianWorld") -> None:
     pass
 
 # -----------------------------------------------------------------------------
 
-def set_level_rules(world: "TyrianWorld"):
+def set_level_rules(world: "TyrianWorld") -> None:
     if Episode.Escape in world.play_episodes:         episode_1_rules(world)
     if Episode.Treachery in world.play_episodes:      episode_2_rules(world)
     if Episode.MissionSuicide in world.play_episodes: episode_3_rules(world)

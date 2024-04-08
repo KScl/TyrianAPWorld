@@ -4,7 +4,7 @@
 # and is released under the terms of the zlib license.
 # See "LICENSE" for more details.
 
-from typing import List, Dict, NamedTuple, Set
+from typing import Dict, NamedTuple, Set
 from enum import IntEnum
 
 from BaseClasses import ItemClassification as IC

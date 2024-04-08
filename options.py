@@ -246,10 +246,10 @@ class Twiddles(Choice):
     """
     Enable or disable twiddles (Street Fighter-esque button combinations).
 
-    If 'on', your ship will have three random twiddles. Their button combinations will be the same as in the original
-    game; as will their use costs.
-    If 'chaos', your ship will have three random twiddles with new inputs. They may have new, unique behaviors; and
-    they may have different use costs.
+    If 'on', your ship will have up to three random twiddles. Their button combinations will be the same as in the
+    original game; as will their use costs.
+    If 'chaos', your ship will have up to three random twiddles with new inputs. They may have new, unique behaviors;
+    and they may have different use costs.
     If 'off', no twiddles will be available.
     """
     display_name = "Twiddles"
@@ -340,8 +340,14 @@ class ArchipelagoRadar(DefaultOnToggle):
     display_name = "Archipelago Radar"
 
 class Christmas(Toggle):
-    """Use the Christmas set of graphics and sound effects. """
+    """Use the Christmas set of graphics and sound effects."""
     display_name = "Christmas Mode"
+
+class TyrianDeathLink(DeathLink):
+    """
+    When you die, everyone else with DeathLink enabled also dies. The reverse is also true.
+    Can be toggled off in the Options menu, if enabled.
+    """
 
 # =============================================================================
 
@@ -378,4 +384,4 @@ class TyrianOptions(PerGameCommonOptions):
     show_twiddle_inputs: ShowTwiddleInputs
     archipelago_radar: ArchipelagoRadar
     christmas_mode: Christmas
-    deathlink: DeathLink
+    death_link: TyrianDeathLink

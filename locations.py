@@ -4,7 +4,7 @@
 # and is released under the terms of the zlib license.
 # See "LICENSE" for more details.
 
-from typing import TYPE_CHECKING, Optional, Dict, Union, List, Set, Tuple
+from typing import TYPE_CHECKING, Dict, List, Set, Tuple
 
 from BaseClasses import LocationProgressType as LP
 

@@ -8,7 +8,7 @@ import json
 import logging
 import math
 import os
-from typing import TYPE_CHECKING, cast, TextIO, Optional, List, Dict, Mapping, Set, Callable, Any
+from typing import TYPE_CHECKING, cast, TextIO, Optional, List, Dict, Mapping, Set, Any
 
 from BaseClasses import Item, Location, Region
 from BaseClasses import ItemClassification as IC
@@ -218,7 +218,7 @@ class TyrianWorld(World):
             "ShowTwiddles": bool(self.options.show_twiddle_inputs),
             "APRadar": bool(self.options.archipelago_radar),
             "Christmas": bool(self.options.christmas_mode),
-            "DeathLink": bool(self.options.deathlink),
+            "DeathLink": bool(self.options.death_link),
         }
 
     # ---------- StartState (obfuscated) --------------------------------------
@@ -353,7 +353,7 @@ class TyrianWorld(World):
 
         input_str = json.dumps(input_obj, separators=(",", ":"))
 
-        def obfuscate_char(in_chr):
+        def obfuscate_char(in_chr: str) -> str:
             nonlocal offset
             try:
                 idx = input_chars.index(in_chr) + offset
@@ -418,6 +418,10 @@ class TyrianWorld(World):
         self.play_episodes.add(3) if self.options.episode_3 != 0 else None
         self.play_episodes.add(4) if self.options.episode_4 != 0 else None
         self.play_episodes.add(5) if self.options.episode_5 != 0 else None
+
+        # Beta: Don't allow seed generation for unfinished episodes
+        if 4 in self.play_episodes: raise NotImplementedError("Episode 4 (An End to Fate): NYI")
+        if 5 in self.play_episodes: raise NotImplementedError("Episode 5 (Hazudra Fodder): NYI")
 
         # Default to at least playing episode 1
         if len(self.play_episodes) == 0:
@@ -549,7 +553,7 @@ class TyrianWorld(World):
 
     def create_items(self) -> None:
 
-        def pop_from_pool(item_name) -> Optional[str]:
+        def pop_from_pool(item_name: str) -> Optional[str]:
             if item_name in self.local_itempool: # Regular item
                 self.local_itempool.remove(item_name)
                 return item_name
@@ -681,7 +685,7 @@ class TyrianWorld(World):
         # === Automatic (base) rules ===
         # ==============================
 
-        def create_level_unlock_rule(level_name: str):
+        def create_level_unlock_rule(level_name: str) -> None:
             entrance = self.multiworld.get_entrance(f"Open {level_name}", self.player)
             entrance.access_rule = lambda state: state.has(level_name, self.player)
 
@@ -690,7 +694,7 @@ class TyrianWorld(World):
 
         # ------------------------------
 
-        def create_episode_complete_rule(event_name, location_name):
+        def create_episode_complete_rule(event_name: str, location_name: str) -> None:
             event = self.multiworld.find_item(event_name, self.player)
             event.access_rule = lambda state: state.can_reach(location_name, "Location", self.player)
 

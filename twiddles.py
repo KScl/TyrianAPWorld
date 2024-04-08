@@ -162,7 +162,7 @@ def generate_twiddles(world: "TyrianWorld", chaos_mode: bool = False) -> List[Tw
     else:                   max_twiddle_count = 3
 
     if chaos_mode:
-        raise NotImplementedError
+        raise NotImplementedError("Chaos mode Twiddles: NYI")
     else:
         # Choose up to three specific twiddle pools, and then choose a twiddle from each.
         twiddle_options = len(vanilla_twiddle_list)
