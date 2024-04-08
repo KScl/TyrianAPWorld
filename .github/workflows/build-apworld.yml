@@ -1,0 +1,28 @@
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build_apworld:
+    name: Build APWorld
+    runs-on: ubuntu-22.04
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Create APWorld (zip)
+      shell: bash
+      run: |
+        mkdir ~/tyrian
+        mkdir ~/tyrian/test
+        cp LICENSE ~/tyrian/
+        cp *.py ~/tyrian/
+        cp test/*.py ~/tyrian/test/
+        zip -r ~/tyrian.apworld ~/tyrian
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: apworld
+        path: ~/tyrian.apworld
+        if-no-files-found: error
+        compression-level: 0
