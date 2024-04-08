@@ -8,7 +8,7 @@ import json
 import logging
 import math
 import os
-from typing import TYPE_CHECKING, TextIO, Optional, List, Dict, Mapping, Set, Callable, Any
+from typing import TYPE_CHECKING, cast, TextIO, Optional, List, Dict, Mapping, Set, Callable, Any
 
 from BaseClasses import Item, Location, Region
 from BaseClasses import ItemClassification as IC
@@ -92,6 +92,9 @@ class TyrianWorld(World):
     def create_shop_location(self, name: str, region: Region, region_data: LevelRegion) -> TyrianLocation:
         loc = TyrianLocation(self.player, name, self.location_name_to_id[name], region)
         region_data.set_random_shop_price(self, loc)
+
+        assert loc.shop_price # Tautological (will be random price, or if all else fails, 0 from __init__)
+        self.total_money_needed += loc.shop_price
 
         region.locations.append(loc)
         return loc
@@ -197,7 +200,9 @@ class TyrianWorld(World):
     # Slot Data / File Output
     # ================================================================================================================
 
+    # ---------- Settings -----------------------------------------------------
     # Game settings, user choices the game needs to know about
+    # Present: Always.
     def output_settings(self) -> Dict[str, Any]:
         return {
             "RequireT2K": bool(self.options.enable_tyrian_2000_support),
@@ -216,7 +221,9 @@ class TyrianWorld(World):
             "DeathLink": bool(self.options.deathlink),
         }
 
-    # Tell the game what we start with
+    # ---------- StartState (obfuscated) --------------------------------------
+    # Tell the game what we start with.
+    # Present: Always. (Optional in theory, but in practice there will always at least be the starting level.)
     def output_start_state(self) -> Dict[str, Any]:
         start_state: Dict[str, Any] = {}
 
@@ -245,6 +252,7 @@ class TyrianWorld(World):
             elif item.name in LocalItemData.rear_ports:      append_state("Items", item.name)
             elif item.name in LocalItemData.special_weapons: append_state("Items", item.name)
             elif item.name in LocalItemData.sidekicks:       append_state("Items", item.name)
+            elif item.name.startswith("Data Cube "):         append_state("Items", item.name)
             elif item.name == "Armor Up":                    increase_state("Armor")
             elif item.name == "Maximum Power Up":            increase_state("Power")
             elif item.name == "Shield Up":                   increase_state("Shield")
@@ -262,52 +270,71 @@ class TyrianWorld(World):
 
         return start_state
 
+    # ---------- WeaponCost (obfuscated) --------------------------------------
     # Base cost of each weapon's upgrades
+    # Present: Always.
     def output_weapon_cost(self) -> Dict[int, int]:
         return {self.item_name_to_id[key] - self.base_id: value for (key, value) in self.weapon_costs.items()}
 
+    # ---------- TwiddleData (obfuscated) -------------------------------------
     # Twiddle inputs, costs, etc.
+    # Present: If the option "Twiddles" is not set to "off".
     def output_twiddles(self) -> List[Dict[str, Any]]:
         return [twiddle.to_json() for twiddle in self.twiddles]
 
-    # Which locations are progression (used for multiworld slot data)
+    # ---------- ProgressionData (obfuscated) ---------------------------------
+    # Which locations contain progression items for any player.
+    # Present: Only in slot_data (remote games).
     def output_progression_data(self) -> List[int]:
-        return [location.address - self.base_id
-              for location in self.multiworld.get_locations(self.player)
-              if location.item.advancement and not location.shop_price and location.address is not None]
+        return [location.address - self.base_id for location in self.multiworld.get_locations(self.player)
+              if location.address is not None and location.item is not None
+              and getattr(location, 'shop_price', None) is None # Ignore shop items (they're scouted in game)
+              and location.item.advancement]
 
-    # Total number of locations available (used for multiworld slot data)
+    # ---------- LocationMax --------------------------------------------------
+    # Total number of locations available.
+    # Present: Only in slot_data (remote games).
     def output_location_count(self) -> int:
         return len([loc for loc in self.multiworld.get_locations(self.player) if loc.address is not None])
 
-    # The contents of every single location (local games only)
+    # ---------- LocationData -------------------------------------------------
+    # The contents of every single location present in the player's game. Single player only.
+    # Present: Only in local/offline .aptyrian files.
     def output_all_locations(self) -> Dict[int, str]:
         assert self.multiworld.players == 1
 
         def get_location_item(location: Location) -> str:
+            assert location.item is not None and location.item.code is not None
             return f"{'!' if location.item.advancement else ''}{location.item.code - self.base_id}"
 
         return {location.address - self.base_id: get_location_item(location)
               for location in self.multiworld.get_locations(self.player)
-              if location.address is not None}
+              if location.address is not None and location.item is not None}
 
-    # Shop prices, possibly other relevant information
+    # ---------- ShopData (obfuscated) ----------------------------------------
+    # The price of every shop present in the player's world.
+    # Present: If the option "Shop Mode" is not set to "none".
     def output_shop_data(self) -> Dict[int, int]:
-        def correct_shop_price(location: Location) -> int:
+        def correct_shop_price(location: TyrianLocation) -> int:
+            assert location.shop_price is not None # Tautological
+
             # If the shop has credits, and the cost is more than you'd gain, reduce the cost.
             # Don't do this in hidden mode, though, since the player shouldn't have any idea what each item is.
-            if self.options.shop_mode != "hidden" and location.item.player == self.player \
-                  and location.item.name.endswith(" Credits"):
+            if self.options.shop_mode != "hidden" and location.item is not None \
+                  and location.item.player == self.player and location.item.name.endswith(" Credits"):
                 credit_amount = int(location.item.name.removesuffix(" Credits"))
                 adjusted_shop_price = location.shop_price % credit_amount
                 return adjusted_shop_price if adjusted_shop_price != 0 else credit_amount
             return location.shop_price
 
-        return {location.address - self.base_id: correct_shop_price(location)
+        return {location.address - self.base_id: correct_shop_price(cast(TyrianLocation, location))
               for location in self.multiworld.get_locations(self.player)
-              if getattr(location, 'shop_price', None) is not None}
+              if location.address is not None # Ignore events
+              and getattr(location, 'shop_price', None) is not None}
 
-    # Boss weapon/weakness list (local and/or remote, if the option is enabled)
+    # ---------- BossWeaknesses (obfuscated) ----------------------------------
+    # Weapons required to defeat bosses for each goal episode.
+    # Present: If the option "Boss Weaknesses" is "on".
     def output_boss_weaknesses(self) -> Dict[int, int]:
         return {episode: self.item_name_to_id[weapon_name] - self.base_id
               for (episode, weapon_name) in self.all_boss_weaknesses.items()}
@@ -355,17 +382,16 @@ class TyrianWorld(World):
             "WeaponCost": self.obfuscate_object(self.output_weapon_cost()),
         }
 
-        if self.options.twiddles:
-            slot_data["TwiddleData"] = self.obfuscate_object(self.output_twiddles())
-        if self.options.boss_weaknesses:
-            slot_data["BossWeaknesses"] = self.obfuscate_object(self.output_boss_weaknesses())
-
         if local_mode: # Local mode: Output all location contents
             slot_data["LocationData"] = self.obfuscate_object(self.output_all_locations())
         else: # Remote mode: Just output a list of location IDs that contain progression
             slot_data["ProgressionData"] = self.obfuscate_object(self.output_progression_data())
             slot_data["LocationMax"] = self.output_location_count()
 
+        if self.options.twiddles:
+            slot_data["TwiddleData"] = self.obfuscate_object(self.output_twiddles())
+        if self.options.boss_weaknesses:
+            slot_data["BossWeaknesses"] = self.obfuscate_object(self.output_boss_weaknesses())
         if self.options.shop_mode != "none":
             slot_data["ShopData"] = self.obfuscate_object(self.output_shop_data())
 
@@ -502,8 +528,7 @@ class TyrianWorld(World):
 
                 for i in range(items_per_shop[level]):
                     shop_loc_name = f"Shop - {level} - Item {i + 1}"
-                    new_location = self.create_shop_location(shop_loc_name, shop_region, region_data)
-                    self.total_money_needed += new_location.shop_price
+                    self.create_shop_location(shop_loc_name, shop_region, region_data)
 
         # ==============
         # === Events ===
@@ -573,20 +598,20 @@ class TyrianWorld(World):
         if not precollected_level_exists:
             # Precollect the default starting level and pop it from the item pool.
             start_level = pop_from_pool(self.default_start_level)
-            if start_level is not None: # Tautological because of above condition, but shuts mypy up
-                self.multiworld.push_precollected(self.create_item(start_level))
+            assert start_level is not None # Tautological because of above condition (can't remove levels from pool)
+            self.multiworld.push_precollected(self.create_item(start_level))
 
         if not precollected_weapon_exists:
             # Pick a starting weapon and pull it from the pool.
             start_weapon_name = self.get_starting_weapon()
             start_weapon = pop_from_pool(start_weapon_name)
-            if start_weapon is not None: # Not actually tautological, this can happen if someone removes every front weapon
+            if start_weapon is not None: # Not actually tautological, this can happen if someone removes Pulse-Cannon
                 self.multiworld.push_precollected(self.create_item(start_weapon))
             else:
                 raise Exception(f"Starting weapon ({start_weapon_name}) not in pool")
 
         if self.options.specials == "on": # Get a random special, no others
-            possible_specials = [weapon for weapon in LocalItemData.special_weapons if weapon.count > 0]
+            possible_specials = self.get_dict_contents_as_items(LocalItemData.special_weapons)
             self.single_special_weapon = self.random.choice(possible_specials)
             self.multiworld.push_precollected(self.create_item(self.single_special_weapon))
 

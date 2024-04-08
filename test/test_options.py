@@ -97,7 +97,7 @@ class TestBossWeaknesses(TyrianTestBase):
     # All bosses should require the Data Cube for the episode, and the weapon specified in the Data Cube.
     @expectedFailure # Logic for Episodes 4 and 5 aren't done yet
     def test_data_cube_and_weakness_weapon_required(self):
-        locations: Dict[int, List[str]] = {
+        locations = {
             1: "ASSASSIN (Episode 1) - Boss",
             2: "GRYPHON (Episode 2) - Boss",
             3: "FLEET (Episode 3) - Boss",
@@ -130,7 +130,7 @@ class TestSomeBossWeaknesses(TyrianTestBase):
 
     # Only episodes marked as "goal" should have boss weaknesses. Others should behave normally.
     def test_only_weaknesses_for_goal_episodes(self):
-        boss_weakness_data: Dict[int, List[str]] = {
+        boss_weakness_data = {
             1: ("ASSASSIN (Episode 1) - Boss", True),
             2: ("GRYPHON (Episode 2) - Boss", False),
             3: ("FLEET (Episode 3) - Boss", True),
