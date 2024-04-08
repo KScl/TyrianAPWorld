@@ -13,12 +13,12 @@ jobs:
     - name: Create APWorld (zip)
       shell: bash
       run: |
-        mkdir ~/tyrian
-        mkdir ~/tyrian/test
-        cp LICENSE ~/tyrian/
-        cp *.py ~/tyrian/
-        cp test/*.py ~/tyrian/test/
-        zip -r ~/tyrian.apworld ~/tyrian
+        mkdir tyrian
+        mkdir tyrian/test
+        cp LICENSE tyrian/
+        cp *.py tyrian/
+        cp test/*.py tyrian/test/
+        zip -r ~/tyrian.apworld tyrian
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
