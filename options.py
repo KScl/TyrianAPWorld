@@ -310,7 +310,12 @@ class HardContact(Toggle):
     display_name = "Contact Bypasses Shields"
 
 class ExcessArmor(DefaultOnToggle):
-    """Twiddles, pickups, etc. can cause your ship to have more armor than its maximum armor rating."""
+    """
+    Twiddles, pickups, etc. can cause your ship to have more armor than its maximum armor rating.
+
+    Enabling this is vanilla behavior. If disabled, a red line over the Armor meter will show the maximum armor level
+    that you are allowed to attain, if not already at maximum armor.
+    """
     display_name = "Allow Excess Armor"
 
 # ======================================
