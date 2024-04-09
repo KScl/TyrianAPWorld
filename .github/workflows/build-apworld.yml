@@ -15,9 +15,11 @@ jobs:
       run: |
         mkdir tyrian
         mkdir tyrian/test
+        mkdir tyrian/docs
         cp LICENSE tyrian/
         cp *.py tyrian/
         cp test/*.py tyrian/test/
+        cp docs/*.md tyrian/docs/
         zip -r ~/tyrian.apworld tyrian
     - name: Upload artifact
       uses: actions/upload-artifact@v4

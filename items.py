@@ -206,7 +206,7 @@ class LocalItemData:
         "Invulnerability":   LocalWeapon(719, item_class=IC.progression, tossable=False),
         "Lightning Zone":    LocalWeapon(720),
         "SDF Main Gun":      LocalWeapon(721, item_class=IC.useful),
-        "Protron Field":     LocalWeapon(722),
+        "Protron Field":     LocalWeapon(722, count=0), # Deprecated (doesn't function properly)
         # ---------- TYRIAN 2000 LINE ----------
         "Super Pretzel":     LocalWeapon(723, count=0),
         "Dragon Lightning":  LocalWeapon(724, count=0),
