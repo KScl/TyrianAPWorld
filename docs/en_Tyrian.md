@@ -43,3 +43,16 @@ You will be informed immediately of received items by the display on the bottom 
 level. For most items you will need to wait until the end of the level to select them, however some items (e.g. Armor
 Up, Shield Up, Generators) will take effect immediately.
 
+## What is the difference between Tyrian and Tyrian 2000?
+
+The primary difference between the two versions of the game is that Tyrian 2000 adds an additional fifth episode, and
+a few additional weapons to collect. All of these can be randomized as well, provided you select the option to "Enable
+Tyrian 2000 Support".
+
+However, Tyrian 2000 also contains some additional level design and balance changes (e.g. the Plasma Storm nerf).
+These have been preserved wherever possible, as long as they do not affect logic. Changes that do affect logic are
+ported back to Tyrian 2.1 to ensure consistent logic between the two versions.
+
+Tyrian 2000 data files can be used to play games designed for both Tyrian 2.1 and Tyrian 2000; it's a matter of
+personal preference if you prefer the balance and level design changes that Tyrian 2000 introduced.
+
