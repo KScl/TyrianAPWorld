@@ -15,10 +15,12 @@ jobs:
       run: |
         mkdir tyrian
         mkdir tyrian/test
+        mkdir tyrian/crossgame
         mkdir tyrian/docs
         cp LICENSE tyrian/
         cp *.py tyrian/
         cp test/*.py tyrian/test/
+        cp crossgame/*.py tyrian/crossgame/
         cp docs/*.md tyrian/docs/
         zip -r ~/tyrian.apworld tyrian
     - name: Upload artifact

@@ -23,7 +23,7 @@ from .twiddles import Twiddle, generate_twiddles
 from worlds.AutoWorld import World, WebWorld
 
 if TYPE_CHECKING:
-    from BaseClasses import CollectionState
+    from BaseClasses import MultiWorld, CollectionState
 
 class TyrianItem(Item):
     game = "Tyrian"
@@ -490,6 +490,12 @@ class TyrianWorld(World):
     # ================================================================================================================
     # Main Generation Steps
     # ================================================================================================================
+
+    @classmethod
+    def stage_assert_generate(cls, multiworld: "MultiWorld") -> None:
+        # Import code that affects other worlds; must happen after all worlds are loaded
+        # See crossgame/__init__.py for more info
+        from .crossgame import alttp
 
     def generate_early(self) -> None:
         if not self.options.enable_tyrian_2000_support:
