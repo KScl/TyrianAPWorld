@@ -236,7 +236,7 @@ class LevelLocationData:
             "TORM (Episode 2) - Undocking Jungle Ship",
             "TORM (Episode 2) - Boss Ship Fly-By",
             "TORM (Episode 2) - Boss",
-        ]),
+        ], shop_setups=["A#", "B", "C", "D", "D", "E", "F", "F", "G", "I!"]),
 
         "GYGES (Episode 2)": LevelRegion(episode=Episode.Treachery, base_id=170, locations=[
             "GYGES (Episode 2) - Circled Shapeshifting Turret 1",
@@ -273,6 +273,9 @@ class LevelLocationData:
             "GEM WAR (Episode 2) - Red Gem Leader 1",
             "GEM WAR (Episode 2) - Red Gem Leader 2",
             "GEM WAR (Episode 2) - Red Gem Leader 3",
+            "GEM WAR (Episode 2) - Red Gem Leader 4",
+            "GEM WAR (Episode 2) - Blue Gem Boss 1",
+            "GEM WAR (Episode 2) - Blue Gem Boss 2",
         ]),
 
         "MARKERS (Episode 2)": LevelRegion(episode=Episode.Treachery, base_id=220, locations=[
@@ -297,11 +300,21 @@ class LevelLocationData:
         ], shop_setups=["B", "D", "J", "K", "L", "O", "V", "Z!"]),
 
         "SOH JIN (Episode 2)": LevelRegion(episode=Episode.Treachery, base_id=240, locations=[
+            "SOH JIN (Episode 2) - Sinusoidal Missile Wave",
+            "SOH JIN (Episode 2) - Second Missile Ship Set",
+            "SOH JIN (Episode 2) - Paddle Destruction 1",
+            "SOH JIN (Episode 2) - Paddle Destruction 2",
+            "SOH JIN (Episode 2) - Last Missile Ship Set",
+            "SOH JIN (Episode 2) - Boss Orbs 1",
+            "SOH JIN (Episode 2) - Boss Orbs 2",
         ]),
 
         "BOTANY A (Episode 2)": LevelRegion(episode=Episode.Treachery, base_id=250, locations=[
             "BOTANY A (Episode 2) - Retreating Mobile Turret",
+            "BOTANY A (Episode 2) - End of Path Secret 1",
             "BOTANY A (Episode 2) - Mobile Turret Approaching Head-On",
+            "BOTANY A (Episode 2) - End of Path Secret 2",
+            "BOTANY A (Episode 2) - Green Ship Pincer",
             "BOTANY A (Episode 2) - Boss",
         ]),
 

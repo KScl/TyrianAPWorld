@@ -8,7 +8,7 @@ import json
 import logging
 import math
 import os
-from typing import TYPE_CHECKING, cast, TextIO, Optional, List, Dict, Mapping, Set, Any
+from typing import TYPE_CHECKING, cast, TextIO, Optional, List, Dict, Mapping, Set, Tuple, Any
 
 from BaseClasses import Item, Location, Region
 from BaseClasses import ItemClassification as IC
@@ -35,12 +35,13 @@ class TyrianLocation(Location):
 
     def __init__(self, player: int, name: str, address: Optional[int], parent: Region):
         super().__init__(player, name, address, parent)
-        self.shop_price = 0 if name.startswith("Shop - ") else None
+        self.shop_price = None
 
 class TyrianWorld(World):
     """
-    Follow pilot Trent Hawkins in the year 20,031 as he flies through the galaxy to defend it from the evil 
-    corporation, Microsol.
+    Tyrian is a PC SHMUP originally released in 1995, and then re-released as Tyrian 2000 in 1999. Follow space pilot
+    Trent Hawkins in the year 20,031 as he flies through the galaxy to defend it from the evil corporation, Microsol.
+    This randomizer supports both versions of the game.
     """
     game = "Tyrian"
     options_dataclass = TyrianOptions
@@ -91,9 +92,9 @@ class TyrianWorld(World):
 
     def create_shop_location(self, name: str, region: Region, region_data: LevelRegion) -> TyrianLocation:
         loc = TyrianLocation(self.player, name, self.location_name_to_id[name], region)
-        region_data.set_random_shop_price(self, loc)
 
-        assert loc.shop_price # Tautological (will be random price, or if all else fails, 0 from __init__)
+        loc.shop_price = 0 # Give a default int value for shops
+        region_data.set_random_shop_price(self, loc)
         self.total_money_needed += loc.shop_price
 
         region.locations.append(loc)
@@ -179,16 +180,105 @@ class TyrianWorld(World):
             return {key: int(self.options.base_weapon_cost.current_key)
                   for key in LocalItemData.default_upgrade_costs.keys()}
 
-    def get_random_weapon(self) -> str:
-        possible_choices = [item for item in self.local_itempool if item in LocalItemData.front_ports]
+    def get_boss_weapon_name(self) -> str:
+        # Can this weapon be required to defeat a boss on a given difficulty
+        weapon_can_appear: Dict[str, Tuple[bool, bool, bool, bool]] = {
+            "Pulse-Cannon":                   (True,  True,  True,  True,  True),
+            "Multi-Cannon (Front)":           (False, False, False, True,  True),
+            "Mega Cannon":                    (True,  True,  True,  True,  True),
+            "Laser":                          (True,  True,  True,  True,  True),
+            "Zica Laser":                     (True,  True,  True,  True,  True),
+            "Protron Z":                      (True,  True,  True,  True,  True),
+            "Vulcan Cannon (Front)":          (True,  True,  True,  True,  True),
+            "Lightning Cannon":               (True,  True,  True,  True,  True),
+            "Protron (Front)":                (True,  True,  True,  True,  True),
+            "Missile Launcher":               (False, False, True,  True,  True),
+            "Mega Pulse (Front)":             (True,  True,  True,  True,  True),
+            "Heavy Missile Launcher (Front)": (True,  True,  True,  True,  True),
+            "Banana Blast (Front)":           (True,  True,  True,  True,  True),
+            "HotDog (Front)":                 (True,  True,  True,  True,  True),
+            "Hyper Pulse":                    (True,  True,  True,  True,  True),
+            "Guided Bombs":                   (False, True,  True,  True,  True),
+            "Shuriken Field":                 (True,  True,  True,  True,  True),
+            "Poison Bomb":                    (True,  True,  True,  True,  True),
+            "Protron Wave":                   (False, False, False, True,  True),
+            "The Orange Juicer":              (False, False, True,  True,  True),
+            "NortShip Super Pulse":           (False, True,  True,  True,  True),
+            "Atomic RailGun":                 (True,  True,  True,  True,  True),
+            "Widget Beam":                    (False, False, False, True,  True),
+            "Sonic Impulse":                  (False, True,  True,  True,  True),
+            "RetroBall":                      (False, False, False, True,  True),
+            "Needle Laser":                   (True,  True,  True,  True,  True),
+            "Pretzel Missile":                (True,  True,  True,  True,  True),
+            "Dragon Frost":                   (True,  True,  True,  True,  True),
+            "Dragon Flame":                   (True,  True,  True,  True,  True),
+        }
+
+        # Note that this deliberately excludes weapons you start with.
+        possible_choices = [item for item in self.local_itempool if item in weapon_can_appear
+              and weapon_can_appear[item][self.options.logic_difficulty.value - 1] == True]
+
+        # List is empty: Okay, sure, this can happen if we start with every weapon.
+        # Retry, and only exclude weapons that are explicitly removed from the seed.
+        if len(possible_choices) == 0:
+            possible_choices = [item for item in weapon_can_appear
+                  if item not in self.options.remove_from_item_pool.keys()
+                  and weapon_can_appear[item][self.options.logic_difficulty.value - 1] == True]
+
+        # List is STILL empty: Fine, you're getting something at random regardless of normal requirements
+        if len(possible_choices) == 0:
+            possible_choices = [item for item in weapon_can_appear
+                  if item not in self.options.remove_from_item_pool.keys()]
+
         return self.random.choice(possible_choices)
 
-    def get_starting_weapon(self) -> str:
+    def get_starting_weapon_name(self) -> str:
         if not self.options.random_starting_weapon:
             return "Pulse-Cannon"
 
-        # TODO More logic here, based on logic difficulty
-        possible_choices = [item for item in self.local_itempool if item in LocalItemData.front_ports]
+        # Per difficulty relative weight of receiving each weapon
+        weapon_weights: Dict[str, Tuple[int, int, int, int]] = {
+            "Pulse-Cannon":                   (1, 3, 2, 1, 1),
+            "Multi-Cannon (Front)":           (0, 1, 1, 1, 1), # Low damage
+            "Mega Cannon":                    (1, 3, 2, 1, 1),
+            "Laser":                          (1, 3, 2, 1, 1),
+            "Zica Laser":                     (1, 3, 2, 1, 1),
+            "Protron Z":                      (1, 3, 2, 1, 1),
+            "Vulcan Cannon (Front)":          (1, 3, 2, 1, 1),
+            "Lightning Cannon":               (1, 3, 2, 1, 1),
+            "Protron (Front)":                (1, 3, 2, 1, 1),
+            "Missile Launcher":               (0, 1, 1, 1, 1), # Low damage
+            "Mega Pulse (Front)":             (1, 3, 2, 1, 1),
+            "Heavy Missile Launcher (Front)": (1, 3, 2, 1, 1),
+            "Banana Blast (Front)":           (1, 3, 2, 1, 1),
+            "HotDog (Front)":                 (1, 3, 2, 1, 1),
+            "Hyper Pulse":                    (1, 3, 2, 1, 1),
+            "Guided Bombs":                   (1, 3, 2, 1, 1),
+            "Shuriken Field":                 (0, 0, 2, 1, 1), # High energy cost
+            "Poison Bomb":                    (0, 0, 2, 1, 1), # High energy cost
+            "Protron Wave":                   (0, 1, 1, 1, 1), # Low damage
+            "The Orange Juicer":              (0, 0, 0, 1, 1), # Lv.1 is sideways only
+            "NortShip Super Pulse":           (0, 0, 2, 1, 1), # High energy cost
+            "Atomic RailGun":                 (0, 0, 2, 1, 1), # High energy cost
+            "Widget Beam":                    (0, 1, 1, 1, 1), # Low damage
+            "Sonic Impulse":                  (1, 3, 2, 1, 1),
+            "RetroBall":                      (0, 1, 1, 1, 1), # Low damage
+            "Needle Laser":                   (1, 3, 2, 1, 1),
+            "Pretzel Missile":                (1, 3, 2, 1, 1),
+            "Dragon Frost":                   (1, 3, 2, 1, 1),
+            "Dragon Flame":                   (1, 3, 2, 1, 1),
+        }
+
+        possible_choices: List[str] = []
+        for (weapon, weight_list) in weapon_weights.items():
+            if weapon in self.local_itempool:
+                possible_choices.extend([weapon] * weight_list[self.options.logic_difficulty.value - 1])
+
+        # List is empty: What did they do, remove everything that was weighted positively?
+        # Pick totally randomly among everything available in the seed
+        if len(possible_choices) == 0:
+            possible_choices = [item for item in self.local_itempool if item in LocalItemData.front_ports]
+
         return self.random.choice(possible_choices)
 
     def get_filler_item_name(self) -> str:
@@ -288,7 +378,7 @@ class TyrianWorld(World):
     def output_progression_data(self) -> List[int]:
         return [location.address - self.base_id for location in self.multiworld.get_locations(self.player)
               if location.address is not None and location.item is not None
-              and getattr(location, 'shop_price', None) is None # Ignore shop items (they're scouted in game)
+              and getattr(location, "shop_price", None) is None # Ignore shop items (they're scouted in game)
               and location.item.advancement]
 
     # ---------- LocationMax --------------------------------------------------
@@ -330,7 +420,7 @@ class TyrianWorld(World):
         return {location.address - self.base_id: correct_shop_price(cast(TyrianLocation, location))
               for location in self.multiworld.get_locations(self.player)
               if location.address is not None # Ignore events
-              and getattr(location, 'shop_price', None) is not None}
+              and getattr(location, "shop_price", None) is not None}
 
     # ---------- BossWeaknesses (obfuscated) ----------------------------------
     # Weapons required to defeat bosses for each goal episode.
@@ -425,7 +515,6 @@ class TyrianWorld(World):
                             f"Logic for {episode_name} is not yet complete. "
                             f"There will probably be issues, and the seed may be impossible as a result.")
 
-        if 2 in self.play_episodes: warn_incomplete_logic("Episode 2 (Treachery)")
         if 3 in self.play_episodes: warn_incomplete_logic("Episode 3 (Mission: Suicide)")
         if 4 in self.play_episodes: warn_incomplete_logic("Episode 4 (An End to Fate)")
         if 5 in self.play_episodes: warn_incomplete_logic("Episode 5 (Hazudra Fodder)")
@@ -614,7 +703,7 @@ class TyrianWorld(World):
 
         if not precollected_weapon_exists:
             # Pick a starting weapon and pull it from the pool.
-            start_weapon_name = self.get_starting_weapon()
+            start_weapon_name = self.get_starting_weapon_name()
             start_weapon = pop_from_pool(start_weapon_name)
             if start_weapon is not None: # Not actually tautological, this can happen if someone removes Pulse-Cannon
                 self.multiworld.push_precollected(self.create_item(start_weapon))
@@ -637,7 +726,7 @@ class TyrianWorld(World):
 
         if self.options.boss_weaknesses:
             for episode in self.goal_episodes:
-                self.all_boss_weaknesses[episode] = self.get_random_weapon()
+                self.all_boss_weaknesses[episode] = self.get_boss_weapon_name()
 
                 # Add data cubes to the pool, too. They're considered logically required.
                 self.local_itempool.append(f"Data Cube (Episode {episode})")
@@ -661,9 +750,14 @@ class TyrianWorld(World):
 
         # So, if rest_item_count doesn't allow for us to stay under an average of 50,000 credits per junk item,
         # (or, hell, if rest_item_count is negative in the first place), we'll toss stuff from the pool to make space.
+        def item_is_tossable(name: str) -> bool:
+            if name in self.all_boss_weaknesses.values():
+                return False # Mandated by boss weaknesses, can't toss
+            return LocalItemData.get(name).tossable
+
         minimum_needed_item_count = math.ceil(self.total_money_needed / 50000)
         if rest_item_count < minimum_needed_item_count:
-            tossable_items = [name for name in self.local_itempool if LocalItemData.get(name).tossable]
+            tossable_items = [name for name in self.local_itempool if item_is_tossable(name)]
             need_to_toss = minimum_needed_item_count - rest_item_count
 
             if need_to_toss > len(tossable_items):
@@ -726,7 +820,7 @@ class TyrianWorld(World):
 
         # For solo seeds, output a file that can be loaded to play the seed offline.
         local_play_filename = f"{self.multiworld.get_out_file_name_base(self.player)}.aptyrian"
-        with open(os.path.join(output_directory, local_play_filename), 'w') as f:
+        with open(os.path.join(output_directory, local_play_filename), "w") as f:
             json.dump(self.get_slot_data(local_mode=True), f)
 
     def write_spoiler(self, spoiler_handle: TextIO) -> None:

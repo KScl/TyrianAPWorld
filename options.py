@@ -276,12 +276,15 @@ class LogicDifficulty(Choice):
     creates a power drain on your current generator.
     If 'master', logic will be as in 'expert' but you will also be expected to know technical things like specific
     triggers for secrets and other minute details, and little to no leeway will be provided with damage calculation.
+    If 'no_logic', all locations within a level will be assumed attainable if you can access that level at all, with
+    zero regard for loadout or anything else. This is *extremely* dangerous and should be used with caution.
     """
     display_name = "Logic Difficulty"
     option_beginner = 1
     option_standard = 2
     option_expert = 3
     option_master = 4
+    option_no_logic = 5
     default = 2
 
 class GameDifficulty(Choice):
