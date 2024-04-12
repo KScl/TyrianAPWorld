@@ -182,7 +182,7 @@ class TyrianWorld(World):
 
     def get_boss_weapon_name(self) -> str:
         # Can this weapon be required to defeat a boss on a given difficulty
-        weapon_can_appear: Dict[str, Tuple[bool, bool, bool, bool]] = {
+        weapon_can_appear: Dict[str, Tuple[bool, bool, bool, bool, bool]] = {
             "Pulse-Cannon":                   (True,  True,  True,  True,  True),
             "Multi-Cannon (Front)":           (False, False, False, True,  True),
             "Mega Cannon":                    (True,  True,  True,  True,  True),
@@ -237,7 +237,7 @@ class TyrianWorld(World):
             return "Pulse-Cannon"
 
         # Per difficulty relative weight of receiving each weapon
-        weapon_weights: Dict[str, Tuple[int, int, int, int]] = {
+        weapon_weights: Dict[str, Tuple[int, int, int, int, int]] = {
             "Pulse-Cannon":                   (1, 3, 2, 1, 1),
             "Multi-Cannon (Front)":           (0, 1, 1, 1, 1), # Low damage
             "Mega Cannon":                    (1, 3, 2, 1, 1),
