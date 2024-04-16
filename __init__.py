@@ -45,7 +45,7 @@ class TyrianWorld(World):
     """
     game = "Tyrian"
     options_dataclass = TyrianOptions
-    options: TyrianOptions
+    options: TyrianOptions # type: ignore
 
     base_id = 20031000
     item_name_to_id = LocalItemData.get_item_name_to_id(base_id)
@@ -447,11 +447,11 @@ class TyrianWorld(World):
             except ValueError:
                 idx = input_chars.index("?") + offset
                 offset += (ord("?") & 0xF) + 1
-            finally:
-                if idx >= 87:
-                    idx -= 87
-                if offset >= 87:
-                    offset -= 87
+
+            if idx >= 87:
+                idx -= 87
+            if offset >= 87:
+                offset -= 87
             return obfus_chars[idx]
 
         return "".join(obfuscate_char(i) for i in input_str)
