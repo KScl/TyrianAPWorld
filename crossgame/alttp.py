@@ -177,7 +177,7 @@ alttp_item_texts: List[Tuple[List[str], TyrianALTTPText]] = [
         ["RetroBall", "Wild Ball", "Xega Ball"],
         TyrianALTTPText(
               pedestal="and the funky ball",
-              sick_kid="",
+              sick_kid="the pitcher kid",
               potion_shop="shrooms for weird ball",
               zora="strange ball for sale",
               flute_spot="funky boy tosses ball again")
