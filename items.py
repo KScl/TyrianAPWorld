@@ -34,7 +34,7 @@ class LocalLevel(LocalItem):
     def __init__(self, local_id: int, episode: Episode, goal_level: bool = False):
         self.local_id = local_id
         self.count = 1
-        self.item_class = IC.progression_skip_balancing if goal_level else IC.progression
+        self.item_class = (IC.progression_skip_balancing|IC.useful) if goal_level else (IC.progression|IC.useful)
         self.episode = episode
         self.tossable = False
 
@@ -251,15 +251,15 @@ class LocalItemData:
     # ----------------------------------------------------------------------------------------------------------------
 
     nonprogressive_items: Dict[str, LocalItem] = {
-        "Advanced MR-12":        LocalItem(900, count=1, item_class=IC.progression),
-        "Gencore Custom MR-12":  LocalItem(901, count=1, item_class=IC.progression),
-        "Standard MicroFusion":  LocalItem(902, count=1, item_class=IC.progression),
-        "Advanced MicroFusion":  LocalItem(903, count=1, item_class=IC.progression),
-        "Gravitron Pulse-Wave":  LocalItem(904, count=1, item_class=IC.progression),
+        "Advanced MR-12":        LocalItem(900, count=1, item_class=IC.progression|IC.useful),
+        "Gencore Custom MR-12":  LocalItem(901, count=1, item_class=IC.progression|IC.useful),
+        "Standard MicroFusion":  LocalItem(902, count=1, item_class=IC.progression|IC.useful),
+        "Advanced MicroFusion":  LocalItem(903, count=1, item_class=IC.progression|IC.useful),
+        "Gravitron Pulse-Wave":  LocalItem(904, count=1, item_class=IC.progression|IC.useful),
     }
 
     progressive_items: Dict[str, LocalItem] = {
-        "Progressive Generator": LocalItem(905, count=5, item_class=IC.progression),
+        "Progressive Generator": LocalItem(905, count=5, item_class=IC.progression|IC.useful),
     }
 
     other_items: Dict[str, LocalItem] = {

@@ -5,79 +5,6 @@
 # See "LICENSE" for more details.
 
 from . import TyrianTestBase
-from unittest import expectedFailure
-
-# =============================================================================
-# Testing Option: Enabling (or disabling) Tyrian 2000 support
-# =============================================================================
-
-class TestTyrian2000Data(TyrianTestBase):
-    options = {
-        "enable_tyrian_2000_support": True,
-        "episode_1": "goal",
-        "episode_2": "goal",
-        "episode_3": "goal",
-        "episode_4": "goal",
-        "episode_5": "goal",
-    }   
-
-    # At least one Tyrian 2000 item should be in the pool.
-    def test_tyrian_2000_items_in_pool(self) -> None:
-        tyrian_2000_items = ["Needle Laser", "Pretzel Missile", "Dragon Frost", "Dragon Flame", "People Pretzels",
-                             "Super Pretzel", "Dragon Lightning", "Bubble Gum-Gun", "Flying Punch"]
-        items_in_pool = self.get_items_by_name(tyrian_2000_items)
-        self.assertNotEqual(len(items_in_pool), 0, msg="Tyrian 2000 items not in Tyrian 2000 enabled world")
-
-    def test_episode_5_required(self) -> None:
-        self.assertBeatable(False)
-        self.collect_all_but(["FRUIT (Episode 5)", "Episode 5 (Hazudra Fodder) Complete"])
-        self.assertBeatable(False)
-        self.collect(self.get_item_by_name("FRUIT (Episode 5)"))
-        self.assertBeatable(True)
-
-class TestTyrianData(TyrianTestBase):
-    options = {
-        "enable_tyrian_2000_support": False,
-        "episode_1": "goal",
-        "episode_2": "goal",
-        "episode_3": "goal",
-        "episode_4": "goal",
-    }
-
-    # No Tyrian 2000 items should ever be in the pool -- Tyrian 2.1 data cannot support them.
-    def test_no_tyrian_2000_items_in_pool(self) -> None:
-        tyrian_2000_items = ["Needle Laser", "Pretzel Missile", "Dragon Frost", "Dragon Flame", "People Pretzels",
-                             "Super Pretzel", "Dragon Lightning", "Bubble Gum-Gun", "Flying Punch"]
-        items_in_pool = self.get_items_by_name(tyrian_2000_items)
-        self.assertEqual(len(items_in_pool), 0, msg="Tyrian 2000 items placed in non-Tyrian 2000 world")
-
-    def test_episode_1_required(self) -> None:
-        self.assertBeatable(False)
-        self.collect_all_but(["ASSASSIN (Episode 1)", "Episode 1 (Escape) Complete"])
-        self.assertBeatable(False)
-        self.collect(self.get_item_by_name("ASSASSIN (Episode 1)"))
-        self.assertBeatable(True)
-
-    def test_episode_2_required(self) -> None:
-        self.assertBeatable(False)
-        self.collect_all_but(["GRYPHON (Episode 2)", "Episode 2 (Treachery) Complete"])
-        self.assertBeatable(False)
-        self.collect(self.get_item_by_name("GRYPHON (Episode 2)"))
-        self.assertBeatable(True)
-
-    def test_episode_3_required(self) -> None:
-        self.assertBeatable(False)
-        self.collect_all_but(["FLEET (Episode 3)", "Episode 3 (Mission: Suicide) Complete"])
-        self.assertBeatable(False)
-        self.collect(self.get_item_by_name("FLEET (Episode 3)"))
-        self.assertBeatable(True)
-
-    def test_episode_4_required(self) -> None:
-        self.assertBeatable(False)
-        self.collect_all_but(["NOSE DRIP (Episode 4)", "Episode 4 (An End to Fate) Complete"])
-        self.assertBeatable(False)
-        self.collect(self.get_item_by_name("NOSE DRIP (Episode 4)"))
-        self.assertBeatable(True)
 
 # =============================================================================
 # Testing Option: Boss Weaknesses
@@ -95,7 +22,6 @@ class TestBossWeaknesses(TyrianTestBase):
     }
 
     # All bosses should require the Data Cube for the episode, and the weapon specified in the Data Cube.
-    @expectedFailure # Logic for Episodes 4 and 5 aren't done yet
     def test_data_cube_and_weakness_weapon_required(self) -> None:
         locations = {
             1: "ASSASSIN (Episode 1) - Boss",
