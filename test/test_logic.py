@@ -184,6 +184,15 @@ class TestTyrianData(TyrianTestBase):
         mixed_dps_check = can_deal_damage(self.multiworld.state, self.player, damage_tables, active=22.0, passive=5.0)
         self.assertEqual(mixed_dps_check, True, "Pulse-Cannon:3 + Starburst:2 should be 24.7/6.0 DPS together, but failed 22.0/5.0")
 
+        # Should succeed (Pulse-Cannon:11 + Fireball:11 = 32.1/15.5 + 15.2/39.7 = 47.3/55.2)
+        # This is why there's weighting applied to distance in DPS.meets_requirements
+        # Without weighting active over passive, Banana Blast (Front):11 will get picked over Pulse-Cannon:11
+        # because it satisfies significantly more passive DPS than the Pulse-Cannon does, but if it does pick that
+        # then it can't satisfy the 40.0 active DPS requirement
+        self.collect(powerups[2:10]) # To Maximum Power 11
+        mixed_dps_check = can_deal_damage(self.multiworld.state, self.player, damage_tables, active=40.0, passive=50.0)
+        self.assertEqual(mixed_dps_check, True, "Pulse-Cannon:11 + Starburst:2 should be 47.3/55.2 DPS together, but failed 40.0/50.0")
+
     def test_solo_weapon_dps_logic(self) -> None:
         damage_tables = self.multiworld.worlds[self.player].damage_tables
         generators = self.get_items_by_name(["Progressive Generator"] * 5)

@@ -10,7 +10,7 @@ from BaseClasses import LocationProgressType as LP
 from worlds.generic.Rules import add_rule
 
 from .items import Episode, LocalItemData
-from .options import LogicDifficulty, GameDifficulty, Specials
+from .options import LogicDifficulty, GameDifficulty
 from .twiddles import SpecialValues
 
 if TYPE_CHECKING:
@@ -38,14 +38,18 @@ class DPS:
 
     def meets_requirements(self, requirements: "DPS") -> Tuple[bool, float]:
         distance = 0.0
+
+        # Apply some weighting to distance
+        # Rear weapons can easily take care of passive and sideways requirements
+        # But active is much harder, piercing even more so
         if requirements.active > 0.0 and self.active < requirements.active:
-            distance += (requirements.active - self.active)
+            distance += (requirements.active - self.active) * 4.0
         if requirements.passive > 0.0 and self.passive < requirements.passive:
-            distance += (requirements.passive - self.passive)
+            distance += (requirements.passive - self.passive) * 0.8
         if requirements.sideways > 0.0 and self.sideways < requirements.sideways:
-            distance += (requirements.sideways - self.sideways)
+            distance += (requirements.sideways - self.sideways) * 1.8
         if requirements.piercing > 0.0 and self.piercing < requirements.piercing:
-            distance += (requirements.piercing - self.piercing)
+            distance += (requirements.piercing - self.piercing) * 10.0
 
         if distance < 0.0001:
             return (True, 0.0)
@@ -653,8 +657,7 @@ def episode_1_rules(world: "TyrianWorld") -> None:
         logic_location_exclude(world, "WINDY (Episode 1) - Central Question Mark")
     elif world.options.logic_difficulty == LogicDifficulty.option_expert:
         # Exclude if we don't have a way to get invulnerability (either specials as items, twiddle, or start with it)
-        if world.options.specials == Specials.option_as_items \
-              or has_invulnerability(world.multiworld.state, world.player):
+        if world.options.specials == "as_items" or has_invulnerability(world.multiworld.state, world.player):
             logic_location_rule(world, "WINDY (Episode 1) - Central Question Mark", lambda state:
                   has_invulnerability(state, world.player))
         else:

@@ -189,7 +189,7 @@ class TyrianWorld(World):
             "Laser":                          (True,  True,  True,  True,  True),
             "Zica Laser":                     (True,  True,  True,  True,  True),
             "Protron Z":                      (True,  True,  True,  True,  True),
-            "Vulcan Cannon (Front)":          (True,  True,  True,  True,  True),
+            "Vulcan Cannon (Front)":          (False, True,  True,  True,  True),
             "Lightning Cannon":               (True,  True,  True,  True,  True),
             "Protron (Front)":                (True,  True,  True,  True,  True),
             "Missile Launcher":               (False, False, True,  True,  True),
@@ -205,12 +205,12 @@ class TyrianWorld(World):
             "The Orange Juicer":              (False, False, True,  True,  True),
             "NortShip Super Pulse":           (False, True,  True,  True,  True),
             "Atomic RailGun":                 (True,  True,  True,  True,  True),
-            "Widget Beam":                    (False, False, False, True,  True),
+            "Widget Beam":                    (False, False, True,  True,  True),
             "Sonic Impulse":                  (False, True,  True,  True,  True),
             "RetroBall":                      (False, False, False, True,  True),
             "Needle Laser":                   (True,  True,  True,  True,  True),
             "Pretzel Missile":                (True,  True,  True,  True,  True),
-            "Dragon Frost":                   (True,  True,  True,  True,  True),
+            "Dragon Frost":                   (False, False, True,  True,  True),
             "Dragon Flame":                   (True,  True,  True,  True,  True),
         }
 
@@ -236,46 +236,42 @@ class TyrianWorld(World):
         if not self.options.random_starting_weapon:
             return "Pulse-Cannon"
 
-        # Per difficulty relative weight of receiving each weapon
-        weapon_weights: Dict[str, Tuple[int, int, int, int, int]] = {
-            "Pulse-Cannon":                   (1, 3, 2, 1, 1),
-            "Multi-Cannon (Front)":           (0, 1, 1, 1, 1), # Low damage
-            "Mega Cannon":                    (1, 3, 2, 1, 1),
-            "Laser":                          (1, 3, 2, 1, 1),
-            "Zica Laser":                     (1, 3, 2, 1, 1),
-            "Protron Z":                      (1, 3, 2, 1, 1),
-            "Vulcan Cannon (Front)":          (1, 3, 2, 1, 1),
-            "Lightning Cannon":               (1, 3, 2, 1, 1),
-            "Protron (Front)":                (1, 3, 2, 1, 1),
-            "Missile Launcher":               (0, 1, 1, 1, 1), # Low damage
-            "Mega Pulse (Front)":             (1, 3, 2, 1, 1),
-            "Heavy Missile Launcher (Front)": (1, 3, 2, 1, 1),
-            "Banana Blast (Front)":           (1, 3, 2, 1, 1),
-            "HotDog (Front)":                 (1, 3, 2, 1, 1),
-            "Hyper Pulse":                    (1, 3, 2, 1, 1),
-            "Guided Bombs":                   (1, 3, 2, 1, 1),
-            "Shuriken Field":                 (0, 0, 2, 1, 1), # High energy cost
-            "Poison Bomb":                    (0, 0, 2, 1, 1), # High energy cost
-            "Protron Wave":                   (0, 1, 1, 1, 1), # Low damage
-            "The Orange Juicer":              (0, 0, 0, 1, 1), # Lv.1 is sideways only
-            "NortShip Super Pulse":           (0, 0, 2, 1, 1), # High energy cost
-            "Atomic RailGun":                 (0, 0, 2, 1, 1), # High energy cost
-            "Widget Beam":                    (0, 1, 1, 1, 1), # Low damage
-            "Sonic Impulse":                  (1, 3, 2, 1, 1),
-            "RetroBall":                      (0, 1, 1, 1, 1), # Low damage
-            "Needle Laser":                   (1, 3, 2, 1, 1),
-            "Pretzel Missile":                (1, 3, 2, 1, 1),
-            "Dragon Frost":                   (1, 3, 2, 1, 1),
-            "Dragon Flame":                   (1, 3, 2, 1, 1),
-        }
+        if self.options.logic_difficulty == "no_logic":
+            # Anything is permissible in no_logic, regardless of circumstances
+            possible_choices = [item for item in self.local_itempool if item in LocalItemData.front_ports]
+            return self.random.choice(possible_choices)
 
-        possible_choices: List[str] = []
-        for (weapon, weight_list) in weapon_weights.items():
-            if weapon in self.local_itempool:
-                possible_choices.extend([weapon] * weight_list[self.options.logic_difficulty.value - 1])
+        starting_generator = 1
+        starting_power_level = 1
+        base_energy = 0
 
-        # List is empty: What did they do, remove everything that was weighted positively?
-        # Pick totally randomly among everything available in the seed
+        # Get the amount of energy and power level we'll start the seed with
+        for item in self.multiworld.precollected_items[self.player]:
+            if item.name == "Advanced MR-12":          base_energy = self.damage_tables.local_power_provided[2]
+            elif item.name == "Gencore Custom MR-12":  base_energy = self.damage_tables.local_power_provided[3]
+            elif item.name == "Standard MicroFusion":  base_energy = self.damage_tables.local_power_provided[4]
+            elif item.name == "Advanced MicroFusion":  base_energy = self.damage_tables.local_power_provided[5]
+            elif item.name == "Gravitron Pulse-Wave":  base_energy = self.damage_tables.local_power_provided[6]
+            elif item.name == "Progressive Generator": starting_generator += 1
+            elif item.name == "Maximum Power Up":      starting_power_level += 1
+        if base_energy == 0:
+            base_energy = self.damage_tables.local_power_provided[starting_generator]
+
+        # If the weapon at any power level has energy usage below our starting generator's power, we can use it
+        def can_use_from_start(weapon_name: str) -> bool:
+            nonlocal base_energy, starting_power_level
+
+            # Forbid the Orange Juicer from power level 1 starts because power 1 only shoots straight right
+            if starting_power_level == 1 and weapon_name == "The Orange Juicer":
+                return False
+
+            lowest_power = min(DamageTables.generator_power_required[weapon_name][0:starting_power_level])
+            return lowest_power <= base_energy
+
+        possible_choices = [item for item in self.local_itempool
+              if item in LocalItemData.front_ports and can_use_from_start(item)]
+
+        # List is empty? Pick totally randomly among everything available in the seed
         if len(possible_choices) == 0:
             possible_choices = [item for item in self.local_itempool if item in LocalItemData.front_ports]
 
@@ -701,6 +697,12 @@ class TyrianWorld(World):
             for i in range(remove_count):
                 pop_from_pool(removed_item)
 
+        # If requested, pull max power upgrades from the pool and give them to the player.
+        for i in range(1, self.options.starting_max_power):
+            max_power_item = pop_from_pool("Maximum Power Up")
+            if max_power_item is not None:
+                self.multiworld.push_precollected(self.create_item(max_power_item))
+
         if not precollected_level_exists:
             # Precollect the default starting level and pop it from the item pool.
             start_level = pop_from_pool(self.default_start_level)
@@ -720,12 +722,6 @@ class TyrianWorld(World):
             possible_specials = self.get_dict_contents_as_items(LocalItemData.special_weapons)
             self.single_special_weapon = self.random.choice(possible_specials)
             self.multiworld.push_precollected(self.create_item(self.single_special_weapon))
-
-        # If requested, pull max power upgrades from the pool and give them to the player.
-        for i in range(1, self.options.starting_max_power):
-            max_power_item = pop_from_pool("Maximum Power Up")
-            if max_power_item is not None:
-                self.multiworld.push_precollected(self.create_item(max_power_item))
 
         # ----------------------------------------------------------------------------------------
         # Set boss weaknesses based on weapons that are in the pool and haven't been removed.
