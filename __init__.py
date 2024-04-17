@@ -247,13 +247,20 @@ class TyrianWorld(World):
 
         # Get the amount of energy and power level we'll start the seed with
         for item in self.multiworld.precollected_items[self.player]:
-            if item.name == "Advanced MR-12":          base_energy = self.damage_tables.local_power_provided[2]
-            elif item.name == "Gencore Custom MR-12":  base_energy = self.damage_tables.local_power_provided[3]
-            elif item.name == "Standard MicroFusion":  base_energy = self.damage_tables.local_power_provided[4]
-            elif item.name == "Advanced MicroFusion":  base_energy = self.damage_tables.local_power_provided[5]
-            elif item.name == "Gravitron Pulse-Wave":  base_energy = self.damage_tables.local_power_provided[6]
-            elif item.name == "Progressive Generator": starting_generator += 1
-            elif item.name == "Maximum Power Up":      starting_power_level += 1
+            if item.name == "Advanced MR-12":
+                base_energy = max(base_energy, self.damage_tables.local_power_provided[2])
+            elif item.name == "Gencore Custom MR-12":
+                base_energy = max(base_energy, self.damage_tables.local_power_provided[3])
+            elif item.name == "Standard MicroFusion":
+                base_energy = max(base_energy, self.damage_tables.local_power_provided[4])
+            elif item.name == "Advanced MicroFusion":
+                base_energy = max(base_energy, self.damage_tables.local_power_provided[5])
+            elif item.name == "Gravitron Pulse-Wave":
+                base_energy = max(base_energy, self.damage_tables.local_power_provided[6])
+            elif item.name == "Progressive Generator":
+                starting_generator += 1
+            elif item.name == "Maximum Power Up":
+                starting_power_level += 1
         if base_energy == 0:
             base_energy = self.damage_tables.local_power_provided[starting_generator]
 
@@ -317,6 +324,10 @@ class TyrianWorld(World):
             nonlocal start_state
             start_state[option] = start_state.get(option, 0) + 1
 
+        def set_state(option: str, value: int) -> None:
+            nonlocal start_state
+            start_state[option] = max(start_state.get(option, 0), value)
+
         def append_state(option: str, value: str) -> None:
             nonlocal start_state
             if option not in start_state:
@@ -343,11 +354,11 @@ class TyrianWorld(World):
             elif item.name == "Maximum Power Up":            increase_state("Power")
             elif item.name == "Shield Up":                   increase_state("Shield")
             elif item.name == "Progressive Generator":       increase_state("Generator")
-            elif item.name == "Advanced MR-12":              start_state["Generator"] = 1
-            elif item.name == "Gencore Custom MR-12":        start_state["Generator"] = 2
-            elif item.name == "Standard MicroFusion":        start_state["Generator"] = 3
-            elif item.name == "Advanced MicroFusion":        start_state["Generator"] = 4
-            elif item.name == "Gravitron Pulse-Wave":        start_state["Generator"] = 5
+            elif item.name == "Advanced MR-12":              set_state("Generator", 1)
+            elif item.name == "Gencore Custom MR-12":        set_state("Generator", 2)
+            elif item.name == "Standard MicroFusion":        set_state("Generator", 3)
+            elif item.name == "Advanced MicroFusion":        set_state("Generator", 4)
+            elif item.name == "Gravitron Pulse-Wave":        set_state("Generator", 5)
             elif item.name == "Solar Shields":               start_state["SolarShield"] = True
             elif item.name == "SuperBomb":                   pass # Only useful if obtained in level, ignore
             elif item.name.endswith(" Credits"):             add_credits(item.name)
@@ -555,6 +566,39 @@ class TyrianWorld(World):
         self.all_levels = []
         self.local_itempool = []
         self.all_boss_weaknesses = {}
+
+        # ----------------------------------------------------------------------------------------
+
+        # Turn start_inventory non-progressive generators into progressive ones, and vice versa, depending on options.
+        # We do this so we can try to ensure consistent behavior among the client, starting item output, and logic.
+        if self.options.progressive_items:
+            # Initialization of this dict will remove all non-progressive generators from start_inventory for us.
+            # We still want to get rid of lower level ones even if we don't acknowledge them later on.
+            nonprogressive_generators = {
+                5: self.multiworld.start_inventory[self.player].value.pop("Gravitron Pulse-Wave", 0),
+                4: self.multiworld.start_inventory[self.player].value.pop("Advanced MicroFusion", 0),
+                3: self.multiworld.start_inventory[self.player].value.pop("Standard MicroFusion", 0),
+                2: self.multiworld.start_inventory[self.player].value.pop("Gencore Custom MR-12", 0),
+                1: self.multiworld.start_inventory[self.player].value.pop("Advanced MR-12", 0),
+            }
+
+            # Now give enough Progressive Generators to reach the highest level we saw.
+            for to_give, num_precollected in nonprogressive_generators.items():
+                if num_precollected > 0:
+                    # This will overwrite any Progressive Generators already in start_inventory, but I think that's a
+                    # fair assumption to make when you throw a non-progressive generator in here in the first place.
+                    self.multiworld.start_inventory[self.player].value["Progressive Generator"] = to_give
+                    break
+        else:
+            # Get rid of all progressive generators from start_inventory.
+            progressive_count = self.multiworld.start_inventory[self.player].value.pop("Progressive Generator", 0)
+            progressive_count = min(progressive_count, 5) # Cap at Gravitron Pulse-Wave
+
+            # Take the count of progressive generators we popped out, and convert them to a single non-progressive one.
+            if progressive_count > 0:
+                generator = ["Advanced MR-12", "Gencore Custom MR-12", "Standard MicroFusion",
+                             "Advanced MicroFusion", "Gravitron Pulse-Wave"][progressive_count - 1]
+                self.multiworld.start_inventory[self.player].value[generator] = 1
 
     def create_regions(self) -> None:
         menu_region = Region("Menu", self.player, self.multiworld)

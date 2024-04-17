@@ -251,15 +251,15 @@ class LocalItemData:
     # ----------------------------------------------------------------------------------------------------------------
 
     nonprogressive_items: Dict[str, LocalItem] = {
-        "Advanced MR-12":        LocalItem(900, count=1, item_class=IC.progression|IC.useful),
-        "Gencore Custom MR-12":  LocalItem(901, count=1, item_class=IC.progression|IC.useful),
-        "Standard MicroFusion":  LocalItem(902, count=1, item_class=IC.progression|IC.useful),
-        "Advanced MicroFusion":  LocalItem(903, count=1, item_class=IC.progression|IC.useful),
-        "Gravitron Pulse-Wave":  LocalItem(904, count=1, item_class=IC.progression|IC.useful),
+        "Advanced MR-12":        LocalItem(900, count=1, item_class=IC.progression),
+        "Gencore Custom MR-12":  LocalItem(901, count=1, item_class=IC.progression),
+        "Standard MicroFusion":  LocalItem(902, count=1, item_class=IC.progression),
+        "Advanced MicroFusion":  LocalItem(903, count=1, item_class=IC.progression),
+        "Gravitron Pulse-Wave":  LocalItem(904, count=1, item_class=IC.progression),
     }
 
     progressive_items: Dict[str, LocalItem] = {
-        "Progressive Generator": LocalItem(905, count=5, item_class=IC.progression|IC.useful),
+        "Progressive Generator": LocalItem(905, count=5, item_class=IC.progression),
     }
 
     other_items: Dict[str, LocalItem] = {
