@@ -149,9 +149,9 @@ vanilla_twiddle_list: List[List[Twiddle]] = [
         Twiddle("Lightning Up+Right", SpecialValues.LightningUpRight,
               command=[TwidDir.Up, TwidDir.RightFire]),
         Twiddle("Lightning Left", SpecialValues.LightningLeft,
-              command=[TwidDir.Neutral, TwidDir.Left]),
+              command=[TwidDir.Neutral, TwidDir.LeftFire]),
         Twiddle("Lightning Right", SpecialValues.LightningRight,
-              command=[TwidDir.Neutral, TwidDir.Right])
+              command=[TwidDir.Neutral, TwidDir.RightFire])
     ],
 ]
 
