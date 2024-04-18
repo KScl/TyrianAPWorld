@@ -131,3 +131,22 @@ class TestShopsOff(TyrianTestBase):
         shop_locations = [location for location in self.multiworld.get_locations(self.player)
               if getattr(location, 'shop_price', None) is not None]
         self.assertEqual(len(shop_locations), 0, msg="Shop items present when shop_mode is none")
+
+class TestShopsOnly(TyrianTestBase):
+    options = {
+        "enable_tyrian_2000_support": True,
+        "episode_1": "goal",
+        "episode_2": "goal",
+        "episode_3": "goal",
+        "episode_4": "goal",
+        "episode_5": "goal",
+        "shop_mode": "shops_only",
+        "shop_item_count": 228,
+    }
+
+    def test_locations_in_level_only_have_credits(self) -> None:
+        level_locations = [location for location in self.multiworld.get_locations(self.player)
+              if location.address is not None and getattr(location, 'shop_price', None) is None]
+        locations_with_credits = [location for location in level_locations
+              if location.item and location.item.name.endswith(" Credits")]
+        self.assertEqual(len(locations_with_credits), len(level_locations), msg="Some in-level locations contain non-Credits items")

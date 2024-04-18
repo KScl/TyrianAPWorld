@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, cast, TextIO, Optional, List, Dict, Mapping, S
 from BaseClasses import Item, Location, Region
 from BaseClasses import ItemClassification as IC
 from BaseClasses import LocationProgressType as LP
+from Fill import fast_fill
 
 from .items import LocalItemData, LocalItem, Episode
 from .locations import LevelLocationData, LevelRegion
@@ -120,7 +121,7 @@ class TyrianWorld(World):
 
         return itemList
 
-    def get_junk_items(self, total_checks: int, total_money: int) -> List[str]:
+    def get_junk_items(self, total_checks: int, total_money: int, allow_superbombs: bool = True) -> List[str]:
         total_money = int(total_money * (self.options.money_pool_scale / 100))
 
         valid_money_amounts = \
@@ -129,9 +130,9 @@ class TyrianWorld(World):
         junk_list = []
 
         while total_checks > 1:
-            # If we've overshot the target, fill all remaining slots with SuperBombs and leave.
+            # Target credit total has been overshot
             if total_money <= 0:
-                junk_list.extend(["SuperBomb"] * total_checks)
+                junk_list.extend(["SuperBomb" if allow_superbombs else "50 Credits"] * total_checks)
                 return junk_list
 
             # We want to allow a wide range of money values early, but then tighten up our focus as we start running
@@ -142,7 +143,7 @@ class TyrianWorld(World):
             possible_choices = [i for i in valid_money_amounts if i > average / avg_divisor and i < average * 5]
 
             # If the low end of the scale is _really_ low, include a SuperBomb as a choice.
-            if average / avg_divisor < 20:
+            if allow_superbombs and average / avg_divisor < 20:
                 possible_choices.append(0)
 
             # In case our focus is a little _too_ tight and we don't actually have any money values close enough to
@@ -285,8 +286,8 @@ class TyrianWorld(World):
         return self.random.choice(possible_choices)
 
     def get_filler_item_name(self) -> str:
-        filler_items = ["50 Credits",  "75 Credits",  "100 Credits", "150 Credits",
-                        "200 Credits", "300 Credits", "375 Credits", "500 Credits"]
+        filler_items = ["SuperBomb", "50 Credits", "75 Credits", "100 Credits", "150 Credits", "200 Credits",
+                        "300 Credits", "375 Credits", "500 Credits", "750 Credits"]
         return self.random.choice(filler_items)
 
     # ================================================================================================================
@@ -780,44 +781,71 @@ class TyrianWorld(World):
         # ----------------------------------------------------------------------------------------
         # Automatically fill the pool with junk Credits items, enough to reach total_money_needed.
 
-        # Subtract what we start with.
-        self.total_money_needed -= self.options.starting_money.value
-
-        # Size of itempool versus number of locations. May be negative (!), will be fixed shortly if it is.
-        rest_item_count = len(self.multiworld.get_unfilled_locations(self.player)) - len(self.local_itempool)
-
-        # Don't spam the seed with all SuperBombs jfc
-        if self.total_money_needed <= 400 * rest_item_count:
-            self.total_money_needed = 400 * rest_item_count
-
-        # We want to at least have SOME variety of credit items in the pool regardless of settings.
-        # We also don't want to leave ourselves with a situation where, say, we can only place one junk item
-        # so it MUST be 1,000,000 credits.
-
-        # So, if rest_item_count doesn't allow for us to stay under an average of 50,000 credits per junk item,
-        # (or, hell, if rest_item_count is negative in the first place), we'll toss stuff from the pool to make space.
         def item_is_tossable(name: str) -> bool:
             if name in self.all_boss_weaknesses.values():
                 return False # Mandated by boss weaknesses, can't toss
             return LocalItemData.get(name).tossable
 
-        minimum_needed_item_count = math.ceil(self.total_money_needed / 50000)
-        if rest_item_count < minimum_needed_item_count:
+        # Returns remaining amount of space in itempool after tossing requested number of items
+        def toss_from_itempool(num_to_toss: int) -> int:
             tossable_items = [name for name in self.local_itempool if item_is_tossable(name)]
-            need_to_toss = minimum_needed_item_count - rest_item_count
+            if num_to_toss > len(tossable_items): # Toss all we can, it's the best we can do.
+                num_to_toss = len(tossable_items)
 
-            if need_to_toss > len(tossable_items):
-                # ... Well, shit. Just toss everything we can, and hopefully it'll work out.
-                need_to_toss = len(tossable_items)
-
-            tossed = [pop_from_pool(i) for i in self.random.sample(tossable_items, need_to_toss)]
-            logging.warning(f"Trimming {need_to_toss} item{'' if need_to_toss == 1 else 's'} "
+            tossed = [pop_from_pool(i) for i in self.random.sample(tossable_items, num_to_toss)]
+            logging.warning(f"Trimming {num_to_toss} item{'' if num_to_toss == 1 else 's'} "
                             f"from {self.multiworld.get_player_name(self.player)}'s Tyrian world.")
 
+            return len(self.multiworld.get_unfilled_locations(self.player)) - len(self.local_itempool)
+
+        # Subtract what we start with.
+        self.total_money_needed -= self.options.starting_money.value
+
+        # Shops-only mode junk fill
+        if self.options.shop_mode == "shops_only":
+            # We're going to take all locations that are not shop locations, and pre-fill all of them with
+            # junk Credits items. This gives shops a wide variety of items, while still giving a way to earn money.
+            in_level_locations = [location for location in self.multiworld.get_unfilled_locations(self.player)
+                  if getattr(location, "shop_price", None) is None]
+            junk_items = [cast(Item, self.create_item(item)) for item in
+                  self.get_junk_items(len(in_level_locations), self.total_money_needed, allow_superbombs=False)]
+
+            fast_fill(self.multiworld, junk_items, in_level_locations)
+            for location in in_level_locations:
+                location.locked = True
+
+            shop_locs_size = len(self.multiworld.get_unfilled_locations(self.player))
+            item_pool_size = len(self.local_itempool)
+            # If the itempool is too small for the shop location pool, add some random filler to make up for it.
+            if item_pool_size < shop_locs_size:
+                need_to_add = shop_locs_size - item_pool_size
+                self.local_itempool.extend([self.get_filler_item_name() for i in range(need_to_add)])
+            # If it's too big, however, trim down items to fit.
+            elif item_pool_size > shop_locs_size:
+                need_to_toss = item_pool_size - shop_locs_size
+                toss_from_itempool(need_to_toss)
+
+        # Traditional junk fill
+        else:
+            # Size of itempool versus number of locations. May be negative (!), will be fixed shortly if it is.
             rest_item_count = len(self.multiworld.get_unfilled_locations(self.player)) - len(self.local_itempool)
 
+            # Don't spam the seed with all SuperBombs jfc
+            if self.total_money_needed <= 400 * rest_item_count:
+                self.total_money_needed = 400 * rest_item_count
 
-        self.local_itempool.extend(self.get_junk_items(rest_item_count, self.total_money_needed))
+            # We want to at least have SOME variety of credit items in the pool regardless of settings.
+            # We also don't want to leave ourselves with a situation where, say,
+            # we can only place one junk item so it MUST be 1,000,000 credits.
+
+            # So, if rest_item_count doesn't allow for us to stay under an average of 50,000 credits per junk item,
+            # (or if rest_item_count is negative in the first place), we'll toss stuff from the pool to make space.
+            minimum_needed_item_count = math.ceil(self.total_money_needed / 50000)
+            if rest_item_count < minimum_needed_item_count:
+                need_to_toss = minimum_needed_item_count - rest_item_count
+                rest_item_count = toss_from_itempool(need_to_toss)
+
+            self.local_itempool.extend(self.get_junk_items(rest_item_count, self.total_money_needed))
 
         # ----------------------------------------------------------------------------------------
 

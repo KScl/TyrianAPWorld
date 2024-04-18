@@ -140,11 +140,14 @@ class ShopMode(Choice):
     If 'standard', each level will contain a shop that is accessible after clearing it. The shop will contain anywhere
     from 1 to 5 additional checks for the multiworld.
     If 'hidden', shops will behave as above, but will not tell you what you're buying until after you spend credits.
+    If 'shops_only', shops will be the only location checks available; items within levels will only contain varying
+    amounts of money for yourself.
     """
     display_name = "Shop Mode"
     option_none = 0
     option_standard = 1
     option_hidden = 2
+    option_shops_only = 3
     alias_true = 1
     alias_false = 0
     default = 1
