@@ -600,7 +600,7 @@ class LevelLocationData:
         # Event: "Episode 5 (Hazudra Fodder) Complete" - Isn't this episode short???
     }
 
-    shop_regions: Dict[str, int] = {name: i for (name, i) in zip(level_regions.keys(), range(1000, 2000, 10))}
+    shop_regions: Dict[str, int] = {name: region.base_id + 1000 for (name, region) in level_regions.items()}
 
     # Events for game completion
     events: Dict[str, str] = {
