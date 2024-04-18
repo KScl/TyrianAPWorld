@@ -985,7 +985,7 @@ def episode_2_rules(world: "TyrianWorld") -> None:
         logic_entrance_rule(world, "Can shop at BOTANY A (Episode 2)", lambda state, armor=wanted_armor:
               has_armor_level(state, world.player, armor))
 
-    if world.options.logic_difficulty == LogicDifficulty.option_beginner:
+    if world.options.logic_difficulty <= LogicDifficulty.option_standard:
         logic_all_locations_exclude(world, "BOTANY A (Episode 2) - End of Path Secret")
 
     enemy_health = scale_health(world, 15, adjust_difficulty=+1) # Moving turret
