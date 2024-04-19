@@ -133,6 +133,8 @@ class TestShopsOff(TyrianTestBase):
         self.assertEqual(len(shop_locations), 0, msg="Shop items present when shop_mode is none")
 
 class TestShopsOnly(TyrianTestBase):
+    # shop_item_count was originally 228/325, however rarely that causes a FillError
+    # because starts in this mode are far more restrictive than normal and AP doesn't handle that well yet
     options = {
         "enable_tyrian_2000_support": True,
         "episode_1": "goal",
@@ -141,7 +143,7 @@ class TestShopsOnly(TyrianTestBase):
         "episode_4": "goal",
         "episode_5": "goal",
         "shop_mode": "shops_only",
-        "shop_item_count": 228,
+        "shop_item_count": "always_five",
     }
 
     def test_locations_in_level_only_have_credits(self) -> None:

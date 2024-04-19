@@ -576,11 +576,11 @@ class TyrianWorld(World):
             # Initialization of this dict will remove all non-progressive generators from start_inventory for us.
             # We still want to get rid of lower level ones even if we don't acknowledge them later on.
             nonprogressive_generators = {
-                5: self.multiworld.start_inventory[self.player].value.pop("Gravitron Pulse-Wave", 0),
-                4: self.multiworld.start_inventory[self.player].value.pop("Advanced MicroFusion", 0),
-                3: self.multiworld.start_inventory[self.player].value.pop("Standard MicroFusion", 0),
-                2: self.multiworld.start_inventory[self.player].value.pop("Gencore Custom MR-12", 0),
-                1: self.multiworld.start_inventory[self.player].value.pop("Advanced MR-12", 0),
+                5: self.options.start_inventory.value.pop("Gravitron Pulse-Wave", 0),
+                4: self.options.start_inventory.value.pop("Advanced MicroFusion", 0),
+                3: self.options.start_inventory.value.pop("Standard MicroFusion", 0),
+                2: self.options.start_inventory.value.pop("Gencore Custom MR-12", 0),
+                1: self.options.start_inventory.value.pop("Advanced MR-12", 0),
             }
 
             # Now give enough Progressive Generators to reach the highest level we saw.
@@ -588,18 +588,18 @@ class TyrianWorld(World):
                 if num_precollected > 0:
                     # This will overwrite any Progressive Generators already in start_inventory, but I think that's a
                     # fair assumption to make when you throw a non-progressive generator in here in the first place.
-                    self.multiworld.start_inventory[self.player].value["Progressive Generator"] = to_give
+                    self.options.start_inventory.value["Progressive Generator"] = to_give
                     break
         else:
             # Get rid of all progressive generators from start_inventory.
-            progressive_count = self.multiworld.start_inventory[self.player].value.pop("Progressive Generator", 0)
+            progressive_count = self.options.start_inventory.value.pop("Progressive Generator", 0)
             progressive_count = min(progressive_count, 5) # Cap at Gravitron Pulse-Wave
 
             # Take the count of progressive generators we popped out, and convert them to a single non-progressive one.
             if progressive_count > 0:
                 generator = ["Advanced MR-12", "Gencore Custom MR-12", "Standard MicroFusion",
                              "Advanced MicroFusion", "Gravitron Pulse-Wave"][progressive_count - 1]
-                self.multiworld.start_inventory[self.player].value[generator] = 1
+                self.options.start_inventory.value[generator] = 1
 
     def create_regions(self) -> None:
         menu_region = Region("Menu", self.player, self.multiworld)
