@@ -219,16 +219,6 @@ alttp_item_texts: List[Tuple[List[str], TyrianALTTPText]] = [
               zora="power plant for sale",
               flute_spot="energy boy makes power again")
     ),
-    ( # Data Cubes
-        ["Data Cube (Episode 1)", "Data Cube (Episode 2)", "Data Cube (Episode 3)", "Data Cube (Episode 4)",
-              "Data Cube (Episode 5)"],
-        TyrianALTTPText(
-              pedestal="and the infodump",
-              sick_kid="the lore-discussing kid",
-              potion_shop="give shrooms and i'll talk",
-              zora="knowledge for sale",
-              flute_spot="lore boy tells all again")
-    ),
     ( # Money
         ["50 Credits", "75 Credits", "100 Credits", "150 Credits", "200 Credits", "300 Credits", "375 Credits",
               "500 Credits", "750 Credits", "800 Credits", "1000 Credits", "2000 Credits", "5000 Credits",
@@ -385,6 +375,15 @@ alttp_item_texts: List[Tuple[List[str], TyrianALTTPText]] = [
               potion_shop="solar-powered shrooms",
               zora="solar energy for sale",
               flute_spot="solar boy makes energy again")
+    ),
+    (
+        ["Data Cube"],
+        TyrianALTTPText(
+              pedestal="and the infodump",
+              sick_kid="the secret-holding kid",
+              potion_shop="give shrooms and i'll talk",
+              zora="knowledge for sale",
+              flute_spot="secret boy tells all again")
     ),
     (
         ["SuperBomb"],

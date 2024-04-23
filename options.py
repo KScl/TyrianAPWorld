@@ -7,8 +7,8 @@
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from Options import PerGameCommonOptions, Toggle, DefaultOnToggle, Choice, Range, NamedRange, TextChoice, ItemDict, \
-      DeathLink
+from Options import Visibility, PerGameCommonOptions, Toggle, DefaultOnToggle, Choice, Range, NamedRange, TextChoice, \
+      ItemDict, DeathLink
 
 if TYPE_CHECKING:
     from BaseClasses import PlandoOptions
@@ -80,12 +80,41 @@ class GoalEpisode5(Choice):
     option_off = 0
     default = 0
 
-class BossWeaknesses(Toggle):
+class DataCubeHunt(Toggle):
     """
-    If true, the boss of the last level of each goal episode will only be weak to one specific weapon.
-    A "Data Cube" item will be added for each boss modified this way, that tells you what weapon you need to use.
+    If enabled, goal levels will not be in the item pool, but will be locked behind collecting a given amount of
+    "Data Cube" items. See data_cubes_required, data_cubes_total_percent, and data_cubes_total for more information.
     """
-    display_name = "Boss Weaknesses"
+    display_name = "Data Cube Hunt"
+
+class DataCubesRequired(Range):
+    """The amount of data cubes that must be collected to access goal levels in Data Cube Hunt mode."""
+    display_name = "Data Cubes Required"
+    range_start = 1
+    range_end = 99
+    default = 40
+
+class DataCubesTotal(Range):
+    """
+    How many data cubes should be added to the pool in Data Cube Hunt mode, as an absolute amount.
+    Only takes effect if this value is above the number of required data cubes, otherwise data_cubes_total_percent is
+    used instead.
+    """
+    display_name = "Data Cubes Total"
+    range_start = 0
+    range_end = 200
+    default = 0
+
+class DataCubesTotalPercent(Range):
+    """
+    How many data cubes should be added to the pool in Data Cube Hunt mode, as a percentage of the required amount.
+    100 adds in exactly the number of data cubes required, 200 adds in twice that amount, etc.
+    """
+    display_name = "Data Cubes Total %"
+    visibility = Visibility.all ^ Visibility.spoiler # Overrides above option if it takes effect
+    range_start = 100
+    range_end = 200
+    default = 100
 
 # ==================================
 # === Itempool / Start Inventory ===
@@ -101,7 +130,7 @@ class StartingMoney(Range):
 class StartingMaxPower(Range):
     """
     Change the maximum power level you're allowed to upgrade weapons to when you start the seed.
-    Setting this to somewhere around 5 can result in significantly more open seeds.
+    Setting this higher can result in more varied seeds.
     """
     display_name = "Starting Maximum Power Level"
     range_start = 1
@@ -302,7 +331,7 @@ class GameDifficulty(Choice):
     option_impossible = 4 # 150% enemy health, fast firing and bullet speeds
     option_suicide = 6 # 200% enemy health, fast firing and bullet speeds
     option_lord_of_game = 8 # 400% enemy health, incredibly fast firing and bullet speeds
-    alias_lord_of_the_game = option_lord_of_game
+    alias_lord = option_lord_of_game
     alias_zinglon = option_lord_of_game
     default = 2
 
@@ -345,14 +374,17 @@ class ForceGameSpeed(Choice):
 class ShowTwiddleInputs(DefaultOnToggle):
     """If twiddles are enabled, show their inputs in "Ship Info" next to the name of each twiddle."""
     display_name = "Show Twiddle Inputs"
+    visibility = Visibility.all ^ Visibility.spoiler # Visual only
 
 class ArchipelagoRadar(DefaultOnToggle):
     """Shows a bright outline around any enemy that contains an Archipelago Item. Recommended for beginners."""
     display_name = "Archipelago Radar"
+    visibility = Visibility.all ^ Visibility.spoiler # Visual only
 
 class Christmas(Toggle):
     """Use the Christmas set of graphics and sound effects."""
     display_name = "Christmas Mode"
+    visibility = Visibility.all ^ Visibility.spoiler # Visual only
 
 class TyrianDeathLink(DeathLink):
     """
@@ -372,7 +404,10 @@ class TyrianOptions(PerGameCommonOptions):
     episode_3: GoalEpisode3
     episode_4: GoalEpisode4
     episode_5: GoalEpisode5
-    boss_weaknesses: BossWeaknesses
+    data_cube_hunt: DataCubeHunt
+    data_cubes_required: DataCubesRequired
+    data_cubes_total: DataCubesTotal
+    data_cubes_total_percent: DataCubesTotalPercent
 
     starting_money: StartingMoney
     starting_max_power: StartingMaxPower

@@ -30,6 +30,7 @@ class LocalItem:
 
 class LocalLevel(LocalItem):
     episode: Episode
+    goal_level: bool
 
     def __init__(self, local_id: int, episode: Episode, goal_level: bool = False):
         self.local_id = local_id
@@ -37,6 +38,7 @@ class LocalLevel(LocalItem):
         self.item_class = (IC.progression_skip_balancing|IC.useful) if goal_level else (IC.progression|IC.useful)
         self.episode = episode
         self.tossable = False
+        self.goal_level = goal_level
 
 class LocalWeapon(LocalItem):
     def __init__(self, local_id: int, item_class: IC = IC.filler, tossable: bool = True, count: int = 1):
@@ -270,12 +272,8 @@ class LocalItemData:
 
         "SuperBomb":             LocalItem(910, count=1), # More can be added in junk fill
 
-        # Items for Boss Weaknesses
-        "Data Cube (Episode 1)": LocalItem(911, item_class=IC.progression),
-        "Data Cube (Episode 2)": LocalItem(912, item_class=IC.progression),
-        "Data Cube (Episode 3)": LocalItem(913, item_class=IC.progression),
-        "Data Cube (Episode 4)": LocalItem(914, item_class=IC.progression),
-        "Data Cube (Episode 5)": LocalItem(915, item_class=IC.progression),
+        # Goal collectible item for Data Cube Hunt mode
+        "Data Cube":             LocalItem(911, item_class=IC.progression_skip_balancing),
 
         # All Credits items have their count set dynamically.
         "50 Credits":            LocalItem(980),

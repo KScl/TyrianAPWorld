@@ -57,7 +57,7 @@ class TyrianWorld(World):
     location_descriptions = LevelLocationData.secret_descriptions
 
     # Raise this to force outdated clients to update.
-    aptyrian_net_version = 3
+    aptyrian_net_version = 4
 
     # --------------------------------------------------------------------------------------------
 
@@ -74,7 +74,6 @@ class TyrianWorld(World):
     weapon_costs: Dict[str, int] # Costs of each weapon's upgrades (see LocalItemData.default_upgrade_costs)
     total_money_needed: int # Sum total of shop prices and max upgrades, used to calculate filler items
 
-    all_boss_weaknesses: Dict[int, str] # Required weapon to use for each boss
     damage_tables: DamageTables # Used for rule generation
 
     # ================================================================================================================
@@ -181,58 +180,6 @@ class TyrianWorld(World):
             return {key: int(self.options.base_weapon_cost.current_key)
                   for key in LocalItemData.default_upgrade_costs.keys()}
 
-    def get_boss_weapon_name(self) -> str:
-        # Can this weapon be required to defeat a boss on a given difficulty
-        weapon_can_appear: Dict[str, Tuple[bool, bool, bool, bool, bool]] = {
-            "Pulse-Cannon":                   (True,  True,  True,  True,  True),
-            "Multi-Cannon (Front)":           (False, False, False, True,  True),
-            "Mega Cannon":                    (True,  True,  True,  True,  True),
-            "Laser":                          (True,  True,  True,  True,  True),
-            "Zica Laser":                     (True,  True,  True,  True,  True),
-            "Protron Z":                      (True,  True,  True,  True,  True),
-            "Vulcan Cannon (Front)":          (False, True,  True,  True,  True),
-            "Lightning Cannon":               (True,  True,  True,  True,  True),
-            "Protron (Front)":                (True,  True,  True,  True,  True),
-            "Missile Launcher":               (False, False, True,  True,  True),
-            "Mega Pulse (Front)":             (True,  True,  True,  True,  True),
-            "Heavy Missile Launcher (Front)": (True,  True,  True,  True,  True),
-            "Banana Blast (Front)":           (True,  True,  True,  True,  True),
-            "HotDog (Front)":                 (True,  True,  True,  True,  True),
-            "Hyper Pulse":                    (True,  True,  True,  True,  True),
-            "Guided Bombs":                   (False, True,  True,  True,  True),
-            "Shuriken Field":                 (True,  True,  True,  True,  True),
-            "Poison Bomb":                    (True,  True,  True,  True,  True),
-            "Protron Wave":                   (False, False, False, True,  True),
-            "The Orange Juicer":              (False, False, True,  True,  True),
-            "NortShip Super Pulse":           (False, True,  True,  True,  True),
-            "Atomic RailGun":                 (True,  True,  True,  True,  True),
-            "Widget Beam":                    (False, False, True,  True,  True),
-            "Sonic Impulse":                  (False, True,  True,  True,  True),
-            "RetroBall":                      (False, False, False, True,  True),
-            "Needle Laser":                   (True,  True,  True,  True,  True),
-            "Pretzel Missile":                (True,  True,  True,  True,  True),
-            "Dragon Frost":                   (False, False, True,  True,  True),
-            "Dragon Flame":                   (True,  True,  True,  True,  True),
-        }
-
-        # Note that this deliberately excludes weapons you start with.
-        possible_choices = [item for item in self.local_itempool if item in weapon_can_appear
-              and weapon_can_appear[item][self.options.logic_difficulty.value - 1] == True]
-
-        # List is empty: Okay, sure, this can happen if we start with every weapon.
-        # Retry, and only exclude weapons that are explicitly removed from the seed.
-        if len(possible_choices) == 0:
-            possible_choices = [item for item in weapon_can_appear
-                  if item not in self.options.remove_from_item_pool.keys()
-                  and weapon_can_appear[item][self.options.logic_difficulty.value - 1] == True]
-
-        # List is STILL empty: Fine, you're getting something at random regardless of normal requirements
-        if len(possible_choices) == 0:
-            possible_choices = [item for item in weapon_can_appear
-                  if item not in self.options.remove_from_item_pool.keys()]
-
-        return self.random.choice(possible_choices)
-
     def get_starting_weapon_name(self) -> str:
         if not self.options.random_starting_weapon:
             return "Pulse-Cannon"
@@ -298,22 +245,38 @@ class TyrianWorld(World):
     # Game settings, user choices the game needs to know about
     # Present: Always.
     def output_settings(self) -> Dict[str, Any]:
-        return {
+        settings: Dict[str, Any] = {
             "RequireT2K": bool(self.options.enable_tyrian_2000_support),
             "Episodes": sum(1 << (i - 1) for i in self.play_episodes),
             "Goal": sum(1 << (i - 1) for i in self.goal_episodes),
             "Difficulty": int(self.options.difficulty),
-
-            "ShopMenu": int(self.options.shop_mode),
-            "SpecialMenu": (self.options.specials == 2),
-            "HardContact": bool(self.options.contact_bypasses_shields),
-            "ExcessArmor": bool(self.options.allow_excess_armor),
-            "GameSpeed": int(self.options.force_game_speed),
-            "ShowTwiddles": bool(self.options.show_twiddle_inputs),
-            "APRadar": bool(self.options.archipelago_radar),
-            "Christmas": bool(self.options.christmas_mode),
-            "DeathLink": bool(self.options.death_link),
         }
+
+        # The following settings are only added if their values are truthy or non-zero
+        # The client should handle their absence just fine (defaulting to false or 0)
+        if self.options.data_cube_hunt:
+            settings["DataCubesNeeded"] = int(self.options.data_cubes_required)
+        if self.options.contact_bypasses_shields:
+            settings["HardContact"] = True
+        if self.options.allow_excess_armor:
+            settings["ExcessArmor"] = True
+        if self.options.force_game_speed != "off":
+            settings["GameSpeed"] = int(self.options.force_game_speed)
+
+        if self.options.shop_mode != "none":
+            settings["ShopMode"] = int(self.options.shop_mode)
+        if self.options.specials == "as_items":
+            settings["SpecialMenu"] = True
+        if self.options.show_twiddle_inputs:
+            settings["ShowTwiddles"] = True
+        if self.options.archipelago_radar:
+            settings["APRadar"] = True
+        if self.options.christmas_mode:
+            settings["Christmas"] = True
+        if self.options.death_link:
+            settings["DeathLink"] = True
+
+        return settings
 
     # ---------- StartState (obfuscated) --------------------------------------
     # Tell the game what we start with.
@@ -350,7 +313,7 @@ class TyrianWorld(World):
             elif item.name in LocalItemData.rear_ports:      append_state("Items", item.name)
             elif item.name in LocalItemData.special_weapons: append_state("Items", item.name)
             elif item.name in LocalItemData.sidekicks:       append_state("Items", item.name)
-            elif item.name.startswith("Data Cube "):         append_state("Items", item.name)
+            elif item.name == "Data Cube":                   increase_state("DataCubes")
             elif item.name == "Armor Up":                    increase_state("Armor")
             elif item.name == "Maximum Power Up":            increase_state("Power")
             elif item.name == "Shield Up":                   increase_state("Shield")
@@ -430,13 +393,6 @@ class TyrianWorld(World):
               if location.address is not None # Ignore events
               and getattr(location, "shop_price", None) is not None}
 
-    # ---------- BossWeaknesses (obfuscated) ----------------------------------
-    # Weapons required to defeat bosses for each goal episode.
-    # Present: If the option "Boss Weaknesses" is "on".
-    def output_boss_weaknesses(self) -> Dict[int, int]:
-        return {episode: self.item_name_to_id[weapon_name] - self.base_id
-              for (episode, weapon_name) in self.all_boss_weaknesses.items()}
-
     # --------------------------------------------------------------------------------------------
 
     def obfuscate_object(self, input_obj: Any) -> str:
@@ -488,8 +444,6 @@ class TyrianWorld(World):
 
         if self.options.twiddles:
             slot_data["TwiddleData"] = self.obfuscate_object(self.output_twiddles())
-        if self.options.boss_weaknesses:
-            slot_data["BossWeaknesses"] = self.obfuscate_object(self.output_boss_weaknesses())
         if self.options.shop_mode != "none":
             slot_data["ShopData"] = self.obfuscate_object(self.output_shop_data())
 
@@ -566,9 +520,15 @@ class TyrianWorld(World):
         self.single_special_weapon = None
         self.all_levels = []
         self.local_itempool = []
-        self.all_boss_weaknesses = {}
 
         # ----------------------------------------------------------------------------------------
+        # Clean up some option values.
+
+        if self.options.data_cube_hunt:
+            # If total < required, set total to (required * total_percentage)
+            if self.options.data_cubes_total.value < self.options.data_cubes_required.value:
+                new_cube_total = int(self.options.data_cubes_required * (self.options.data_cubes_total_percent / 100))
+                self.options.data_cubes_total.value = new_cube_total
 
         # Turn start_inventory non-progressive generators into progressive ones, and vice versa, depending on options.
         # We do this so we can try to ensure consistent behavior among the client, starting item output, and logic.
@@ -721,6 +681,14 @@ class TyrianWorld(World):
         else:
             self.local_itempool.extend(self.get_dict_contents_as_items(LocalItemData.nonprogressive_items))
 
+        if self.options.data_cube_hunt:
+            # Earlier code will ensure this is set to a final value already.
+            self.local_itempool.extend(["Data Cube"] * self.options.data_cubes_total.value)
+
+            # Remove goal levels from the itempool.
+            [pop_from_pool(name) for (name, details) in LocalItemData.levels.items()
+                  if details.goal_level and details.episode in self.goal_episodes]
+
         # ----------------------------------------------------------------------------------------
         # Handle pre-collected items, remove requests, other options.
 
@@ -769,26 +737,11 @@ class TyrianWorld(World):
             self.multiworld.push_precollected(self.create_item(self.single_special_weapon))
 
         # ----------------------------------------------------------------------------------------
-        # Set boss weaknesses based on weapons that are in the pool and haven't been removed.
-
-        if self.options.boss_weaknesses:
-            for episode in self.goal_episodes:
-                self.all_boss_weaknesses[episode] = self.get_boss_weapon_name()
-
-                # Add data cubes to the pool, too. They're considered logically required.
-                self.local_itempool.append(f"Data Cube (Episode {episode})")
-
-        # ----------------------------------------------------------------------------------------
         # Automatically fill the pool with junk Credits items, enough to reach total_money_needed.
-
-        def item_is_tossable(name: str) -> bool:
-            if name in self.all_boss_weaknesses.values():
-                return False # Mandated by boss weaknesses, can't toss
-            return LocalItemData.get(name).tossable
 
         # Returns remaining amount of space in itempool after tossing requested number of items
         def toss_from_itempool(num_to_toss: int) -> int:
-            tossable_items = [name for name in self.local_itempool if item_is_tossable(name)]
+            tossable_items = [name for name in self.local_itempool if LocalItemData.get(name).tossable]
             if num_to_toss > len(tossable_items): # Toss all we can, it's the best we can do.
                 num_to_toss = len(tossable_items)
 
@@ -864,8 +817,20 @@ class TyrianWorld(World):
             entrance = self.multiworld.get_entrance(f"Open {level_name}", self.player)
             entrance.access_rule = lambda state: state.has(level_name, self.player)
 
-        for level in self.all_levels:
-            create_level_unlock_rule(level)
+        def create_data_cube_unlock_rule(level_name: str) -> None:
+            entrance = self.multiworld.get_entrance(f"Open {level_name}", self.player)
+            entrance.access_rule = lambda state: state.has("Data Cube", self.player,
+                  self.options.data_cubes_required.value)
+
+        if self.options.data_cube_hunt:
+            for level in self.all_levels:
+                level_details = LocalItemData.levels[level]
+                if level_details.goal_level and level_details.episode in self.goal_episodes:
+                    create_data_cube_unlock_rule(level)
+                else:
+                    create_level_unlock_rule(level)
+        else:
+            [create_level_unlock_rule(level) for level in self.all_levels]
 
         # ------------------------------
 
@@ -898,15 +863,6 @@ class TyrianWorld(World):
             json.dump(self.get_slot_data(local_mode=True), f)
 
     def write_spoiler(self, spoiler_handle: TextIO) -> None:
-        precollected_names = [item.name for item in self.multiworld.precollected_items[self.player]]
-        spoiler_handle.write(f"\n\nLevel locations ({self.multiworld.player_name[self.player]}):\n\n")
-        for level in self.all_levels:
-            if level in precollected_names:
-                spoiler_handle.write(f"{level}: Start\n")               
-            else:
-                level_item_location = self.multiworld.find_item(level, self.player)
-                spoiler_handle.write(f"{level}: {level_item_location.name}\n")
-
         spoiler_handle.write(f"\n\nSpecial Weapon ({self.multiworld.player_name[self.player]}):\n")
         spoiler_handle.write(f"{self.single_special_weapon}\n")
 

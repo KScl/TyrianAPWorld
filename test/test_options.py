@@ -7,75 +7,46 @@
 from . import TyrianTestBase
 
 # =============================================================================
-# Testing Option: Boss Weaknesses
+# Testing Option: Data Cube Hunt
 # =============================================================================
 
-class TestBossWeaknesses(TyrianTestBase):
+class TestDataCubeHuntAbsolute(TyrianTestBase):
     options = {
-        "enable_tyrian_2000_support": True,
-        "episode_1": "goal",
-        "episode_2": "goal",
-        "episode_3": "goal",
-        "episode_4": "goal",
-        "episode_5": "goal",
-        "boss_weaknesses": True,
-    }
-
-    # All bosses should require the Data Cube for the episode, and the weapon specified in the Data Cube.
-    def test_data_cube_and_weakness_weapon_required(self) -> None:
-        locations = {
-            1: "ASSASSIN (Episode 1) - Boss",
-            2: "GRYPHON (Episode 2) - Boss",
-            3: "FLEET (Episode 3) - Boss",
-            4: "NOSE DRIP (Episode 4) - Boss",
-            5: "FRUIT (Episode 5) - Boss",
-        }
-
-        for (episode, location) in locations.items():
-            with self.subTest(episode=episode, location=location):
-                data_cube = self.get_item_by_name(f"Data Cube (Episode {episode})")
-                weapon = self.get_item_by_name(self.world.all_boss_weaknesses[episode])
-
-                items = [weapon.name, data_cube.name]
-                self.assertAccessDependency([location], [items], only_check_listed=True)
-
-class TestSomeBossWeaknesses(TyrianTestBase):
-    options = {
-        "enable_tyrian_2000_support": True,
-        "episode_1": "goal",
+        "episode_1": "on",
         "episode_2": "on",
-        "episode_3": "goal",
-        "episode_4": "on",
-        "episode_5": "goal",
-        "boss_weaknesses": True,
+        "episode_3": "on",
+        "episode_4": "goal",
+        "data_cube_hunt": True,
+        "data_cubes_required": 28,
+        "data_cubes_total": 34,
     }
 
-    @property
-    def run_default_tests(self) -> bool:
-        return False
+    # Goal levels shouldn't be in the item pool.
+    def test_goal_level_not_in_pool(self):
+        goal_level = self.get_items_by_name("NOSE DRIP (Episode 4)")
+        self.assertEqual(len(goal_level), 0, msg="Goal level present in Data Cube Hunt mode")
 
-    # Only episodes marked as "goal" should have boss weaknesses. Others should behave normally.
-    def test_only_weaknesses_for_goal_episodes(self) -> None:
-        boss_weakness_data = {
-            1: ("ASSASSIN (Episode 1) - Boss", True),
-            2: ("GRYPHON (Episode 2) - Boss", False),
-            3: ("FLEET (Episode 3) - Boss", True),
-            4: ("NOSE DRIP (Episode 4) - Boss", False),
-            5: ("FRUIT (Episode 5) - Boss", True),
-        }
+    # Data cube count should match data_cubes_total.
+    def test_all_data_cubes_present(self):
+        data_cubes = self.get_items_by_name("Data Cube")
+        self.assertEqual(len(data_cubes), 34, msg="Number of data cubes present does not equal data_cubes_total")
 
-        for episode in boss_weakness_data.keys():
-            with self.subTest(episode=episode):
-                location, has_weakness = boss_weakness_data[episode]
-                data_cubes = self.get_items_by_name(f"Data Cube (Episode {episode})")
-                if has_weakness:
-                    msg = f"Episode {episode} is goal, but has no weakness"
-                    self.assertEqual(len(data_cubes), 1, msg=msg)
-                    self.assertIn(episode, self.world.all_boss_weaknesses, msg=msg)
-                else:
-                    msg = f"Episode {episode} is not goal, but has weakness"
-                    self.assertEqual(len(data_cubes), 0, msg=msg)
-                    self.assertNotIn(episode, self.world.all_boss_weaknesses, msg=msg)
+    # At least data_cubes_required number of data cubes should be necessary to beat the seed.
+    def test_data_cubes_required(self):
+        self.collect(self.get_item_by_name("Sonic Wave"))
+        self.collect(self.get_item_by_name("Atomic RailGun"))
+        self.collect(self.get_items_by_name("Maximum Power Up"))
+        self.collect(self.get_items_by_name("Armor Up"))
+        self.collect(self.get_items_by_name("Progressive Generator"))
+        self.assertBeatable(False)
+
+        data_cubes = self.get_items_by_name("Data Cube")
+        self.collect(data_cubes[0:26])
+        self.assertBeatable(False)
+        self.collect(data_cubes[26])
+        self.assertBeatable(False)
+        self.collect(data_cubes[27])
+        self.assertBeatable(True)
 
 # =============================================================================
 # Testing Option: Shops

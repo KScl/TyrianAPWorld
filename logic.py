@@ -785,13 +785,8 @@ def episode_1_rules(world: "TyrianWorld") -> None:
     # ===== ASSASSIN ==========================================================
     logic_entrance_behind_location(world, "Can shop at ASSASSIN (Episode 1)", "ASSASSIN (Episode 1) - Boss")
 
-    if Episode.Escape in world.all_boss_weaknesses:
-        logic_location_rule(world, "ASSASSIN (Episode 1) - Boss", lambda state:
-              state.has("Data Cube (Episode 1)", world.player)
-              and can_damage_with_weapon(state, world.player, world.damage_tables, world.all_boss_weaknesses[1], 25.0))
-    else:
-        logic_location_rule(world, "ASSASSIN (Episode 1) - Boss", lambda state:
-              can_deal_damage(state, world.player, world.damage_tables, 25.0))
+    logic_location_rule(world, "ASSASSIN (Episode 1) - Boss", lambda state:
+          can_deal_damage(state, world.player, world.damage_tables, 25.0))
 
     # Difficulty-based armor requirements
     wanted_armor = (9, 8, 7, 5, 5)[world.options.logic_difficulty.value - 1]
@@ -1060,11 +1055,6 @@ def episode_2_rules(world: "TyrianWorld") -> None:
           and has_generator_level(state, world.player, 3)
           and can_deal_damage(state, world.player, world.damage_tables, active=22.0, passive=16.0))
 
-    if Episode.Treachery in world.all_boss_weaknesses:
-        logic_location_rule(world, "GRYPHON (Episode 2) - Boss", lambda state:
-              state.has("Data Cube (Episode 2)", world.player)
-              and can_damage_with_weapon(state, world.player, world.damage_tables, world.all_boss_weaknesses[2], 22.0))
-
 # -----------------------------------------------------------------------------
 
 def episode_3_rules(world: "TyrianWorld") -> None:
@@ -1182,54 +1172,15 @@ def episode_3_rules(world: "TyrianWorld") -> None:
     logic_location_rule(world, "FLEET (Episode 3) - Boss", lambda state:
           can_deal_damage(state, world.player, world.damage_tables, active=50.0))
 
-    if Episode.MissionSuicide in world.all_boss_weaknesses:
-        logic_location_rule(world, "FLEET (Episode 3) - Boss", lambda state:
-              state.has("Data Cube (Episode 3)", world.player)
-              and can_damage_with_weapon(state, world.player, world.damage_tables, world.all_boss_weaknesses[3], 30.0))
-
 # -----------------------------------------------------------------------------
 
 def episode_4_rules(world: "TyrianWorld") -> None:
-    # ===== NOSE DRIP =========================================================
-    if Episode.AnEndToFate in world.all_boss_weaknesses:
-        logic_location_rule(world, "NOSE DRIP (Episode 4) - Boss", lambda state:
-              state.has("Data Cube (Episode 4)", world.player)
-              and can_damage_with_weapon(state, world.player, world.damage_tables, world.all_boss_weaknesses[4], 20.0))
+    pass
 
 # -----------------------------------------------------------------------------
 
 def episode_5_rules(world: "TyrianWorld") -> None:
-    # ===== FRUIT =============================================================
-    if Episode.HazudraFodder in world.all_boss_weaknesses:
-        logic_location_rule(world, "FRUIT (Episode 5) - Boss", lambda state:
-              state.has("Data Cube (Episode 5)", world.player)
-              and can_damage_with_weapon(state, world.player, world.damage_tables, world.all_boss_weaknesses[5], 20.0))
-
-# -----------------------------------------------------------------------------
-
-def no_logic_rules(world: "TyrianWorld") -> None:
-    # ===== BOSS WEAKNESSES ===================================================
-    # You need the weapon they're weak to.
-    # Data Cube's optional, though. Figure it out yourself.
-    if Episode.Escape in world.all_boss_weaknesses:
-        logic_location_rule(world, "ASSASSIN (Episode 1) - Boss", lambda state:
-            state.has(world.all_boss_weaknesses[1], world.player))
-
-    if Episode.Treachery in world.all_boss_weaknesses:
-        logic_location_rule(world, "GRYPHON (Episode 2) - Boss", lambda state:
-            state.has(world.all_boss_weaknesses[2], world.player))
-
-    if Episode.MissionSuicide in world.all_boss_weaknesses:
-        logic_location_rule(world, "FLEET (Episode 3) - Boss", lambda state:
-            state.has(world.all_boss_weaknesses[3], world.player))
-
-    if Episode.AnEndToFate in world.all_boss_weaknesses:
-        logic_location_rule(world, "NOSE DRIP (Episode 4) - Boss", lambda state:
-            state.has(world.all_boss_weaknesses[4], world.player))
-
-    if Episode.HazudraFodder in world.all_boss_weaknesses:
-        logic_location_rule(world, "FRUIT (Episode 5) - Boss", lambda state:
-            state.has(world.all_boss_weaknesses[5], world.player))
+    pass
 
 # -----------------------------------------------------------------------------
 
@@ -1238,8 +1189,6 @@ def set_level_rules(world: "TyrianWorld") -> None:
     # Notably, logic for unlocking levels functions outside of this, so you won't have self-locking levels or other
     # impossible scenarios like that. Just an assumption that you can beat anything thrown at you.
     if world.options.logic_difficulty == LogicDifficulty.option_no_logic:
-        # Still have to do a couple things to at least make some combination of options possible
-        no_logic_rules(world)
         return
 
     if Episode.Escape in world.play_episodes:         episode_1_rules(world)
