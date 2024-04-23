@@ -69,8 +69,8 @@ class DamageTables:
         # Difficulty --------------Power  Non MR9 M12 C12 SMF AMF GPW
         LogicDifficulty.option_beginner: [  0,  9, 12, 16, 21, 25, 41], # -1, -2, -3, -4, -5, -9 (for shield recharge)
         LogicDifficulty.option_standard: [  0, 10, 14, 19, 25, 30, 50], # Base power levels of each generator
-        LogicDifficulty.option_expert:   [  0, 12, 16, 22, 28, 34, 55], # +2, +2, +3, +3, +4, +5
-        LogicDifficulty.option_master:   [  0, 14, 18, 24, 30, 35, 58], # +4, +4, +5, +5, +5, +8
+        LogicDifficulty.option_expert:   [  0, 11, 16, 21, 28, 33, 55], # +1, +2, +2, +3, +4, +5
+        LogicDifficulty.option_master:   [  0, 12, 17, 23, 30, 35, 58], # +2, +3, +4, +5, +5, +8
         LogicDifficulty.option_no_logic: [ 99, 99, 99, 99, 99, 99, 99],
     }
 
@@ -567,7 +567,7 @@ def episode_1_rules(world: "TyrianWorld") -> None:
 
     # ===== HOLES =============================================================
     logic_entrance_rule(world, "Can shop at HOLES (Episode 1)", lambda state, health=enemy_health:
-          can_deal_damage(state, world.player, world.damage_tables, passive=21.0))
+          can_deal_damage(state, world.player, world.damage_tables, active=8.0, passive=21.0))
    
     boss_health = scale_health(world, 100) + 254 # Health of one wing + boss
     logic_location_rule(world, "HOLES (Episode 1) - Boss Ship Fly-By 1", lambda state, health=boss_health:
@@ -576,11 +576,17 @@ def episode_1_rules(world: "TyrianWorld") -> None:
           can_deal_damage(state, world.player, world.damage_tables, active=health/5.0, passive=21.0))
 
     logic_location_rule(world, "HOLES (Episode 1) - Lander after Spinners", lambda state:
-          can_deal_damage(state, world.player, world.damage_tables, passive=21.0))
+          can_deal_damage(state, world.player, world.damage_tables, active=8.0, passive=21.0))
     logic_location_rule(world, "HOLES (Episode 1) - U-Ships after Boss Fly-By", lambda state:
-          can_deal_damage(state, world.player, world.damage_tables, passive=21.0))
+          can_deal_damage(state, world.player, world.damage_tables, active=8.0, passive=21.0))
     logic_location_rule(world, "HOLES (Episode 1) - Before Speed Up Section", lambda state:
-          can_deal_damage(state, world.player, world.damage_tables, passive=21.0))
+          can_deal_damage(state, world.player, world.damage_tables, active=8.0, passive=21.0))
+
+    wanted_armor = (6, 5, 5, 5, 5)[world.options.logic_difficulty.value - 1]
+    if world.options.contact_bypasses_shields:
+        wanted_armor = (8, 7, 6, 5, 5)[world.options.logic_difficulty.value - 1]
+    logic_all_locations_rule(world, "HOLES (Episode 1)", lambda state, armor=wanted_armor:
+          has_armor_level(state, world.player, armor))
 
     # ===== SOH JIN ===========================================================
     enemy_health = scale_health(world, 40) # Single wall tile
@@ -726,6 +732,8 @@ def episode_1_rules(world: "TyrianWorld") -> None:
     # Difficulty-based armor requirements
     wanted_armor = (8, 7, 6, 5, 5)[world.options.logic_difficulty.value - 1]
     logic_all_locations_rule(world, "SAVARA II (Episode 1)", lambda state, armor=wanted_armor:
+          has_armor_level(state, world.player, armor))
+    logic_entrance_rule(world, "Can shop at SAVARA II (Episode 1)", lambda state, armor=wanted_armor:
           has_armor_level(state, world.player, armor))
 
     # ===== MINES =============================================================
