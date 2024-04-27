@@ -94,15 +94,17 @@ class DataCubesRequired(Range):
     range_end = 99
     default = 40
 
-class DataCubesTotal(Range):
+class DataCubesTotal(NamedRange):
     """
     How many data cubes should be added to the pool in Data Cube Hunt mode, as an absolute amount.
-    Only takes effect if this value is above the number of required data cubes, otherwise data_cubes_total_percent is
-    used instead.
+    You may specify 'percentage' to use the value from data_cubes_total_percent instead.
     """
     display_name = "Data Cubes Total"
-    range_start = 0
+    range_start = 1
     range_end = 200
+    special_range_names = {
+        "percentage": 0,
+    }
     default = 0
 
 class DataCubesTotalPercent(Range):
@@ -319,6 +321,12 @@ class LogicDifficulty(Choice):
     option_no_logic = 5
     default = 2
 
+class LogicBossTimeout(Toggle):
+    """
+    If enabled, bosses that can be timed out may logically require you to do so; requiring you to dodge them until the
+    level automatically completes to obtain items from a shop afterward.
+    """
+
 class GameDifficulty(Choice):
     """
     Select the base difficulty of the game. Anything beyond Impossible is VERY STRONGLY not recommended unless you
@@ -422,6 +430,8 @@ class TyrianOptions(PerGameCommonOptions):
     twiddles: Twiddles
 
     logic_difficulty: LogicDifficulty
+    logic_boss_timeout: LogicBossTimeout
+
     difficulty: GameDifficulty
     contact_bypasses_shields: HardContact
     allow_excess_armor: ExcessArmor

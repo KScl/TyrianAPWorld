@@ -69,7 +69,7 @@ class DamageTables:
         # Difficulty --------------Power  Non MR9 M12 C12 SMF AMF GPW
         LogicDifficulty.option_beginner: [  0,  9, 12, 16, 21, 25, 41], # -1, -2, -3, -4, -5, -9 (for shield recharge)
         LogicDifficulty.option_standard: [  0, 10, 14, 19, 25, 30, 50], # Base power levels of each generator
-        LogicDifficulty.option_expert:   [  0, 11, 16, 21, 28, 33, 55], # +1, +2, +2, +3, +4, +5
+        LogicDifficulty.option_expert:   [  0, 11, 16, 21, 28, 33, 55], # +1, +2, +2, +3, +3, +5
         LogicDifficulty.option_master:   [  0, 12, 17, 23, 30, 35, 58], # +2, +3, +4, +5, +5, +8
         LogicDifficulty.option_no_logic: [ 99, 99, 99, 99, 99, 99, 99],
     }
@@ -485,13 +485,6 @@ def has_invulnerability(state: "CollectionState", player: int) -> bool:
 def has_repulsor(state: "CollectionState", player: int) -> bool:
     return state.has("Repulsor", player) or has_twiddle(state, player, SpecialValues.Repulsor)
 
-# -----------------------------------------------------------------------------
-
-def boss_timeout_in_logic(world: "TyrianWorld") -> bool:
-    # This is in a function because it may change in the future to be based on a different set of logic difficulties
-    # or just depend on another option entirely
-    return world.options.logic_difficulty.value == LogicDifficulty.option_beginner
-
 # =================================================================================================
 
 def logic_entrance_rule(world: "TyrianWorld", entrance_name: str, rule: Callable[..., bool]) -> None:
@@ -522,8 +515,9 @@ def logic_all_locations_exclude(world: "TyrianWorld", location_name_base: str) -
 
 def episode_1_rules(world: "TyrianWorld") -> None:
     # ===== TYRIAN ============================================================
-    if not boss_timeout_in_logic(world):
+    if not world.options.logic_boss_timeout:
         logic_entrance_behind_location(world, "Can shop at TYRIAN (Episode 1)", "TYRIAN (Episode 1) - Boss")
+    # Boss time-out attainable with no items
  
     if world.options.logic_difficulty == LogicDifficulty.option_beginner:
         logic_location_exclude(world, "TYRIAN (Episode 1) - HOLES Warp Orb")
@@ -690,8 +684,14 @@ def episode_1_rules(world: "TyrianWorld") -> None:
               can_deal_damage(state, world.player, world.damage_tables, active=health/1.4))
 
     # ===== SAVARA ============================================================
-    if not boss_timeout_in_logic(world):
+    if not world.options.logic_boss_timeout:
         logic_entrance_behind_location(world, "Can shop at SAVARA (Episode 1)", "SAVARA (Episode 1) - Boss")
+    else:
+        # Need enough damage to destroy things the boss shoots at you, when dodging isn't an option
+        enemy_health = scale_health(world, 6) # Homing ticks from boss
+        logic_entrance_rule(world, "Can shop at SAVARA (Episode 1)", lambda state, health=enemy_health:
+              state.can_reach("SAVARA (Episode 1) - Boss", "Location", world.player)
+              or can_deal_damage(state, world.player, world.damage_tables, sideways=health/1.2))
 
     enemy_health = scale_health(world, 60) # Large planes
     logic_location_rule(world, "SAVARA (Episode 1) - Huge Plane, Speeds By", lambda state, health=enemy_health:
@@ -704,12 +704,20 @@ def episode_1_rules(world: "TyrianWorld") -> None:
           can_deal_damage(state, world.player, world.damage_tables, active=health/1.6)
           or can_deal_damage(state, world.player, world.damage_tables, passive=health/2.4))
 
-    logic_location_rule(world, "SAVARA (Episode 1) - Boss", lambda state:
-          can_deal_damage(state, world.player, world.damage_tables, active=254/60))
+    # Damage estimate: 254 health for the boss, shooting through 15 ticks and 4 missiles
+    enemy_health = 254 + (scale_health(world, 6) * 15) + (scale_health(world, 10) * 4)
+    logic_location_rule(world, "SAVARA (Episode 1) - Boss", lambda state, health=enemy_health:
+          can_deal_damage(state, world.player, world.damage_tables, active=health/30.0))
 
     # ===== SAVARA II =========================================================
-    if not boss_timeout_in_logic(world):
+    if not world.options.logic_boss_timeout:
         logic_entrance_behind_location(world, "Can shop at SAVARA II (Episode 1)", "SAVARA II (Episode 1) - Boss")
+    else:
+        # Need enough damage to destroy things the boss shoots at you, when dodging isn't an option
+        enemy_health = scale_health(world, 6) # Homing ticks from boss
+        logic_entrance_rule(world, "Can shop at SAVARA II (Episode 1)", lambda state, health=enemy_health:
+              state.can_reach("SAVARA II (Episode 1) - Boss", "Location", world.player)
+              or can_deal_damage(state, world.player, world.damage_tables, sideways=health/1.2))
 
     logic_location_rule(world, "SAVARA II (Episode 1) - Green Plane Sequence 1", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=7.0))
@@ -726,8 +734,10 @@ def episode_1_rules(world: "TyrianWorld") -> None:
           can_deal_damage(state, world.player, world.damage_tables, active=health/1.6)
           or can_deal_damage(state, world.player, world.damage_tables, passive=health/2.4))
 
-    logic_location_rule(world, "SAVARA (Episode 1) - Boss", lambda state:
-          can_deal_damage(state, world.player, world.damage_tables, active=254/50))
+    # Damage estimate: 254 health for the boss, shooting through 15 ticks and 4 missiles
+    enemy_health = 254 + (scale_health(world, 6) * 15) + (scale_health(world, 10) * 4)
+    logic_location_rule(world, "SAVARA (Episode 1) - Boss", lambda state, health=enemy_health:
+          can_deal_damage(state, world.player, world.damage_tables, active=health/30.0))
 
     # Difficulty-based armor requirements
     wanted_armor = (8, 7, 6, 5, 5)[world.options.logic_difficulty.value - 1]
@@ -735,6 +745,11 @@ def episode_1_rules(world: "TyrianWorld") -> None:
           has_armor_level(state, world.player, armor))
     logic_entrance_rule(world, "Can shop at SAVARA II (Episode 1)", lambda state, armor=wanted_armor:
           has_armor_level(state, world.player, armor))
+
+    # ===== BONUS =============================================================
+    # Temporary rule to keep this from occurring too early.
+    logic_entrance_rule(world, "Can shop at BONUS (Episode 1)", lambda state:
+          can_deal_damage(state, world.player, world.damage_tables, active=10.0, passive=10.0))
 
     # ===== MINES =============================================================
     enemy_health = scale_health(world, 20) # Rotating Orbs
@@ -805,8 +820,9 @@ def episode_1_rules(world: "TyrianWorld") -> None:
 
 def episode_2_rules(world: "TyrianWorld") -> None:
     # ===== TORM ==============================================================
-    if not boss_timeout_in_logic(world):
+    if not world.options.logic_boss_timeout:
         logic_entrance_behind_location(world, "Can shop at TORM (Episode 2)", "TORM (Episode 2) - Boss")
+    # Boss time-out attainable with no items
 
     if world.options.logic_difficulty == LogicDifficulty.option_beginner:
         logic_location_exclude(world, "TORM (Episode 2) - Ship Fleeing Dragon Secret")
@@ -837,6 +853,11 @@ def episode_2_rules(world: "TyrianWorld") -> None:
     logic_location_rule(world, "GYGES (Episode 2) - Boss", lambda state:
           can_deal_damage(state, world.player, world.damage_tables, active=254/45.0))
 
+    # ===== BONUS 1 ===========================================================
+    # Temporary rule to keep this from occurring too early.
+    logic_entrance_rule(world, "Can shop at BONUS 1 (Episode 2)", lambda state:
+          can_deal_damage(state, world.player, world.damage_tables, active=10.0, passive=10.0))
+
     # ===== ASTCITY ===========================================================
     logic_entrance_behind_location(world, "Can shop at ASTCITY (Episode 2)", 
           "ASTCITY (Episode 2) - Ending Turret Group")
@@ -857,6 +878,9 @@ def episode_2_rules(world: "TyrianWorld") -> None:
     wanted_armor = (7, 7, 6, 5, 5)[world.options.logic_difficulty.value - 1]
     logic_all_locations_rule(world, "ASTCITY (Episode 2)", lambda state, armor=wanted_armor:
           has_armor_level(state, world.player, armor))
+
+    # ===== BONUS 2 ===========================================================
+    # (logicless - flythrough only, no items, easily doable without firing a shot)
 
     # ===== GEM WAR ===========================================================
     logic_entrance_behind_location(world, "Can shop at GEM WAR (Episode 2)", 
@@ -981,7 +1005,7 @@ def episode_2_rules(world: "TyrianWorld") -> None:
     # ===== BOTANY A ==========================================================
     wanted_armor = (9, 9, 8, 6, 5)[world.options.logic_difficulty.value - 1]
 
-    if not boss_timeout_in_logic(world):
+    if not world.options.logic_boss_timeout:
         logic_entrance_behind_location(world, "Can shop at BOTANY A (Episode 2)",
               "BOTANY A (Episode 2) - Boss")
     else:
@@ -1024,7 +1048,7 @@ def episode_2_rules(world: "TyrianWorld") -> None:
           has_armor_level(state, world.player, armor))
 
     # ===== BOTANY B ==========================================================
-    if not boss_timeout_in_logic(world):
+    if not world.options.logic_boss_timeout:
         logic_entrance_behind_location(world, "Can shop at BOTANY B (Episode 2)",
               "BOTANY B (Episode 2) - Boss")
     else:
@@ -1069,7 +1093,7 @@ def episode_3_rules(world: "TyrianWorld") -> None:
     # ===== GAUNTLET ==========================================================
 
     # ===== IXMUCANE ==========================================================
-    if not boss_timeout_in_logic(world):
+    if not world.options.logic_boss_timeout:
         logic_entrance_behind_location(world, "Can shop at IXMUCANE (Episode 3)", "IXMUCANE (Episode 3) - Boss")
 
     # ===== BONUS =============================================================
@@ -1149,14 +1173,14 @@ def episode_3_rules(world: "TyrianWorld") -> None:
         logic_location_exclude(world, "SAWBLADES (Episode 3) - SuperCarrot Drop")
 
     # ===== CAMANIS ===========================================================
-    if not boss_timeout_in_logic(world):
+    if not world.options.logic_boss_timeout:
         logic_entrance_behind_location(world, "Can shop at CAMANIS (Episode 3)", "CAMANIS (Episode 3) - Boss")
 
     # ===== MACES =============================================================
     # (logicless - purely a test of dodging skill)
 
     # ===== TYRIAN X ==========================================================
-    if not boss_timeout_in_logic(world):
+    if not world.options.logic_boss_timeout:
         logic_entrance_behind_location(world, "Can shop at TYRIAN X (Episode 3)", "TYRIAN X (Episode 3) - Boss")
 
     if world.options.logic_difficulty == LogicDifficulty.option_beginner:
@@ -1166,7 +1190,7 @@ def episode_3_rules(world: "TyrianWorld") -> None:
         logic_location_exclude(world, "TYRIAN X (Episode 3) - Tank Turn-and-fire Secret")
 
     # ===== SAVARA Y ==========================================================
-    if not boss_timeout_in_logic(world):
+    if not world.options.logic_boss_timeout:
         logic_entrance_behind_location(world, "Can shop at SAVARA Y (Episode 3)", "SAVARA Y (Episode 3) - Boss")
 
     # ===== NEW DELI ==========================================================

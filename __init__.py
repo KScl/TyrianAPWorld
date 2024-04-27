@@ -526,7 +526,7 @@ class TyrianWorld(World):
 
         if self.options.data_cube_hunt:
             # If total < required, set total to (required * total_percentage)
-            if self.options.data_cubes_total.value < self.options.data_cubes_required.value:
+            if self.options.data_cubes_total.value == 0:
                 new_cube_total = int(self.options.data_cubes_required * (self.options.data_cubes_total_percent / 100))
                 self.options.data_cubes_total.value = new_cube_total
 
