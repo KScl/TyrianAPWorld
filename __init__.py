@@ -524,11 +524,14 @@ class TyrianWorld(World):
         # ----------------------------------------------------------------------------------------
         # Clean up some option values.
 
-        if self.options.data_cube_hunt:
-            # If total < required, set total to (required * total_percentage)
-            if self.options.data_cubes_total.value == 0:
-                new_cube_total = int(self.options.data_cubes_required * (self.options.data_cubes_total_percent / 100))
-                self.options.data_cubes_total.value = new_cube_total
+        # Data Cube Hunt related options
+        if self.options.data_cubes_total.value == 0:
+            # Set total to (required * total_percentage) if in percentage mode
+            new_cube_total = int(self.options.data_cubes_required * (self.options.data_cubes_total_percent / 100))
+            self.options.data_cubes_total.value = new_cube_total
+        elif self.options.data_cubes_total.value < self.options.data_cubes_required.value:
+            # Raise total to at least match required
+            self.options.data_cubes_total.value = self.options.data_cubes_required.value
 
         # Turn start_inventory non-progressive generators into progressive ones, and vice versa, depending on options.
         # We do this so we can try to ensure consistent behavior among the client, starting item output, and logic.
