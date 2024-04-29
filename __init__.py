@@ -267,7 +267,7 @@ class TyrianWorld(World):
             settings["ShopMode"] = int(self.options.shop_mode)
         if self.options.specials == "as_items":
             settings["SpecialMenu"] = True
-        if self.options.show_twiddle_inputs:
+        if self.options.twiddles and self.options.show_twiddle_inputs:
             settings["ShowTwiddles"] = True
         if self.options.archipelago_radar:
             settings["APRadar"] = True
