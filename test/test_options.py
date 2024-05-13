@@ -22,17 +22,17 @@ class TestDataCubeHuntAbsolute(TyrianTestBase):
     }
 
     # Goal levels shouldn't be in the item pool.
-    def test_goal_level_not_in_pool(self):
+    def test_goal_level_not_in_pool(self) -> None:
         goal_level = self.get_items_by_name("NOSE DRIP (Episode 4)")
         self.assertEqual(len(goal_level), 0, msg="Goal level present in Data Cube Hunt mode")
 
     # Data cube count should match data_cubes_total.
-    def test_all_data_cubes_present(self):
+    def test_all_data_cubes_present(self) -> None:
         data_cubes = self.get_items_by_name("Data Cube")
         self.assertEqual(len(data_cubes), 34, msg="Number of data cubes present does not equal data_cubes_total")
 
     # At least data_cubes_required number of data cubes should be necessary to beat the seed.
-    def test_data_cubes_required(self):
+    def test_data_cubes_required(self) -> None:
         self.collect(self.get_item_by_name("Sonic Wave"))
         self.collect(self.get_item_by_name("Atomic RailGun"))
         self.collect(self.get_items_by_name("Maximum Power Up"))

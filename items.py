@@ -190,7 +190,7 @@ class LocalItemData:
         "Pearl Wind":        LocalWeapon(701),
         "Soul of Zinglon":   LocalWeapon(702),
         "Attractor":         LocalWeapon(703),
-        "Ice Beam":          LocalWeapon(704),
+        "Ice Beam":          LocalWeapon(704, item_class=IC.useful),
         "Flare":             LocalWeapon(705),
         "Blade Field":       LocalWeapon(706),
         "SandStorm":         LocalWeapon(707),
@@ -240,7 +240,7 @@ class LocalItemData:
         "Protron Cannon Indigo":      LocalWeapon(822, count=1), # Right-only (limited to 1)
         "Companion Ship Quicksilver": LocalWeapon(823, count=2),
         "Protron Cannon Tangerine":   LocalWeapon(824, count=1, item_class=IC.useful), # Right-only (limited to 1)
-        "MicroSol FrontBlaster II":   LocalWeapon(825, count=1), # Right-only (limited to 1)
+        "MicroSol FrontBlaster II":   LocalWeapon(825, count=1, item_class=IC.useful), # Right-only (limited to 1)
         "Beno Wallop Beam":           LocalWeapon(826, count=1), # Right-only (limited to 1)
         "Beno Protron System -B-":    LocalWeapon(827, count=1, item_class=IC.useful), # Right-only (limited to 1)
         "Tropical Cherry Companion":  LocalWeapon(828, count=2),

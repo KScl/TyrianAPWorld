@@ -451,21 +451,6 @@ def can_deal_damage(state: "CollectionState", player: int, damage_tables: Damage
             return True
     return False
 
-def can_damage_with_weapon(state: "CollectionState", player: int, damage_tables: DamageTables,
-      weapon: str, solo_dps: float) -> bool:
-    if not state.has(weapon, player):
-        return False
-
-    power_level_max = get_maximum_power_level(state, player)
-    start_energy = damage_tables.local_power_provided[get_generator_level(state, player)]
-
-    target_dps = DPS(active=solo_dps * damage_tables.logic_difficulty_multiplier)
-
-    # Workaround: We assume power 11 with Gravitron Pulse-Wave can defeat anything, to avoid logic issues
-    if power_level_max == 11 and start_energy >= 40:
-        return True
-    return damage_tables.can_meet_dps(target_dps, [weapon], power_level_max, start_energy)
-
 def has_armor_level(state: "CollectionState", player: int, armor_level: int) -> bool:
     return True if armor_level <= 5 else state.has("Armor Up", player, armor_level - 5)
 
@@ -1022,9 +1007,8 @@ def episode_2_rules(world: "TyrianWorld") -> None:
           can_deal_damage(state, world.player, world.damage_tables, active=health/2.2))
 
     # Armor and generator is to get to that point, damage is to kill as it goes by
-    logic_location_rule(world, "BOTANY A (Episode 2) - Mobile Turret Approaching Head-On",
-          lambda state, health=enemy_health:
-              can_deal_damage(state, world.player, world.damage_tables, active=health/1.0))
+    logic_location_rule(world, "BOTANY A (Episode 2) - Mobile Turret Approaching Head-On", lambda state, health=enemy_health:
+          can_deal_damage(state, world.player, world.damage_tables, active=health/1.0))
 
     logic_all_locations_rule(world, "BOTANY A (Episode 2) - End of Path Secret", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/2.0))
@@ -1038,8 +1022,8 @@ def episode_2_rules(world: "TyrianWorld") -> None:
           can_deal_damage(state, world.player, world.damage_tables, active=(254*1.8)/24.0))
 
     # Apply armor requirements to late locations too
-    logic_location_rule(world, "BOTANY A (Episode 2) - Mobile Turret Approaching Head-On",
-          lambda state, armor=wanted_armor: has_armor_level(state, world.player, armor))
+    logic_location_rule(world, "BOTANY A (Episode 2) - Mobile Turret Approaching Head-On", lambda state, armor=wanted_armor:
+          has_armor_level(state, world.player, armor))
     logic_all_locations_rule(world, "BOTANY A (Episode 2) - End of Path Secret", lambda state, armor=wanted_armor:
           has_armor_level(state, world.player, armor))
     logic_location_rule(world, "BOTANY A (Episode 2) - Green Ship Pincer", lambda state, armor=wanted_armor:
@@ -1049,11 +1033,9 @@ def episode_2_rules(world: "TyrianWorld") -> None:
 
     # ===== BOTANY B ==========================================================
     if not world.options.logic_boss_timeout:
-        logic_entrance_behind_location(world, "Can shop at BOTANY B (Episode 2)",
-              "BOTANY B (Episode 2) - Boss")
+        logic_entrance_behind_location(world, "Can shop at BOTANY B (Episode 2)", "BOTANY B (Episode 2) - Boss")
     else:
-        logic_entrance_behind_location(world, "Can shop at BOTANY B (Episode 2)",
-              "BOTANY B (Episode 2) - Main Platform Sensor 1")
+        logic_entrance_behind_location(world, "Can shop at BOTANY B (Episode 2)", "BOTANY B (Episode 2) - Main Platform Sensor 1")
 
     # Start of level, nothing nearby dangerous, only need to destroy it
     enemy_health = scale_health(world, 6, adjust_difficulty=+1) # Destructible sensor

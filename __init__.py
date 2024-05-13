@@ -846,7 +846,8 @@ class TyrianWorld(World):
                 else:
                     create_level_unlock_rule(level)
         else:
-            [create_level_unlock_rule(level) for level in self.all_levels]
+            for level in self.all_levels:
+                create_level_unlock_rule(level)
 
         # ------------------------------
 

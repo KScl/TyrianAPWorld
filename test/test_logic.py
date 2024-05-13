@@ -5,7 +5,7 @@
 # See "LICENSE" for more details.
 
 from . import TyrianTestBase
-from ..logic import can_deal_damage, can_damage_with_weapon
+from ..logic import can_deal_damage
 
 # =============================================================================
 # Testing Tyrian 2000 specific things
@@ -192,41 +192,3 @@ class TestTyrianData(TyrianTestBase):
         self.collect(powerups[2:10]) # To Maximum Power 11
         mixed_dps_check = can_deal_damage(self.multiworld.state, self.player, damage_tables, active=40.0, passive=50.0)
         self.assertEqual(mixed_dps_check, True, "Pulse-Cannon:11 + Starburst:2 should be 47.3/55.2 DPS together, but failed 40.0/50.0")
-
-    def test_solo_weapon_dps_logic(self) -> None:
-        damage_tables = self.multiworld.worlds[self.player].damage_tables
-        generators = self.get_items_by_name(["Progressive Generator"] * 5)
-        powerups = self.get_items_by_name(["Maximum Power Up"] * 10)
-        self.collect(self.get_item_by_name("Lightning Cannon"))
-
-        # This should fail (Lightning Cannon requires at least one generator upgrade)
-        solo_dps_check = can_damage_with_weapon(self.multiworld.state, self.player, damage_tables, "Lightning Cannon", 1.0)
-        self.assertEqual(solo_dps_check, False, "Should not be able to use acquired Lightning Cannon, but DPS 1.0 test passed")
-
-        # Should succeed now as one generator upgrade is all we need
-        self.collect(generators[0])
-        solo_dps_check = can_damage_with_weapon(self.multiworld.state, self.player, damage_tables, "Lightning Cannon", 1.0)
-        self.assertEqual(solo_dps_check, True, "DPS 1.0 test with required Lightning Cannon failed despite having and being able to use")
-
-        # Test power level closer to 7
-        solo_dps_check = can_damage_with_weapon(self.multiworld.state, self.player, damage_tables, "Lightning Cannon", 20.0)
-        self.assertEqual(solo_dps_check, False, "Lightning Cannon:1 should not be able to reach DPS 20.0, yet test passed")
-        self.collect(powerups[0:6]) # To Maximum Power 7
-        solo_dps_check = can_damage_with_weapon(self.multiworld.state, self.player, damage_tables, "Lightning Cannon", 20.0)
-        self.assertEqual(solo_dps_check, True, "Lightning Cannon:7 can reach DPS 20.0, yet test failed")
-
-        # Test extreme end
-        solo_dps_check = can_damage_with_weapon(self.multiworld.state, self.player, damage_tables, "Lightning Cannon", 80.0)
-        self.assertEqual(solo_dps_check, False, "Lightning Cannon:7 should not be able to reach DPS 80.0, yet test passed")
-        self.collect(powerups[6:10]) # To Maximum Power 11
-        solo_dps_check = can_damage_with_weapon(self.multiworld.state, self.player, damage_tables, "Lightning Cannon", 80.0)
-        self.assertEqual(solo_dps_check, False, "Lightning Cannon:11 isn't usable without Gravitron Pulse-Wave, yet test passed")
-        self.collect(generators[1:5]) # Gravitron Pulse-Wave
-        solo_dps_check = can_damage_with_weapon(self.multiworld.state, self.player, damage_tables, "Lightning Cannon", 80.0)
-        self.assertEqual(solo_dps_check, True, "Lightning Cannon:11 with Gravitron Pulse-Wave reaches 93.3 DPS, yet 80.0 DPS test failed")
-
-        # This should obviously fail (have everything except the required weapon)
-        self.remove(self.get_item_by_name("Lightning Cannon"))
-        self.collect_all_but(["Lightning Cannon"])
-        solo_dps_check = can_damage_with_weapon(self.multiworld.state, self.player, damage_tables, "Lightning Cannon", 1.0)
-        self.assertEqual(solo_dps_check, False, "Collected all except Lightning Cannon, but test requiring Lightning Cannon passed")
