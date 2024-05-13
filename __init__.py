@@ -739,6 +739,19 @@ class TyrianWorld(World):
             self.single_special_weapon = self.random.choice(possible_specials)
             self.multiworld.push_precollected(self.create_item(self.single_special_weapon))
 
+        # Mark some levels as local only, based on Local Level %
+        if self.options.local_level_percent != 0:
+            levels_in_pool = [level for level in self.local_itempool if level in LocalItemData.levels]
+            requested_local_levels = int(len(levels_in_pool) * (self.options.local_level_percent / 100))
+
+            levels_made_local = self.random.sample(levels_in_pool, requested_local_levels)
+            self.options.local_items.value.update(levels_made_local)
+
+            # If over 50% of the levels are marked to be local, also mark one of those local levels early.
+            if self.options.local_level_percent >= 50 and requested_local_levels > 0:
+                early_level = self.random.choice(levels_made_local)
+                self.multiworld.early_items[self.player][early_level] = 1
+
         # ----------------------------------------------------------------------------------------
         # Automatically fill the pool with junk Credits items, enough to reach total_money_needed.
 

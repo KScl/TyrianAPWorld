@@ -14,9 +14,9 @@ if TYPE_CHECKING:
     from BaseClasses import PlandoOptions
     from worlds.AutoWorld import World
 
-# ===================
-# === Goals, etc. ===
-# ===================
+# =============
+# === Goals ===
+# =============
 
 class EnableTyrian2000Support(Toggle):
     """
@@ -118,9 +118,18 @@ class DataCubesTotalPercent(Range):
     range_end = 200
     default = 100
 
-# ==================================
-# === Itempool / Start Inventory ===
-# ==================================
+# =============================
+# === Item Pool Adjustments ===
+# =============================
+
+class RemoveFromItemPool(ItemDict):
+    """
+    Allows customizing the item pool by removing unwanted items from it.
+
+    Note: Items in starting inventory are automatically removed from the pool; you don't need to remove them here too.
+    """
+    display_name = "Remove From Item Pool"
+    verify_item_name = True
 
 class StartingMoney(Range):
     """Change the amount of money you start the seed with."""
@@ -132,7 +141,7 @@ class StartingMoney(Range):
 class StartingMaxPower(Range):
     """
     Change the maximum power level you're allowed to upgrade weapons to when you start the seed.
-    Setting this higher can result in more varied seeds.
+    Increasing this can result in more varied seeds, and/or easier starts.
     """
     display_name = "Starting Maximum Power Level"
     range_start = 1
@@ -150,14 +159,60 @@ class RandomStartingWeapon(Toggle):
     """
     display_name = "Random Starting Weapon"
 
-class RemoveFromItemPool(ItemDict):
+class ProgressiveItems(DefaultOnToggle):
     """
-    Allows customizing the item pool by removing unwanted items from it.
+    How items with multiple tiers (in this game, only generators) should be rewarded.
 
-    Note: Items in starting inventory are automatically removed from the pool; you don't need to remove them here too.
+    If 'off', each item can be independently picked up, letting you skip tiers. Picking up an item of a lower tier
+    after an item of a higher tier does nothing.
+    If 'on', each "Progressive" item will move you up to the next tier, regardless of which one you find.
     """
-    display_name = "Remove From Item Pool"
-    verify_item_name = True
+    display_name = "Progressive Items"
+
+class Specials(Choice):
+    """
+    Enable or disable specials (extra behaviors when starting to fire).
+
+    If 'on', your ship will have a random special from the start.
+    If 'as_items', specials will be added to the item pool, and can be freely chosen once acquired.
+    If 'off', specials won't be available at all.
+    """
+    display_name = "Specials"
+    option_on = 1
+    option_as_items = 2
+    option_off = 0
+    alias_true = 1
+    alias_false = 0
+    default = 2
+
+class Twiddles(Choice):
+    """
+    Enable or disable twiddles (Street Fighter-esque button combinations).
+
+    If 'on', your ship will have up to three random twiddles. Their button combinations will be the same as in the
+    original game; as will their use costs.
+    If 'chaos', your ship will have up to three random twiddles with new inputs. They may have new, unique behaviors;
+    and they may have different use costs.
+    If 'off', no twiddles will be available.
+    """
+    display_name = "Twiddles"
+    option_on = 1
+    option_chaos = 2
+    option_off = 0
+    alias_true = 1
+    alias_false = 0
+    default = 1
+
+class LocalLevelPercent(Range):
+    """
+    Set some percentage of levels, chosen randomly, to be local to your own world.
+    Increasing this may reduce the chance of being in BK mode (having no checks available), but may also result in less
+    interaction with other worlds.
+    """
+    display_name = "Local Level %"
+    range_start = 0
+    range_end = 100
+    default = 0
 
 # =======================
 # === Shops and Money ===
@@ -250,53 +305,9 @@ class BaseWeaponCost(TextChoice):
         raise ValueError(f"Could not find option '{self.value}' for '{self.__class__.__name__}', "
                          f"known options are {', '.join(self.options)}, <any positive integer>")
 
-class ProgressiveItems(DefaultOnToggle):
-    """
-    How items with multiple tiers (in this game, only generators) should be rewarded.
-
-    If 'off', each item can be independently picked up, letting you skip tiers. Picking up an item of a lower tier
-    after an item of a higher tier does nothing.
-    If 'on', each "Progressive" item will move you up to the next tier, regardless of which one you find.
-    """
-    display_name = "Progressive Items"
-
-class Specials(Choice):
-    """
-    Enable or disable specials (extra behaviors when starting to fire).
-
-    If 'on', your ship will have a random special from the start.
-    If 'as_items', specials will be added to the item pool, and can be freely chosen once acquired.
-    If 'off', specials won't be available at all.
-    """
-    display_name = "Specials"
-    option_on = 1
-    option_as_items = 2
-    option_off = 0
-    alias_true = 1
-    alias_false = 0
-    default = 2
-
-class Twiddles(Choice):
-    """
-    Enable or disable twiddles (Street Fighter-esque button combinations).
-
-    If 'on', your ship will have up to three random twiddles. Their button combinations will be the same as in the
-    original game; as will their use costs.
-    If 'chaos', your ship will have up to three random twiddles with new inputs. They may have new, unique behaviors;
-    and they may have different use costs.
-    If 'off', no twiddles will be available.
-    """
-    display_name = "Twiddles"
-    option_on = 1
-    option_chaos = 2
-    option_off = 0
-    alias_true = 1
-    alias_false = 0
-    default = 1
-
-# ==================
-# === Difficulty ===
-# ==================
+# =========================
+# === Logic Adjustments ===
+# =========================
 
 class LogicDifficulty(Choice):
     """
@@ -326,6 +337,10 @@ class LogicBossTimeout(Toggle):
     If enabled, bosses that can be timed out may logically require you to do so; requiring you to dodge them until the
     level automatically completes to obtain items from a shop afterward.
     """
+
+# ===================================
+# === Game Difficulty Adjustments ===
+# ===================================
 
 class GameDifficulty(Choice):
     """
@@ -404,8 +419,11 @@ class TyrianDeathLink(DeathLink):
 
 @dataclass
 class TyrianOptions(PerGameCommonOptions):
+    # ----- Remove from Item Pool ---------------------------------------------
+    # This is listed separately from others, so that it follows per-game common options.
     remove_from_item_pool: RemoveFromItemPool
 
+    # ----- Goals -------------------------------------------------------------
     enable_tyrian_2000_support: EnableTyrian2000Support
     episode_1: GoalEpisode1
     episode_2: GoalEpisode2
@@ -417,25 +435,31 @@ class TyrianOptions(PerGameCommonOptions):
     data_cubes_total: DataCubesTotal
     data_cubes_total_percent: DataCubesTotalPercent
 
+    # ----- Item Pool Adjustments ---------------------------------------------
+    specials: Specials
+    twiddles: Twiddles
+    local_level_percent: LocalLevelPercent
+    progressive_items: ProgressiveItems
+    random_starting_weapon: RandomStartingWeapon
     starting_money: StartingMoney
     starting_max_power: StartingMaxPower
-    random_starting_weapon: RandomStartingWeapon
 
+    # ----- Shops and Money ---------------------------------------------------
     shop_mode: ShopMode
     shop_item_count: ShopItemCount
     money_pool_scale: MoneyPoolScale
     base_weapon_cost: BaseWeaponCost
-    progressive_items: ProgressiveItems
-    specials: Specials
-    twiddles: Twiddles
 
+    # ----- Logic Adjustments -------------------------------------------------
     logic_difficulty: LogicDifficulty
     logic_boss_timeout: LogicBossTimeout
 
+    # ----- Game Difficulty Adjustments ---------------------------------------
     difficulty: GameDifficulty
     contact_bypasses_shields: HardContact
     allow_excess_armor: ExcessArmor
 
+    # ----- Visual Tweaks and Other Things ------------------------------------
     force_game_speed: ForceGameSpeed
     show_twiddle_inputs: ShowTwiddleInputs
     archipelago_radar: ArchipelagoRadar
