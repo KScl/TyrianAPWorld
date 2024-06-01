@@ -10,7 +10,7 @@ import math
 import os
 from typing import TYPE_CHECKING, cast, TextIO, Optional, List, Dict, Mapping, Set, Tuple, Any
 
-from BaseClasses import Item, Location, Region
+from BaseClasses import Item, Location, Region, Tutorial
 from BaseClasses import ItemClassification as IC
 from BaseClasses import LocationProgressType as LP
 from Fill import fast_fill
@@ -18,7 +18,7 @@ from Fill import fast_fill
 from .items import LocalItemData, LocalItem, Episode
 from .locations import LevelLocationData, LevelRegion
 from .logic import DamageTables, set_level_rules
-from .options import TyrianOptions
+from .options import TyrianOptions, tyrian_option_groups
 from .twiddles import Twiddle, generate_twiddles
 
 from worlds.AutoWorld import World, WebWorld
@@ -32,11 +32,24 @@ class TyrianItem(Item):
 class TyrianLocation(Location):
     game = "Tyrian"
 
-    shop_price: Optional[int] # None if not a shop, price in credits if it is
+    shop_price: Optional[int]  # None if not a shop, price in credits if it is
 
     def __init__(self, player: int, name: str, address: Optional[int], parent: Region):
         super().__init__(player, name, address, parent)
         self.shop_price = None
+
+class TyrianWebWorld(WebWorld):
+    game = "Tyrian"
+    option_groups = tyrian_option_groups
+    theme = "partyTime"
+    tutorials = [Tutorial(
+        "Multiworld Setup Guide",
+        "A guide to playing Tyrian with Archipelago.",
+        "English",
+        "setup_en.md",
+        "setup/en",
+        ["Kaito Sinclaire"]
+    )]
 
 class TyrianWorld(World):
     """
@@ -45,8 +58,9 @@ class TyrianWorld(World):
     This randomizer supports both versions of the game.
     """
     game = "Tyrian"
+    web = TyrianWebWorld()
     options_dataclass = TyrianOptions
-    options: TyrianOptions # type: ignore
+    options: TyrianOptions  # type: ignore
 
     base_id = 20031000
     item_name_to_id = LocalItemData.get_item_name_to_id(base_id)
@@ -61,20 +75,20 @@ class TyrianWorld(World):
 
     # --------------------------------------------------------------------------------------------
 
-    goal_episodes: Set[int] # Require these episodes for goal (1, 2, 3, 4, 5)
-    play_episodes: Set[int] # Add levels from these episodes (1, 2, 3, 4, 5)
+    goal_episodes: Set[int]  # Require these episodes for goal (1, 2, 3, 4, 5)
+    play_episodes: Set[int]  # Add levels from these episodes (1, 2, 3, 4, 5)
 
-    default_start_level: str # Level we start on, gets precollected automatically
-    all_levels: List[str] # List of all levels available in seed
-    local_itempool: List[str] # String-based item pool for us, becomes multiworld item pool after create_items
+    default_start_level: str  # Level we start on, gets precollected automatically
+    all_levels: List[str]  # List of all levels available in seed
+    local_itempool: List[str]  # String-based item pool for us, becomes multiworld item pool after create_items
 
-    single_special_weapon: Optional[str] # For output to spoiler log only
-    twiddles: List[Twiddle] # Twiddle/SF Code inputs and their results.
+    single_special_weapon: Optional[str]  # For output to spoiler log only
+    twiddles: List[Twiddle]  # Twiddle/SF Code inputs and their results.
 
-    weapon_costs: Dict[str, int] # Costs of each weapon's upgrades (see LocalItemData.default_upgrade_costs)
-    total_money_needed: int # Sum total of shop prices and max upgrades, used to calculate filler items
+    weapon_costs: Dict[str, int]  # Costs of each weapon's upgrades (see LocalItemData.default_upgrade_costs)
+    total_money_needed: int  # Sum total of shop prices and max upgrades, used to calculate filler items
 
-    damage_tables: DamageTables # Used for rule generation
+    damage_tables: DamageTables  # Used for rule generation
 
     # ================================================================================================================
     # Item / Location Helpers
@@ -93,7 +107,7 @@ class TyrianWorld(World):
     def create_shop_location(self, name: str, region: Region, region_data: LevelRegion) -> TyrianLocation:
         loc = TyrianLocation(self.player, name, self.location_name_to_id[name], region)
 
-        loc.shop_price = 0 # Give a default int value for shops
+        loc.shop_price = 0  # Give a default int value for shops
         region_data.set_random_shop_price(self, loc)
         self.total_money_needed += loc.shop_price
 
@@ -123,8 +137,8 @@ class TyrianWorld(World):
     def get_junk_items(self, total_checks: int, total_money: int, allow_superbombs: bool = True) -> List[str]:
         total_money = int(total_money * (self.options.money_pool_scale / 100))
 
-        valid_money_amounts = \
-              [int(name.removesuffix(" Credits")) for name in LocalItemData.other_items if name.endswith(" Credits")]
+        valid_money_amounts = [int(name.removesuffix(" Credits"))
+                               for name in LocalItemData.other_items if name.endswith(" Credits")]
 
         junk_list = []
 
@@ -162,7 +176,7 @@ class TyrianWorld(World):
             item_choice = [i for i in valid_money_amounts if i >= total_money][0]
             junk_list.append(f"{item_choice} Credits")
 
-        return junk_list;
+        return junk_list
 
     # ================================================================================================================
     # Option Parsing Helpers
@@ -175,10 +189,10 @@ class TyrianWorld(World):
             return {key: value.balanced for (key, value) in LocalItemData.default_upgrade_costs.items()}
         elif self.options.base_weapon_cost.current_key == "randomized":
             return {key: self.random.randrange(400, 1801, 50)
-                  for key in LocalItemData.default_upgrade_costs.keys()}
+                    for key in LocalItemData.default_upgrade_costs.keys()}
         else:
             return {key: int(self.options.base_weapon_cost.current_key)
-                  for key in LocalItemData.default_upgrade_costs.keys()}
+                    for key in LocalItemData.default_upgrade_costs.keys()}
 
     def get_starting_weapon_name(self) -> str:
         if not self.options.random_starting_weapon:
@@ -224,7 +238,7 @@ class TyrianWorld(World):
             return lowest_power <= base_energy
 
         possible_choices = [item for item in self.local_itempool
-              if item in LocalItemData.front_ports and can_use_from_start(item)]
+                            if item in LocalItemData.front_ports and can_use_from_start(item)]
 
         # List is empty? Pick totally randomly among everything available in the seed
         if len(possible_choices) == 0:
@@ -324,7 +338,7 @@ class TyrianWorld(World):
             elif item.name == "Advanced MicroFusion":        set_state("Generator", 4)
             elif item.name == "Gravitron Pulse-Wave":        set_state("Generator", 5)
             elif item.name == "Solar Shields":               start_state["SolarShield"] = True
-            elif item.name == "SuperBomb":                   pass # Only useful if obtained in level, ignore
+            elif item.name == "SuperBomb":                   pass  # Only useful if obtained in level, ignore
             elif item.name.endswith(" Credits"):             add_credits(item.name)
             else:
                 raise Exception(f"Unknown item '{item.name}' in precollected items")
@@ -348,9 +362,9 @@ class TyrianWorld(World):
     # Present: Only in slot_data (remote games).
     def output_progression_data(self) -> List[int]:
         return [location.address - self.base_id for location in self.multiworld.get_locations(self.player)
-              if location.address is not None and location.item is not None
-              and getattr(location, "shop_price", None) is None # Ignore shop items (they're scouted in game)
-              and location.item.advancement]
+                if location.address is not None and location.item is not None
+                and getattr(location, "shop_price", None) is None  # Ignore shop items (they're scouted in game)
+                and location.item.advancement]
 
     # ---------- LocationMax --------------------------------------------------
     # Total number of locations available.
@@ -369,15 +383,15 @@ class TyrianWorld(World):
             return f"{'!' if location.item.advancement else ''}{location.item.code - self.base_id}"
 
         return {location.address - self.base_id: get_location_item(location)
-              for location in self.multiworld.get_locations(self.player)
-              if location.address is not None and location.item is not None}
+                for location in self.multiworld.get_locations(self.player)
+                if location.address is not None and location.item is not None}
 
     # ---------- ShopData (obfuscated) ----------------------------------------
     # The price of every shop present in the player's world.
     # Present: If the option "Shop Mode" is not set to "none".
     def output_shop_data(self) -> Dict[int, int]:
         def correct_shop_price(location: TyrianLocation) -> int:
-            assert location.shop_price is not None # Tautological
+            assert location.shop_price is not None  # Tautological
 
             # If the shop has credits, and the cost is more than you'd gain, reduce the cost.
             # Don't do this in hidden mode, though, since the player shouldn't have any idea what each item is.
@@ -389,9 +403,9 @@ class TyrianWorld(World):
             return location.shop_price
 
         return {location.address - self.base_id: correct_shop_price(cast(TyrianLocation, location))
-              for location in self.multiworld.get_locations(self.player)
-              if location.address is not None # Ignore events
-              and getattr(location, "shop_price", None) is not None}
+                for location in self.multiworld.get_locations(self.player)
+                if location.address is not None  # Ignore events
+                and getattr(location, "shop_price", None) is not None}
 
     # --------------------------------------------------------------------------------------------
 
@@ -436,9 +450,9 @@ class TyrianWorld(World):
             "WeaponCost": self.obfuscate_object(self.output_weapon_cost()),
         }
 
-        if local_mode: # Local mode: Output all location contents
+        if local_mode:  # Local mode: Output all location contents
             slot_data["LocationData"] = self.obfuscate_object(self.output_all_locations())
-        else: # Remote mode: Just output a list of location IDs that contain progression
+        else:  # Remote mode: Just output a list of location IDs that contain progression
             slot_data["ProgressionData"] = self.obfuscate_object(self.output_progression_data())
             slot_data["LocationMax"] = self.output_location_count()
 
@@ -556,7 +570,7 @@ class TyrianWorld(World):
         else:
             # Get rid of all progressive generators from start_inventory.
             progressive_count = self.options.start_inventory.value.pop("Progressive Generator", 0)
-            progressive_count = min(progressive_count, 5) # Cap at Gravitron Pulse-Wave
+            progressive_count = min(progressive_count, 5)  # Cap at Gravitron Pulse-Wave
 
             # Take the count of progressive generators we popped out, and convert them to a single non-progressive one.
             if progressive_count > 0:
@@ -606,7 +620,7 @@ class TyrianWorld(World):
         if self.options.shop_mode != "none":
             # One of the "always_x" choices, add each level shop exactly x times
             if self.options.shop_item_count <= -1:
-                times_to_add = abs(self.options.shop_item_count)            
+                times_to_add = abs(self.options.shop_item_count)
                 items_per_shop = {name: times_to_add for name in self.all_levels}
 
             # Not enough items for one in every shop
@@ -660,7 +674,7 @@ class TyrianWorld(World):
     def create_items(self) -> None:
 
         def pop_from_pool(item_name: str) -> Optional[str]:
-            if item_name in self.local_itempool: # Regular item
+            if item_name in self.local_itempool:  # Regular item
                 self.local_itempool.remove(item_name)
                 return item_name
             return None
@@ -701,9 +715,9 @@ class TyrianWorld(World):
         # Remove precollected (starting inventory) items from the pool.
         for precollect in self.multiworld.precollected_items[self.player]:
             name = pop_from_pool(precollect.name)
-            if name in LocalItemData.levels: # Allow starting level override (dangerous logic-wise, but whatever)
+            if name in LocalItemData.levels:  # Allow starting level override (dangerous logic-wise, but whatever)
                 precollected_level_exists = True
-            elif name in LocalItemData.front_ports: # Allow default weapon override
+            elif name in LocalItemData.front_ports:  # Allow default weapon override
                 precollected_weapon_exists = True
 
         # Remove items we've been requested to remove from the pool.
@@ -722,19 +736,19 @@ class TyrianWorld(World):
         if not precollected_level_exists:
             # Precollect the default starting level and pop it from the item pool.
             start_level = pop_from_pool(self.default_start_level)
-            assert start_level is not None # Tautological because of above condition (can't remove levels from pool)
+            assert start_level is not None  # Tautological because of above condition (can't remove levels from pool)
             self.multiworld.push_precollected(self.create_item(start_level))
 
         if not precollected_weapon_exists:
             # Pick a starting weapon and pull it from the pool.
             start_weapon_name = self.get_starting_weapon_name()
             start_weapon = pop_from_pool(start_weapon_name)
-            if start_weapon is not None: # Not actually tautological, this can happen if someone removes Pulse-Cannon
+            if start_weapon is not None:  # Not actually tautological, this can happen if someone removes Pulse-Cannon
                 self.multiworld.push_precollected(self.create_item(start_weapon))
             else:
                 raise Exception(f"Starting weapon ({start_weapon_name}) not in pool")
 
-        if self.options.specials == "on": # Get a random special, no others
+        if self.options.specials == "on":  # Get a random special, no others
             possible_specials = self.get_dict_contents_as_items(LocalItemData.special_weapons)
             self.single_special_weapon = self.random.choice(possible_specials)
             self.multiworld.push_precollected(self.create_item(self.single_special_weapon))
@@ -758,7 +772,7 @@ class TyrianWorld(World):
         # Returns remaining amount of space in itempool after tossing requested number of items
         def toss_from_itempool(num_to_toss: int) -> int:
             tossable_items = [name for name in self.local_itempool if LocalItemData.get(name).tossable]
-            if num_to_toss > len(tossable_items): # Toss all we can, it's the best we can do.
+            if num_to_toss > len(tossable_items):  # Toss all we can, it's the best we can do.
                 num_to_toss = len(tossable_items)
 
             tossed = [pop_from_pool(i) for i in self.random.sample(tossable_items, num_to_toss)]
@@ -865,7 +879,7 @@ class TyrianWorld(World):
             # If only one episode is goal, exclude anything in the shop behind the goal level.
             if len(self.goal_episodes) == 1:
                 shop_locations = [loc for loc in self.multiworld.get_locations(self.player)
-                      if loc.name.startswith(f"Shop - {level_name} - ")]
+                                  if loc.name.startswith(f"Shop - {level_name} - ")]
 
                 for location in shop_locations:
                     location.progress_type = LP.EXCLUDED

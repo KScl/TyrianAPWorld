@@ -7,8 +7,8 @@
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from Options import Visibility, PerGameCommonOptions, Toggle, DefaultOnToggle, Choice, Range, NamedRange, TextChoice, \
-      ItemDict, DeathLink
+from Options import OptionGroup, Visibility, PerGameCommonOptions, \
+      Toggle, DefaultOnToggle, Choice, Range, NamedRange, TextChoice, ItemDict, DeathLink
 
 if TYPE_CHECKING:
     from BaseClasses import PlandoOptions
@@ -113,7 +113,7 @@ class DataCubesTotalPercent(Range):
     100 adds in exactly the number of data cubes required, 200 adds in twice that amount, etc.
     """
     display_name = "Data Cubes Total %"
-    visibility = Visibility.all ^ Visibility.spoiler # Overrides above option if it takes effect
+    visibility = Visibility.all ^ Visibility.spoiler  # Overrides above option if it takes effect
     range_start = 100
     range_end = 200
     default = 100
@@ -337,6 +337,7 @@ class LogicBossTimeout(Toggle):
     If enabled, bosses that can be timed out may logically require you to do so; requiring you to dodge them until the
     level automatically completes to obtain items from a shop afterward.
     """
+    display_name = "Boss Timeout in Logic"
 
 # ===================================
 # === Game Difficulty Adjustments ===
@@ -348,12 +349,12 @@ class GameDifficulty(Choice):
     know what you're doing.
     """
     display_name = "Game Difficulty"
-    option_easy = 1 # 75% enemy health
-    option_normal = 2 # 100% enemy health
-    option_hard = 3 # 120% enemy health
-    option_impossible = 4 # 150% enemy health, fast firing and bullet speeds
-    option_suicide = 6 # 200% enemy health, fast firing and bullet speeds
-    option_lord_of_game = 8 # 400% enemy health, incredibly fast firing and bullet speeds
+    option_easy = 1  # 75% enemy health
+    option_normal = 2  # 100% enemy health
+    option_hard = 3  # 120% enemy health
+    option_impossible = 4  # 150% enemy health, fast firing and bullet speeds
+    option_suicide = 6  # 200% enemy health, fast firing and bullet speeds
+    option_lord_of_game = 8  # 400% enemy health, incredibly fast firing and bullet speeds
     alias_lord = option_lord_of_game
     alias_zinglon = option_lord_of_game
     default = 2
@@ -397,17 +398,17 @@ class ForceGameSpeed(Choice):
 class ShowTwiddleInputs(DefaultOnToggle):
     """If twiddles are enabled, show their inputs in "Ship Info" next to the name of each twiddle."""
     display_name = "Show Twiddle Inputs"
-    visibility = Visibility.all ^ Visibility.spoiler # Visual only
+    visibility = Visibility.all ^ Visibility.spoiler  # Visual only
 
 class ArchipelagoRadar(DefaultOnToggle):
     """Shows a bright outline around any enemy that contains an Archipelago Item. Recommended for beginners."""
     display_name = "Archipelago Radar"
-    visibility = Visibility.all ^ Visibility.spoiler # Visual only
+    visibility = Visibility.all ^ Visibility.spoiler  # Visual only
 
 class Christmas(Toggle):
     """Use the Christmas set of graphics and sound effects."""
     display_name = "Christmas Mode"
-    visibility = Visibility.all ^ Visibility.spoiler # Visual only
+    visibility = Visibility.all ^ Visibility.spoiler  # Visual only
 
 class TyrianDeathLink(DeathLink):
     """
@@ -464,4 +465,30 @@ class TyrianOptions(PerGameCommonOptions):
     show_twiddle_inputs: ShowTwiddleInputs
     archipelago_radar: ArchipelagoRadar
     christmas_mode: Christmas
+
     death_link: TyrianDeathLink
+
+
+tyrian_option_groups = [
+    OptionGroup("Episodes & Goals", [
+        GoalEpisode1,
+        GoalEpisode2,
+        GoalEpisode3,
+        GoalEpisode4,
+        GoalEpisode5,
+        DataCubeHunt,
+        DataCubesRequired,
+        DataCubesTotal,
+        DataCubesTotalPercent
+    ]),
+    OptionGroup("Visual Tweaks & Other Things", [
+        ForceGameSpeed,
+        ShowTwiddleInputs,
+        ArchipelagoRadar,
+        Christmas,
+    ]),
+    OptionGroup("Item & Location Options", [
+        # Other options are automatically added.
+        RemoveFromItemPool
+    ])
+]

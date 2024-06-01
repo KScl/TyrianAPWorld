@@ -13,6 +13,7 @@ from .items import Episode
 if TYPE_CHECKING:
     from . import TyrianWorld, TyrianLocation
 
+
 class LevelRegion:
     # I don't really like the distribution I was getting from just doing random.triangular, so
     # instead we have multiple different types of random prices that can get generated, and we choose
@@ -45,13 +46,13 @@ class LevelRegion:
         "W": (10000, 65601, 100),
         "X": (20000, 65601, 100),
         "Y": (30000, 65601, 100),
-        "Z": (65535, 65536,   1) # Always max shop price
+        "Z": (65535, 65536,   1)  # Always max shop price
     }
 
     episode: Episode
     locations: List[str]
-    base_id: int # Should match ID in lvlmast.c
-    shop_setups: List[str] # See base_shop_setups_list above
+    base_id: int  # Should match ID in lvlmast.c
+    shop_setups: List[str]  # See base_shop_setups_list above
 
     def __init__(self, episode: Episode, base_id: int, locations: List[str],
           shop_setups: List[str] = ["F", "H", "K", "L"]):

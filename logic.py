@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from BaseClasses import CollectionState
     from . import TyrianLocation, TyrianWorld
 
+
 class DPS:
     active: float
     passive: float
@@ -55,6 +56,7 @@ class DPS:
             return (True, 0.0)
         return (False, distance)
 
+
 class DamageTables:
     # Local versions, used when instantiated, holds all rules for a given logic difficulty merged together
     local_power_provided: List[int]
@@ -67,10 +69,10 @@ class DamageTables:
     # Maximum amount of generator power use we expect for each logic difficulty
     generator_power_provided: Dict[int, List[int]] = {
         # Difficulty --------------Power  Non MR9 M12 C12 SMF AMF GPW
-        LogicDifficulty.option_beginner: [  0,  9, 12, 16, 21, 25, 41], # -1, -2, -3, -4, -5, -9 (for shield recharge)
-        LogicDifficulty.option_standard: [  0, 10, 14, 19, 25, 30, 50], # Base power levels of each generator
-        LogicDifficulty.option_expert:   [  0, 11, 16, 21, 28, 33, 55], # +1, +2, +2, +3, +3, +5
-        LogicDifficulty.option_master:   [  0, 12, 17, 23, 30, 35, 58], # +2, +3, +4, +5, +5, +8
+        LogicDifficulty.option_beginner: [  0,  9, 12, 16, 21, 25, 41],  # -1, -2, -3, -4, -5, -9 (for shield recharge)
+        LogicDifficulty.option_standard: [  0, 10, 14, 19, 25, 30, 50],  # Base power levels of each generator
+        LogicDifficulty.option_expert:   [  0, 11, 16, 21, 28, 33, 55],  # +1, +2, +2, +3, +3, +5
+        LogicDifficulty.option_master:   [  0, 12, 17, 23, 30, 35, 58],  # +2, +3, +4, +5, +5, +8
         LogicDifficulty.option_no_logic: [ 99, 99, 99, 99, 99, 99, 99],
     }
 
@@ -284,7 +286,7 @@ class DamageTables:
         # Expert level: May need to move in closer to deal damage
         LogicDifficulty.option_expert: {
             # Front Weapons ----------- Power  --1-- --2-- --3-- --4-- --5-- --6-- --7-- --8-- ---9-- --10-- --11--
-            "The Orange Juicer":              [10.0,    0,    0,    0,    0,    0, 14.0, 14.0,  14.0,  28.0,  28.0],   
+            "The Orange Juicer":              [10.0,    0,    0,    0,    0,    0, 14.0, 14.0,  14.0,  28.0,  28.0],
         },
 
         # Master level: Assumes abuse of mechanics (e.g.: using mode switch to reset weapon state)
@@ -368,8 +370,8 @@ class DamageTables:
 
     def get_dps_shot_types(self, target_dps: DPS, weapons: List[str],
           max_power_level: int = 11, rest_energy: int = 99) -> Dict[int, DPS]:
-        best_distances: Dict[int, float] = {} # energy required: distance
-        results: Dict[int, DPS] = {} # energy required: full DPS info (returned)
+        best_distances: Dict[int, float] = {}  # energy required: distance
+        results: Dict[int, DPS] = {}  # energy required: full DPS info (returned)
 
         for weapon in weapons:
             for power in range(max_power_level):
@@ -380,13 +382,14 @@ class DamageTables:
                 cur_dps = self.local_dps[weapon][power]
                 success, distance = cur_dps.meets_requirements(target_dps)
 
-                if success: # Target DPS has been met, abandon further searching
+                if success:  # Target DPS has been met, abandon further searching
                     return {cur_energy_req: self.dps_result_success}
                 elif distance < best_distances.get(cur_energy_req, 512.0):
                     best_distances[cur_energy_req] = distance
                     results[cur_energy_req] = target_dps - cur_dps
 
         return results
+
 
 # =================================================================================================
 

@@ -9,6 +9,7 @@ from enum import IntEnum
 
 from BaseClasses import ItemClassification as IC
 
+
 class Episode(IntEnum):
     Escape = 1
     Treachery = 2
@@ -16,17 +17,19 @@ class Episode(IntEnum):
     AnEndToFate = 4
     HazudraFodder = 5
 
+
 class LocalItem:
     local_id: int
     count: int
     tossable: bool
     item_class: IC
 
-    def __init__(self, local_id: int, count: int = 0, item_class: IC = IC.filler, tossable: bool = False):
+    def __init__(self, local_id: int, count: int = 0, item_class: IC = IC.filler):
         self.local_id = local_id
         self.count = count
         self.item_class = item_class
         self.tossable = (item_class != IC.progression and item_class != IC.progression_skip_balancing)
+
 
 class LocalLevel(LocalItem):
     episode: Episode
@@ -40,6 +43,7 @@ class LocalLevel(LocalItem):
         self.tossable = False
         self.goal_level = goal_level
 
+
 class LocalWeapon(LocalItem):
     def __init__(self, local_id: int, item_class: IC = IC.filler, tossable: bool = True, count: int = 1):
         self.local_id = local_id
@@ -47,11 +51,14 @@ class LocalWeapon(LocalItem):
         self.item_class = item_class
         self.tossable = tossable
 
+
 class UpgradeCost(NamedTuple):
     original: int
     balanced: int
 
+
 # --------------------------------------------------------------------------------------------------------------------
+
 
 class LocalItemData:
     levels: Dict[str, LocalLevel] = {
@@ -65,7 +72,7 @@ class LocalItemData:
         "MINEMAZE (Episode 1)":  LocalLevel(  7, Episode.Escape),
         "WINDY (Episode 1)":     LocalLevel(  8, Episode.Escape),
         "SAVARA (Episode 1)":    LocalLevel(  9, Episode.Escape),
-        "SAVARA II (Episode 1)": LocalLevel( 10, Episode.Escape), # Savara Hard
+        "SAVARA II (Episode 1)": LocalLevel( 10, Episode.Escape),  # Savara Hard
         "BONUS (Episode 1)":     LocalLevel( 11, Episode.Escape),
         "MINES (Episode 1)":     LocalLevel( 12, Episode.Escape),
         "DELIANI (Episode 1)":   LocalLevel( 13, Episode.Escape),
@@ -132,7 +139,7 @@ class LocalItemData:
     # All Front and Rear port weapons are progression, some specific specials are too
     # All other specials and sidekicks are useful at most
     front_ports: Dict[str, LocalWeapon] = {
-        "Pulse-Cannon":                   LocalWeapon(500, item_class=IC.progression), # Default starting weapon
+        "Pulse-Cannon":                   LocalWeapon(500, item_class=IC.progression),  # Default starting weapon
         "Multi-Cannon (Front)":           LocalWeapon(501, item_class=IC.progression),
         "Mega Cannon":                    LocalWeapon(502, item_class=IC.progression),
         "Laser":                          LocalWeapon(503, item_class=IC.progression),
@@ -208,7 +215,7 @@ class LocalItemData:
         "Invulnerability":   LocalWeapon(719, item_class=IC.progression, tossable=False),
         "Lightning Zone":    LocalWeapon(720),
         "SDF Main Gun":      LocalWeapon(721, item_class=IC.useful),
-        "Protron Field":     LocalWeapon(722, count=0), # Deprecated (doesn't function properly)
+        "Protron Field":     LocalWeapon(722, count=0),  # Deprecated (doesn't function properly)
         # ---------- TYRIAN 2000 LINE ----------
         "Super Pretzel":     LocalWeapon(723, count=0),
         "Dragon Lightning":  LocalWeapon(724, count=0),
@@ -234,15 +241,15 @@ class LocalItemData:
         "Zica Flamethrower":          LocalWeapon(816, count=2),
         "Side Ship":                  LocalWeapon(817, count=2),
         "Companion Ship Warfly":      LocalWeapon(818, count=2),
-        "MicroSol FrontBlaster":      LocalWeapon(819, count=1), # Right-only (limited to 1)
+        "MicroSol FrontBlaster":      LocalWeapon(819, count=1),  # Right-only (limited to 1)
         "Companion Ship Gerund":      LocalWeapon(820, count=2),
-        "BattleShip-Class Firebomb":  LocalWeapon(821, count=1, item_class=IC.useful), # Right-only (limited to 1)
-        "Protron Cannon Indigo":      LocalWeapon(822, count=1), # Right-only (limited to 1)
+        "BattleShip-Class Firebomb":  LocalWeapon(821, count=1, item_class=IC.useful),  # Right-only (limited to 1)
+        "Protron Cannon Indigo":      LocalWeapon(822, count=1),  # Right-only (limited to 1)
         "Companion Ship Quicksilver": LocalWeapon(823, count=2),
-        "Protron Cannon Tangerine":   LocalWeapon(824, count=1, item_class=IC.useful), # Right-only (limited to 1)
-        "MicroSol FrontBlaster II":   LocalWeapon(825, count=1, item_class=IC.useful), # Right-only (limited to 1)
-        "Beno Wallop Beam":           LocalWeapon(826, count=1), # Right-only (limited to 1)
-        "Beno Protron System -B-":    LocalWeapon(827, count=1, item_class=IC.useful), # Right-only (limited to 1)
+        "Protron Cannon Tangerine":   LocalWeapon(824, count=1, item_class=IC.useful),  # Right-only (limited to 1)
+        "MicroSol FrontBlaster II":   LocalWeapon(825, count=1, item_class=IC.useful),  # Right-only (limited to 1)
+        "Beno Wallop Beam":           LocalWeapon(826, count=1),  # Right-only (limited to 1)
+        "Beno Protron System -B-":    LocalWeapon(827, count=1, item_class=IC.useful),  # Right-only (limited to 1)
         "Tropical Cherry Companion":  LocalWeapon(828, count=2),
         "Satellite Marlo":            LocalWeapon(829, count=2),
         # ---------- TYRIAN 2000 LINE ----------
@@ -265,12 +272,12 @@ class LocalItemData:
     }
 
     other_items: Dict[str, LocalItem] = {
-        "Maximum Power Up":      LocalItem(906, count=10, item_class=IC.progression_skip_balancing), # 1 -> 11
-        "Armor Up":              LocalItem(907, count=9,  item_class=IC.progression_skip_balancing), # 5 -> 14
-        "Shield Up":             LocalItem(908, count=9,  item_class=IC.useful), # 5 -> 14
+        "Maximum Power Up":      LocalItem(906, count=10, item_class=IC.progression_skip_balancing),  # 1 -> 11
+        "Armor Up":              LocalItem(907, count=9,  item_class=IC.progression_skip_balancing),  # 5 -> 14
+        "Shield Up":             LocalItem(908, count=9,  item_class=IC.useful),  # 5 -> 14
         "Solar Shields":         LocalItem(909, count=1,  item_class=IC.useful),
 
-        "SuperBomb":             LocalItem(910, count=1), # More can be added in junk fill
+        "SuperBomb":             LocalItem(910, count=1),  # More can be added in junk fill
 
         # Goal collectible item for Data Cube Hunt mode
         "Data Cube":             LocalItem(911, item_class=IC.progression_skip_balancing),
@@ -295,7 +302,7 @@ class LocalItemData:
         "40000 Credits":         LocalItem(996),
         "75000 Credits":         LocalItem(997),
         "100000 Credits":        LocalItem(998),
-        "1000000 Credits":       LocalItem(999), # Should only be seen in case of emergency
+        "1000000 Credits":       LocalItem(999),  # Should only be seen in case of emergency
     }
 
     # ----------------------------------------------------------------------------------------------------------------
@@ -335,7 +342,7 @@ class LocalItemData:
             "Specials": {name for name in cls.special_weapons.keys()},
             "Sidekicks": {name for name in cls.sidekicks.keys()},
             "Generators": {"Progressive Generator", "Advanced MR-12", "Gencore Custom MR-12", "Standard MicroFusion",
-                  "Advanced MicroFusion", "Gravitron Pulse-Wave"},
+                           "Advanced MicroFusion", "Gravitron Pulse-Wave"},
             "Credits": {name for name in cls.other_items.keys() if name.endswith(" Credits")}
         }
 
@@ -382,7 +389,7 @@ class LocalItemData:
         "Protron Wave":                   UpgradeCost(original=750,  balanced=600),
         "The Orange Juicer":              UpgradeCost(original=900,  balanced=1000),
         "NortShip Super Pulse":           UpgradeCost(original=1100, balanced=1100),
-        "Atomic RailGun":                 UpgradeCost(original=1101, balanced=1800), # Yes, that's not a typo
+        "Atomic RailGun":                 UpgradeCost(original=1101, balanced=1800),  # Yes, that's not a typo
         "Widget Beam":                    UpgradeCost(original=950,  balanced=500),
         "Sonic Impulse":                  UpgradeCost(original=1000, balanced=1000),
         "RetroBall":                      UpgradeCost(original=1000, balanced=600),
