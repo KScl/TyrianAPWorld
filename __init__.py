@@ -26,8 +26,10 @@ from worlds.AutoWorld import World, WebWorld
 if TYPE_CHECKING:
     from BaseClasses import MultiWorld, CollectionState
 
+
 class TyrianItem(Item):
     game = "Tyrian"
+
 
 class TyrianLocation(Location):
     game = "Tyrian"
@@ -37,6 +39,7 @@ class TyrianLocation(Location):
     def __init__(self, player: int, name: str, address: Optional[int], parent: Region):
         super().__init__(player, name, address, parent)
         self.shop_price = None
+
 
 class TyrianWebWorld(WebWorld):
     game = "Tyrian"
@@ -50,6 +53,7 @@ class TyrianWebWorld(WebWorld):
         "setup/en",
         ["Kaito Sinclaire"]
     )]
+
 
 class TyrianWorld(World):
     """
@@ -443,7 +447,6 @@ class TyrianWorld(World):
     def get_slot_data(self, local_mode: bool = False) -> Dict[str, Any]:
         # local_mode: If true, return a JSON file meant to be downloaded, for offline play
         slot_data = {
-            "Seed": self.multiworld.seed_name,
             "NetVersion": self.aptyrian_net_version,
             "Settings": self.output_settings(),
             "StartState": self.obfuscate_object(self.output_start_state()),
@@ -451,6 +454,7 @@ class TyrianWorld(World):
         }
 
         if local_mode:  # Local mode: Output all location contents
+            slot_data["Seed"] = self.multiworld.seed_name  # Needed for savegames
             slot_data["LocationData"] = self.obfuscate_object(self.output_all_locations())
         else:  # Remote mode: Just output a list of location IDs that contain progression
             slot_data["ProgressionData"] = self.obfuscate_object(self.output_progression_data())
@@ -590,6 +594,26 @@ class TyrianWorld(World):
         # === Levels ===
         # ==============
 
+        def recursive_create_subregions(locations: Dict[str, Any], parent_region: Region) -> None:
+            for name, value in locations.items():
+                # Create a new subregion, recurse to add subregions/locations to it
+                if type(value) is dict:
+                    new_subregion = Region(f"{name} (subregion)", self.player, self.multiworld)
+                    parent_region.connect(new_subregion, name)
+                    self.multiworld.regions.append(new_subregion)
+                    recursive_create_subregions(value, new_subregion)
+
+                # Create a shop subregion, that we'll fill in later.
+                elif type(value) is tuple:
+                    # Create a shop subregion that will be filled in later
+                    shop_region = Region(name, self.player, self.multiworld)
+                    parent_region.connect(shop_region, f"{name} @ Shop Open")
+                    self.multiworld.regions.append(shop_region)
+
+                # Create a new location attached to this region.
+                else:
+                    self.create_level_location(name, parent_region)
+
         for (name, region_info) in LevelLocationData.level_regions.items():
             if region_info.episode not in self.play_episodes:
                 continue
@@ -598,19 +622,12 @@ class TyrianWorld(World):
             self.local_itempool.append(name)
 
             # Create the region for the level and connect it to the hub
-            level_region = Region(name, self.player, self.multiworld)
-            main_hub_region.connect(level_region, f"Open {name}")
-            self.multiworld.regions.append(level_region)
+            level_start_region = Region(f"{name} @ Start", self.player, self.multiworld)
+            main_hub_region.connect(level_start_region, f"{name} @ Start")
+            self.multiworld.regions.append(level_start_region)
 
-            # Create the shop region immediately, and connect it to the level (treat completion as an entrance)
-            # We don't particularly care if shops are even enabled, and we'll fill in shop checks afterward
-            shop_region = Region(f"Shop - {name}", self.player, self.multiworld)
-            level_region.connect(shop_region, f"Can shop at {name}")
-            self.multiworld.regions.append(shop_region)
-
-            # Make all locations listed for this region
-            for location_name in region_info.locations:
-                self.create_level_location(location_name, level_region)
+            # Create all locations and subregions now
+            recursive_create_subregions(region_info.locations, parent_region=level_start_region)
 
         # =============
         # === Shops ===
@@ -844,11 +861,11 @@ class TyrianWorld(World):
         # ==============================
 
         def create_level_unlock_rule(level_name: str) -> None:
-            entrance = self.multiworld.get_entrance(f"Open {level_name}", self.player)
+            entrance = self.multiworld.get_entrance(f"{level_name} @ Start", self.player)
             entrance.access_rule = lambda state: state.has(level_name, self.player)
 
         def create_data_cube_unlock_rule(level_name: str) -> None:
-            entrance = self.multiworld.get_entrance(f"Open {level_name}", self.player)
+            entrance = self.multiworld.get_entrance(f"{level_name} @ Start", self.player)
             entrance.access_rule = lambda state: state.has("Data Cube", self.player,
                   self.options.data_cubes_required.value)
 
@@ -867,14 +884,14 @@ class TyrianWorld(World):
 
         def create_episode_complete_rule(event_name: str, location_name: str) -> None:
             event = self.multiworld.find_item(event_name, self.player)
-            event.access_rule = lambda state: state.can_reach(location_name, "Location", self.player)
+            event.access_rule = lambda state: state.can_reach(location_name, "Entrance", self.player)
 
         for (event_name, level_name) in LevelLocationData.events.items():
             region_data = LevelLocationData.level_regions[level_name]
             if (region_data.episode not in self.goal_episodes):
                 continue
 
-            create_episode_complete_rule(event_name, region_data.locations[-1])
+            create_episode_complete_rule(event_name, f"{level_name} @ Destroy Boss")
 
             # If only one episode is goal, exclude anything in the shop behind the goal level.
             if len(self.goal_episodes) == 1:

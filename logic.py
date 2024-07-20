@@ -4,7 +4,9 @@
 # and is released under the terms of the zlib license.
 # See "LICENSE" for more details.
 
-from typing import TYPE_CHECKING, Callable, List, Dict, Tuple
+from typing import TYPE_CHECKING, Callable, Optional, List, Dict, Tuple
+from enum import IntEnum
+from itertools import product
 
 from BaseClasses import LocationProgressType as LP
 from worlds.generic.Rules import add_rule
@@ -18,7 +20,16 @@ if TYPE_CHECKING:
     from . import TyrianLocation, TyrianWorld
 
 
+# Determined primary type of damage needed.
+class DPSType(IntEnum):
+    Active = 1
+    Passive = 2
+    Sideways = 4
+    Piercing = 8
+
+
 class DPS:
+    _type: DPSType
     active: float
     passive: float
     sideways: float
@@ -29,6 +40,12 @@ class DPS:
         self.passive = passive
         self.sideways = sideways
         self.piercing = piercing
+
+        self._type = 0
+        if active > 0.0:   self._type |= DPSType.Active
+        if passive > 0.0:  self._type |= DPSType.Passive
+        if sideways > 0.0: self._type |= DPSType.Sideways
+        if piercing > 0.0: self._type |= DPSType.Piercing
 
     def __sub__(self, other: "DPS") -> "DPS":
         new_active = max(self.active - other.active, 0.0)
@@ -42,7 +59,7 @@ class DPS:
 
         # Apply some weighting to distance
         # Rear weapons can easily take care of passive and sideways requirements
-        # But active is much harder, piercing even more so
+        # But active is much harder, and piercing is entirely impossible
         if requirements.active > 0.0 and self.active < requirements.active:
             distance += (requirements.active - self.active) * 4.0
         if requirements.passive > 0.0 and self.passive < requirements.passive:
@@ -50,7 +67,7 @@ class DPS:
         if requirements.sideways > 0.0 and self.sideways < requirements.sideways:
             distance += (requirements.sideways - self.sideways) * 1.8
         if requirements.piercing > 0.0 and self.piercing < requirements.piercing:
-            distance += (requirements.piercing - self.piercing) * 10.0
+            distance += 10000.0
 
         if distance < 0.0001:
             return (True, 0.0)
@@ -358,14 +375,13 @@ class DamageTables:
 
     def can_meet_dps(self, target_dps: DPS, weapons: List[str],
           max_power_level: int = 11, rest_energy: int = 99) -> bool:
-        for weapon in weapons:
-            for power in range(max_power_level):
-                if self.generator_power_required[weapon][power] > rest_energy:
-                    continue
+        for (weapon, power) in product(weapons, range(max_power_level)):
+            if self.generator_power_required[weapon][power] > rest_energy:
+                continue
 
-                success, _ = self.local_dps[weapon][power].meets_requirements(target_dps)
-                if success:
-                    return True
+            success, _ = self.local_dps[weapon][power].meets_requirements(target_dps)
+            if success:
+                return True
         return False
 
     def get_dps_shot_types(self, target_dps: DPS, weapons: List[str],
@@ -373,20 +389,19 @@ class DamageTables:
         best_distances: Dict[int, float] = {}  # energy required: distance
         results: Dict[int, DPS] = {}  # energy required: full DPS info (returned)
 
-        for weapon in weapons:
-            for power in range(max_power_level):
-                cur_energy_req = self.generator_power_required[weapon][power]
-                if cur_energy_req > rest_energy:
-                    continue
+        for (weapon, power) in product(weapons, range(max_power_level)):
+            cur_energy_req = self.generator_power_required[weapon][power]
+            if cur_energy_req > rest_energy:
+                continue
 
-                cur_dps = self.local_dps[weapon][power]
-                success, distance = cur_dps.meets_requirements(target_dps)
+            cur_dps = self.local_dps[weapon][power]
+            success, distance = cur_dps.meets_requirements(target_dps)
 
-                if success:  # Target DPS has been met, abandon further searching
-                    return {cur_energy_req: self.dps_result_success}
-                elif distance < best_distances.get(cur_energy_req, 512.0):
-                    best_distances[cur_energy_req] = distance
-                    results[cur_energy_req] = target_dps - cur_dps
+            if success:  # Target DPS has been met, abandon further searching
+                return {cur_energy_req: self.dps_result_success}
+            elif distance < best_distances.get(cur_energy_req, 512.0):
+                best_distances[cur_energy_req] = distance
+                results[cur_energy_req] = target_dps - cur_dps
 
         return results
 
@@ -409,11 +424,79 @@ def scale_health(world: "TyrianWorld", health: int, adjust_difficulty: int = 0) 
     difficulty = min(max(1, world.options.difficulty + adjust_difficulty), 10)
     return health_scale[difficulty](health)
 
-def get_owned_weapon_state(state: "CollectionState", player: int) -> Tuple[List[str], List[str]]:
-    return (
-        [name for name in LocalItemData.front_ports if state.has(name, player)],
-        [name for name in LocalItemData.rear_ports if state.has(name, player)]
-    )
+def get_difficulty_armor_choice(world: "TyrianWorld",
+      base: Tuple[int, int, int, int], hard_contact: Optional[Tuple[int, int, int, int]] = None):
+    if world.options.logic_difficulty == "no_logic":
+        return 5
+    if hard_contact is not None and world.options.contact_bypasses_shields:
+        return hard_contact[world.options.logic_difficulty.value - 1]
+    return base[world.options.logic_difficulty.value - 1]
+
+# =================================================================================================
+
+# If piercing is in a DPS requirement at ALL, we use this order for front weapons.
+# As an optimization, only the five front weapons that can actually pierce are here, because rear can't help with this.
+ordered_front_table_piercing = [
+    "Needle Laser", "Sonic Impulse", "Mega Cannon", "Dragon Frost", "Dragon Flame"
+]
+
+# If active is in a DPS requirement, we use this order for front weapons.
+ordered_front_table_active = [
+    "Atomic RailGun", "Zica Laser", "Laser", "Lightning Cannon", "Poison Bomb", "Mega Pulse (Front)", "Protron Z",
+    "NortShip Super Pulse", "Pulse-Cannon", "Heavy Missile Launcher (Front)", "HotDog (Front)", "Hyper Pulse",
+    "Guided Bombs", "The Orange Juicer", "Dragon Flame", "Pretzel Missile", "Vulcan Cannon (Front)",
+    "Missile Launcher", "Needle Laser", "Mega Cannon", "Shuriken Field", "Widget Beam", "Banana Blast (Front)",
+    "Protron (Front)", "Multi-Cannon (Front)", "Sonic Impulse", "Dragon Frost", "RetroBall", "Protron Wave"
+]
+
+# Otherwise, we use this order.
+ordered_front_table_other = [
+    "Shuriken Field", "NortShip Super Pulse", "Banana Blast (Front)", "Multi-Cannon (Front)", "Dragon Frost",
+    "Poison Bomb", "Sonic Impulse", "Protron (Front)", "The Orange Juicer", "Hyper Pulse", "Guided Bombs",
+    "Lightning Cannon", "Heavy Missile Launcher (Front)", "RetroBall", "HotDog (Front)", "Mega Cannon",
+    "Mega Pulse (Front)", "Widget Beam", "Missile Launcher", "Protron Wave", "Pretzel Missile", "Protron Z",
+    "Vulcan Cannon (Front)", "Zica Laser", "Pulse-Cannon", "Needle Laser", "Dragon Flame", "Laser"
+]
+
+def get_front_weapon_state(state: "CollectionState", player: int, _type: DPSType) -> List[str]:
+    if _type & DPSType.Piercing:
+        return [name for name in ordered_front_table_piercing if state.has(name, player)]
+    elif _type & DPSType.Active:
+        return [name for name in ordered_front_table_active if state.has(name, player)]
+    else:
+        return [name for name in ordered_front_table_other if state.has(name, player)]
+
+# If sideways is in a DPS requirement, we use this order for rear weapons.
+# If we've gotten to this point, we NEED sideways DPS, so we can exclude rear weapons which don't give it.
+ordered_rear_table_sideways = [
+    "Starburst", "Scatter Wave", "Mega Pulse (Rear)", "Multi-Cannon (Rear)", "Sonic Wave", "Protron (Rear)",
+    "Heavy Guided Bombs", "Banana Blast (Rear)", "NortShip Spreader", "People Pretzels", "Guided Micro Bombs"
+]
+
+# If passive is in a DPS requirement, we use this order for rear weapons.
+ordered_rear_table_passive = [
+    "NortShip Spreader", "Starburst", "Mega Pulse (Rear)", "NortShip Spreader B", "HotDog (Rear)",
+    "Heavy Missile Launcher (Rear)", "Protron (Rear)", "Multi-Cannon (Rear)", "Sonic Wave", "Scatter Wave",
+    "Vulcan Cannon (Rear)", "Banana Blast (Rear)", "Fireball", "Wild Ball", "Heavy Guided Bombs",
+    "Guided Micro Bombs", "People Pretzels"
+]
+
+# Otherwise, we use this order.
+# Again, the only possible way we get here is if only active is remaining, so we can exclude weapons that can't help.
+ordered_rear_table_other = [
+    "Banana Blast (Rear)", "Sonic Wave", "Wild Ball", "Fireball", "People Pretzels", "Mega Pulse (Rear)",
+    "Scatter Wave", "NortShip Spreader B", "HotDog (Rear)"
+]
+
+def get_rear_weapon_state(state: "CollectionState", player: int, _type: DPSType) -> List[str]:
+    if _type & DPSType.Sideways:
+        return [name for name in ordered_rear_table_sideways if state.has(name, player)]
+    elif _type & DPSType.Passive:
+        return [name for name in ordered_rear_table_passive if state.has(name, player)]
+    else:
+        return [name for name in ordered_rear_table_other if state.has(name, player)]
+
+# =================================================================================================
 
 def get_maximum_power_level(state: "CollectionState", player: int) -> int:
     return min(11, 1 + state.count("Maximum Power Up", player))
@@ -435,14 +518,15 @@ def get_base_energy_level(state: "CollectionState", player: int, damage_tables: 
 
 def can_deal_damage(state: "CollectionState", player: int, damage_tables: DamageTables,
           active: float = 0.0, passive: float = 0.0, sideways: float = 0.0, piercing: float = 0.0) -> bool:
-    owned_front, owned_rear = get_owned_weapon_state(state, player)
-    power_level_max = get_maximum_power_level(state, player)
-    start_energy = get_base_energy_level(state, player, damage_tables)
-
     target_dps = DPS(active=active * damage_tables.logic_difficulty_multiplier,
                      passive=passive * damage_tables.logic_difficulty_multiplier,
                      sideways=sideways * damage_tables.logic_difficulty_multiplier,
                      piercing=piercing * damage_tables.logic_difficulty_multiplier)
+
+    owned_front = get_front_weapon_state(state, player, target_dps._type)
+    owned_rear = get_rear_weapon_state(state, player, target_dps._type)
+    power_level_max = get_maximum_power_level(state, player)
+    start_energy = get_base_energy_level(state, player, damage_tables)
 
     best_front_dps_list = damage_tables.get_dps_shot_types(target_dps, owned_front, power_level_max, start_energy)
     for (used_energy, rest_dps) in best_front_dps_list.items():
@@ -452,6 +536,7 @@ def can_deal_damage(state: "CollectionState", player: int, damage_tables: Damage
         rest_energy = start_energy - used_energy
         if damage_tables.can_meet_dps(rest_dps, owned_rear, power_level_max, rest_energy):
             return True
+
     return False
 
 def has_armor_level(state: "CollectionState", player: int, armor_level: int) -> bool:
@@ -479,10 +564,6 @@ def logic_entrance_rule(world: "TyrianWorld", entrance_name: str, rule: Callable
     entrance = world.multiworld.get_entrance(entrance_name, world.player)
     add_rule(entrance, rule)
 
-def logic_entrance_behind_location(world: "TyrianWorld", entrance_name: str, location_name: str) -> None:
-    logic_entrance_rule(world, entrance_name, lambda state:
-          state.can_reach(location_name, "Location", world.player))
-
 def logic_location_rule(world: "TyrianWorld", location_name: str, rule: Callable[..., bool]) -> None:
     location = world.multiworld.get_location(location_name, world.player)
     add_rule(location, rule)
@@ -503,10 +584,6 @@ def logic_all_locations_exclude(world: "TyrianWorld", location_name_base: str) -
 
 def episode_1_rules(world: "TyrianWorld") -> None:
     # ===== TYRIAN ============================================================
-    if not world.options.logic_boss_timeout:
-        logic_entrance_behind_location(world, "Can shop at TYRIAN (Episode 1)", "TYRIAN (Episode 1) - Boss")
-    # Boss time-out attainable with no items
- 
     if world.options.logic_difficulty == LogicDifficulty.option_beginner:
         logic_location_exclude(world, "TYRIAN (Episode 1) - HOLES Warp Orb")
         logic_location_exclude(world, "TYRIAN (Episode 1) - SOH JIN Warp Orb")
@@ -514,6 +591,7 @@ def episode_1_rules(world: "TyrianWorld") -> None:
         logic_location_exclude(world, "TYRIAN (Episode 1) - Tank Turn-and-fire Secret")
 
     # Four trigger enemies among the starting U-Ship sets, need enough damage to clear them out
+    # Below game difficulty Hard, the level layout is different
     if world.options.difficulty >= GameDifficulty.option_hard:
         enemy_health = scale_health(world, 19) # Not tied to a specific enemy
         logic_location_rule(world, "TYRIAN (Episode 1) - HOLES Warp Orb", lambda state, health=enemy_health:
@@ -525,16 +603,27 @@ def episode_1_rules(world: "TyrianWorld") -> None:
           can_deal_damage(state, world.player, world.damage_tables, active=health/3.6))
 
     boss_health = scale_health(world, 100) + 254 # Health of one wing + boss
-    logic_location_rule(world, "TYRIAN (Episode 1) - Boss", lambda state, health=boss_health:
-          can_deal_damage(state, world.player, world.damage_tables, active=health/75.0))
+    if not world.options.logic_boss_timeout:
+        logic_entrance_rule(world, "TYRIAN (Episode 1) @ Pass Boss (can time out)", lambda state, health=boss_health:
+              can_deal_damage(state, world.player, world.damage_tables, active=health/40.0))
+    else:
+        wanted_armor = get_difficulty_armor_choice(world, base=(5, 5, 5, 5), hard_contact=(6, 6, 5, 5))
+        logic_entrance_rule(world, "TYRIAN (Episode 1) @ Pass Boss (can time out)", lambda state, health=boss_health, armor=wanted_armor:
+              has_armor_level(state, world.player, armor)
+              or has_invulnerability(state, world.player)
+              or can_deal_damage(state, world.player, world.damage_tables, active=health/40.0))
+        logic_location_rule(world, "TYRIAN (Episode 1) - Boss", lambda state, health=boss_health:
+              can_deal_damage(state, world.player, world.damage_tables, active=health/40.0))
 
     # ===== BUBBLES ===========================================================
     if world.options.logic_difficulty == LogicDifficulty.option_beginner:
         logic_all_locations_exclude(world, "BUBBLES (Episode 1) - Coin Rain")
 
     enemy_health = scale_health(world, 20) # Health of red bubbles (in all cases)
-    logic_entrance_rule(world, "Can shop at BUBBLES (Episode 1)", lambda state, health=enemy_health:
+    logic_entrance_rule(world, "BUBBLES (Episode 1) @ Pass Bubble Lines", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/4.0))
+    logic_entrance_rule(world, "BUBBLES (Episode 1) @ Speed Up Section", lambda state, health=enemy_health:
+          can_deal_damage(state, world.player, world.damage_tables, active=health/1.9))
 
     logic_location_rule(world, "BUBBLES (Episode 1) - Orbiting Bubbles", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/3.0)
@@ -542,53 +631,34 @@ def episode_1_rules(world: "TyrianWorld") -> None:
     logic_location_rule(world, "BUBBLES (Episode 1) - Shooting Bubbles", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/1.2)
           or can_deal_damage(state, world.player, world.damage_tables, piercing=health/4.0))
-    logic_all_locations_rule(world, "BUBBLES (Episode 1) - Coin Rain", lambda state, health=enemy_health:
-          can_deal_damage(state, world.player, world.damage_tables, active=health/1.9))
-    logic_location_rule(world, "BUBBLES (Episode 1) - Final Bubble Line", lambda state, health=enemy_health:
-          can_deal_damage(state, world.player, world.damage_tables, active=health/4.0))
 
     # ===== HOLES =============================================================
-    logic_entrance_rule(world, "Can shop at HOLES (Episode 1)", lambda state, health=enemy_health:
+    logic_entrance_rule(world, "HOLES (Episode 1) @ Pass Spinner Gauntlet", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=8.0, passive=21.0))
+
+    wanted_armor = get_difficulty_armor_choice(world, base=(5, 5, 5, 5), hard_contact=(8, 7, 6, 5))
+    logic_entrance_rule(world, "HOLES (Episode 1) @ Pass Spinner Gauntlet", lambda state, armor=wanted_armor:
+          has_armor_level(state, world.player, armor))
    
     boss_health = scale_health(world, 100) + 254 # Health of one wing + boss
-    logic_location_rule(world, "HOLES (Episode 1) - Boss Ship Fly-By 1", lambda state, health=boss_health:
+    logic_entrance_rule(world, "HOLES (Episode 1) @ Destroy Boss Ships", lambda state, health=boss_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/5.0, passive=21.0))
-    logic_location_rule(world, "HOLES (Episode 1) - Boss Ship Fly-By 2", lambda state, health=boss_health:
-          can_deal_damage(state, world.player, world.damage_tables, active=health/5.0, passive=21.0))
-
-    logic_location_rule(world, "HOLES (Episode 1) - Lander after Spinners", lambda state:
-          can_deal_damage(state, world.player, world.damage_tables, active=8.0, passive=21.0))
-    logic_location_rule(world, "HOLES (Episode 1) - U-Ships after Boss Fly-By", lambda state:
-          can_deal_damage(state, world.player, world.damage_tables, active=8.0, passive=21.0))
-    logic_location_rule(world, "HOLES (Episode 1) - Before Speed Up Section", lambda state:
-          can_deal_damage(state, world.player, world.damage_tables, active=8.0, passive=21.0))
-
-    wanted_armor = (6, 5, 5, 5, 5)[world.options.logic_difficulty.value - 1]
-    if world.options.contact_bypasses_shields:
-        wanted_armor = (8, 7, 6, 5, 5)[world.options.logic_difficulty.value - 1]
-    logic_all_locations_rule(world, "HOLES (Episode 1)", lambda state, armor=wanted_armor:
-          has_armor_level(state, world.player, armor))
 
     # ===== SOH JIN ===========================================================
     enemy_health = scale_health(world, 40) # Single wall tile
-    logic_location_rule(world, "SOH JIN (Episode 1) - Walled-in Orb Launcher", lambda state, health=enemy_health:
+    logic_entrance_rule(world, "SOH JIN (Episode 1) @ Destroy Walls", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/4.6))
 
     # ===== ASTEROID1 =========================================================
-    logic_entrance_behind_location(world, "Can shop at ASTEROID1 (Episode 1)", "ASTEROID1 (Episode 1) - Boss")
-
     enemy_health = scale_health(world, 25) + (scale_health(world, 5) * 2) # Face rock, plus tiles before it
     logic_location_rule(world, "ASTEROID1 (Episode 1) - ASTEROID? Warp Orb", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/4.4))
 
     boss_health = scale_health(world, 100) # Only the boss dome
-    logic_location_rule(world, "ASTEROID1 (Episode 1) - Boss", lambda state, health=boss_health:
+    logic_entrance_rule(world, "ASTEROID1 (Episode 1) @ Destroy Boss", lambda state, health=boss_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/30.0))
 
     # ===== ASTEROID2 =========================================================    
-    logic_entrance_behind_location(world, "Can shop at ASTEROID2 (Episode 1)", "ASTEROID2 (Episode 1) - Boss")
-
     if world.options.logic_difficulty == LogicDifficulty.option_beginner:
         logic_location_exclude(world, "ASTEROID2 (Episode 1) - Tank Turn-around Secret 1")
         logic_location_exclude(world, "ASTEROID2 (Episode 1) - Tank Turn-around Secret 2")
@@ -611,7 +681,7 @@ def episode_1_rules(world: "TyrianWorld") -> None:
     logic_location_rule(world, "ASTEROID2 (Episode 1) - MINEMAZE Warp Orb", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/4.4))
 
-    logic_location_rule(world, "ASTEROID2 (Episode 1) - Boss", lambda state:
+    logic_entrance_rule(world, "ASTEROID2 (Episode 1) @ Destroy Boss", lambda state:
           can_deal_damage(state, world.player, world.damage_tables, active=10.0))
 
     # ===== ASTEROID? =========================================================
@@ -619,21 +689,18 @@ def episode_1_rules(world: "TyrianWorld") -> None:
         logic_location_exclude(world, "ASTEROID? (Episode 1) - WINDY Warp Orb")
 
     enemy_health = scale_health(world, 40) # Launchers, and the secret ships
-    logic_location_rule(world, "ASTEROID? (Episode 1) - Welcoming Launchers 1", lambda state, health=enemy_health:
+    logic_entrance_rule(world, "ASTEROID? (Episode 1) @ Initial Welcome", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/3.5))
-    logic_location_rule(world, "ASTEROID? (Episode 1) - Welcoming Launchers 2", lambda state, health=enemy_health:
-          can_deal_damage(state, world.player, world.damage_tables, active=health/3.5))
+    logic_entrance_rule(world, "ASTEROID? (Episode 1) @ Quick Shots", lambda state, health=enemy_health:
+          can_deal_damage(state, world.player, world.damage_tables, active=health/1.36))
 
-    logic_location_rule(world, "ASTEROID? (Episode 1) - Quick Shot 1", lambda state, health=enemy_health:
-          can_deal_damage(state, world.player, world.damage_tables, active=health/1.36))
-    logic_location_rule(world, "ASTEROID? (Episode 1) - Quick Shot 2", lambda state, health=enemy_health:
-          can_deal_damage(state, world.player, world.damage_tables, active=health/1.36))
+    wanted_armor = get_difficulty_armor_choice(world, base=(6, 5, 5, 5), hard_contact=(8, 7, 7, 6))
+    logic_entrance_rule(world, "ASTEROID? (Episode 1) @ Final Gauntlet", lambda state, armor=wanted_armor:
+          has_armor_level(state, world.player, armor))
 
     # ===== MINEMAZE ==========================================================
     enemy_health = scale_health(world, 20) # Gates
-    logic_entrance_rule(world, "Can shop at MINEMAZE (Episode 1)", lambda state, health=enemy_health:
-          can_deal_damage(state, world.player, world.damage_tables, active=health/3.8))
-    logic_all_locations_rule(world, "MINEMAZE (Episode 1)", lambda state, health=enemy_health:
+    logic_entrance_rule(world, "MINEMAZE (Episode 1) @ Destroy Gates", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/3.8))
 
     # ===== WINDY =============================================================
@@ -646,41 +713,23 @@ def episode_1_rules(world: "TyrianWorld") -> None:
     elif world.options.logic_difficulty == LogicDifficulty.option_expert:
         # Exclude if we don't have a way to get invulnerability (either specials as items, twiddle, or start with it)
         if world.options.specials == "as_items" or has_invulnerability(world.multiworld.state, world.player):
-            logic_location_rule(world, "WINDY (Episode 1) - Central Question Mark", lambda state:
+            logic_entrance_rule(world, "WINDY (Episode 1) @ Phase Through Walls", lambda state:
                   has_invulnerability(state, world.player))
         else:
             logic_location_exclude(world, "WINDY (Episode 1) - Central Question Mark")
     else:
-        logic_location_rule(world, "WINDY (Episode 1) - Central Question Mark", lambda state:
+        logic_entrance_rule(world, "WINDY (Episode 1) @ Phase Through Walls", lambda state:
               has_invulnerability(state, world.player) or has_armor_level(state, world.player, 14))
 
     enemy_health = scale_health(world, 10) # Regular block health
-    if world.options.contact_bypasses_shields:
-        wanted_armor = (10, 9, 8, 6, 5)[world.options.logic_difficulty.value - 1]
-        logic_location_rule(world, "WINDY (Episode 1) - Central Question Mark",
-              lambda state, health=enemy_health, armor=wanted_armor:
-                  has_armor_level(state, world.player, armor)
-                  and can_deal_damage(state, world.player, world.damage_tables, active=health/1.4))
-        logic_entrance_rule(world, "Can shop at WINDY (Episode 1)",
-              lambda state, health=enemy_health, armor=wanted_armor:
-                  has_armor_level(state, world.player, armor)
-                  and can_deal_damage(state, world.player, world.damage_tables, active=health/1.4))
-    else:
-        logic_location_rule(world, "WINDY (Episode 1) - Central Question Mark", lambda state, health=enemy_health:
-              can_deal_damage(state, world.player, world.damage_tables, active=health/1.4))
-        logic_entrance_rule(world, "Can shop at WINDY (Episode 1)", lambda state, health=enemy_health:
-              can_deal_damage(state, world.player, world.damage_tables, active=health/1.4))
+    logic_entrance_rule(world, "WINDY (Episode 1) @ Fly Through", lambda state, health=enemy_health:
+          can_deal_damage(state, world.player, world.damage_tables, active=health/1.4))
+
+    wanted_armor = get_difficulty_armor_choice(world, base=(7, 5, 5, 5), hard_contact=(11, 9, 8, 6))
+    logic_entrance_rule(world, "WINDY (Episode 1) @ Fly Through", lambda state, armor=wanted_armor:
+          has_armor_level(state, world.player, armor))
 
     # ===== SAVARA ============================================================
-    if not world.options.logic_boss_timeout:
-        logic_entrance_behind_location(world, "Can shop at SAVARA (Episode 1)", "SAVARA (Episode 1) - Boss")
-    else:
-        # Need enough damage to destroy things the boss shoots at you, when dodging isn't an option
-        enemy_health = scale_health(world, 6) # Homing ticks from boss
-        logic_entrance_rule(world, "Can shop at SAVARA (Episode 1)", lambda state, health=enemy_health:
-              state.can_reach("SAVARA (Episode 1) - Boss", "Location", world.player)
-              or can_deal_damage(state, world.player, world.damage_tables, sideways=health/1.2))
-
     enemy_health = scale_health(world, 60) # Large planes
     logic_location_rule(world, "SAVARA (Episode 1) - Huge Plane, Speeds By", lambda state, health=enemy_health:
           has_generator_level(state, world.player, 3)
@@ -693,23 +742,27 @@ def episode_1_rules(world: "TyrianWorld") -> None:
           or can_deal_damage(state, world.player, world.damage_tables, passive=health/2.4))
 
     # Damage estimate: 254 health for the boss, shooting through 15 ticks and 4 missiles
-    enemy_health = 254 + (scale_health(world, 6) * 15) + (scale_health(world, 10) * 4)
-    logic_location_rule(world, "SAVARA (Episode 1) - Boss", lambda state, health=enemy_health:
-          can_deal_damage(state, world.player, world.damage_tables, active=health/30.0))
+    boss_health = 254 + (scale_health(world, 6) * 15) + (scale_health(world, 10) * 4)
+    enemy_health = scale_health(world, 6) # Homing ticks from boss
+    if not world.options.logic_boss_timeout:
+        logic_entrance_rule(world, "SAVARA (Episode 1) @ Pass Boss (can time out)", lambda state, health=boss_health:
+              can_deal_damage(state, world.player, world.damage_tables, active=health/30.0))
+    else:
+        logic_location_rule(world, "SAVARA (Episode 1) - Boss", lambda state, health=boss_health:
+              can_deal_damage(state, world.player, world.damage_tables, active=health/30.0))
+
+        # Also need enough damage to destroy things the boss shoots at you, when dodging isn't an option
+        logic_entrance_rule(world, "SAVARA (Episode 1) @ Pass Boss (can time out)", lambda state, health=boss_health, tick_health=enemy_health:
+              has_invulnerability(state, world.player)
+              or can_deal_damage(state, world.player, world.damage_tables, sideways=tick_health/1.2)
+              or can_deal_damage(state, world.player, world.damage_tables, active=health/30.0))
 
     # ===== SAVARA II =========================================================
-    if not world.options.logic_boss_timeout:
-        logic_entrance_behind_location(world, "Can shop at SAVARA II (Episode 1)", "SAVARA II (Episode 1) - Boss")
-    else:
-        # Need enough damage to destroy things the boss shoots at you, when dodging isn't an option
-        enemy_health = scale_health(world, 6) # Homing ticks from boss
-        logic_entrance_rule(world, "Can shop at SAVARA II (Episode 1)", lambda state, health=enemy_health:
-              state.can_reach("SAVARA II (Episode 1) - Boss", "Location", world.player)
-              or can_deal_damage(state, world.player, world.damage_tables, sideways=health/1.2))
+    wanted_armor = get_difficulty_armor_choice(world, base=(8, 7, 6, 5))
+    logic_entrance_rule(world, "SAVARA II (Episode 1) @ Base Requirements", lambda state, armor=wanted_armor:
+          has_armor_level(state, world.player, armor))
 
-    logic_location_rule(world, "SAVARA II (Episode 1) - Green Plane Sequence 1", lambda state, health=enemy_health:
-          can_deal_damage(state, world.player, world.damage_tables, active=7.0))
-    logic_location_rule(world, "SAVARA II (Episode 1) - Green Plane Sequence 2", lambda state, health=enemy_health:
+    logic_entrance_rule(world, "SAVARA II (Episode 1) @ Destroy Green Planes", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=7.0))
 
     enemy_health = scale_health(world, 60, adjust_difficulty=-1) # Large planes
@@ -723,28 +776,32 @@ def episode_1_rules(world: "TyrianWorld") -> None:
           or can_deal_damage(state, world.player, world.damage_tables, passive=health/2.4))
 
     # Damage estimate: 254 health for the boss, shooting through 15 ticks and 4 missiles
-    enemy_health = 254 + (scale_health(world, 6) * 15) + (scale_health(world, 10) * 4)
-    logic_location_rule(world, "SAVARA (Episode 1) - Boss", lambda state, health=enemy_health:
-          can_deal_damage(state, world.player, world.damage_tables, active=health/30.0))
+    boss_health = 254 + (scale_health(world, 6) * 15) + (scale_health(world, 10) * 4)
+    enemy_health = scale_health(world, 6) # Homing ticks from boss
+    if not world.options.logic_boss_timeout:
+        logic_entrance_rule(world, "SAVARA II (Episode 1) @ Pass Boss (can time out)", lambda state, health=boss_health:
+              can_deal_damage(state, world.player, world.damage_tables, active=health/30.0))
+    else:
+        logic_location_rule(world, "SAVARA II (Episode 1) - Boss", lambda state, health=boss_health:
+              can_deal_damage(state, world.player, world.damage_tables, active=health/30.0))
 
-    # Difficulty-based armor requirements
-    wanted_armor = (8, 7, 6, 5, 5)[world.options.logic_difficulty.value - 1]
-    logic_all_locations_rule(world, "SAVARA II (Episode 1)", lambda state, armor=wanted_armor:
-          has_armor_level(state, world.player, armor))
-    logic_entrance_rule(world, "Can shop at SAVARA II (Episode 1)", lambda state, armor=wanted_armor:
-          has_armor_level(state, world.player, armor))
+        # Also need enough damage to destroy things the boss shoots at you, when dodging isn't an option
+        logic_entrance_rule(world, "SAVARA II (Episode 1) @ Pass Boss (can time out)", lambda state, health=boss_health, tick_health=enemy_health:
+              has_invulnerability(state, world.player)
+              or can_deal_damage(state, world.player, world.damage_tables, sideways=tick_health/1.2)
+              or can_deal_damage(state, world.player, world.damage_tables, active=health/30.0))
 
     # ===== BONUS =============================================================
     # Temporary rule to keep this from occurring too early.
-    logic_entrance_rule(world, "Can shop at BONUS (Episode 1)", lambda state:
+    logic_entrance_rule(world, "BONUS (Episode 1) @ Destroy Patterns", lambda state:
           can_deal_damage(state, world.player, world.damage_tables, active=10.0, passive=10.0))
 
     # ===== MINES =============================================================
     enemy_health = scale_health(world, 20) # Rotating Orbs
-    logic_location_rule(world, "MINES (Episode 1) - Regular Spinning Orbs", lambda state, health=enemy_health:
+    logic_entrance_rule(world, "MINES (Episode 1) @ Destroy First Orb", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/1.0)
           or can_deal_damage(state, world.player, world.damage_tables, piercing=health/2.7))
-    logic_location_rule(world, "MINES (Episode 1) - Regular Spinning Orbs", lambda state, health=enemy_health:
+    logic_entrance_rule(world, "MINES (Episode 1) @ Destroy Second Orb", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/0.5)
           or can_deal_damage(state, world.player, world.damage_tables, piercing=health/1.2))
 
@@ -753,8 +810,6 @@ def episode_1_rules(world: "TyrianWorld") -> None:
           can_deal_damage(state, world.player, world.damage_tables, active=30/3.0))
 
     # ===== DELIANI ===========================================================
-    logic_entrance_behind_location(world, "Can shop at DELIANI (Episode 1)", "DELIANI (Episode 1) - Boss")
-
     if world.options.logic_difficulty == LogicDifficulty.option_beginner:
         logic_location_exclude(world, "DELIANI (Episode 1) - Tricky Rail Turret")
 
@@ -763,55 +818,37 @@ def episode_1_rules(world: "TyrianWorld") -> None:
           can_deal_damage(state, world.player, world.damage_tables, active=health/2.2))
 
     enemy_health = scale_health(world, 25) # Two-tile wide turret ships
-    logic_location_rule(world, "DELIANI (Episode 1) - Ambush", lambda state, health=enemy_health:
+    logic_entrance_rule(world, "DELIANI (Episode 1) @ Pass Ambush", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/1.6))
-    logic_location_rule(world, "DELIANI (Episode 1) - Last Cross Formation", lambda state, health=enemy_health:
-          can_deal_damage(state, world.player, world.damage_tables, active=health/1.6))
+
+    wanted_armor = get_difficulty_armor_choice(world, base=(10, 9, 8, 6))
+    logic_entrance_rule(world, "DELIANI (Episode 1) @ Pass Ambush", lambda state, armor=wanted_armor:
+          has_armor_level(state, world.player, armor))
 
     boss_health = (scale_health(world, 80) * 3) + scale_health(world, 200) # Repulsor orbs and boss
-    logic_location_rule(world, "DELIANI (Episode 1) - Boss", lambda state, health=boss_health:
+    logic_entrance_rule(world, "DELIANI (Episode 1) @ Destroy Boss", lambda state, health=boss_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/26.0))
 
-    # Difficulty-based armor requirements
-    wanted_armor = (10, 9, 8, 6, 5)[world.options.logic_difficulty.value - 1]
-    logic_location_rule(world, "DELIANI (Episode 1) - Ambush", lambda state, armor=wanted_armor:
-          has_armor_level(state, world.player, armor))
-    logic_location_rule(world, "DELIANI (Episode 1) - Last Cross Formation", lambda state, armor=wanted_armor:
-          has_armor_level(state, world.player, armor))
-    logic_location_rule(world, "DELIANI (Episode 1) - Boss", lambda state, armor=wanted_armor:
-          has_armor_level(state, world.player, armor))
-
     # ===== SAVARA V ==========================================================
-    logic_entrance_behind_location(world, "Can shop at SAVARA V (Episode 1)", "SAVARA V (Episode 1) - Boss")
-
     enemy_health = scale_health(world, 70) # Blimp
     logic_location_rule(world, "SAVARA V (Episode 1) - Super Blimp", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/1.5))
 
-    logic_location_rule(world, "SAVARA V (Episode 1) - Mid-Boss", lambda state:
-          can_deal_damage(state, world.player, world.damage_tables, active=254/15.0))
-    logic_location_rule(world, "SAVARA V (Episode 1) - Boss", lambda state:
+    logic_entrance_rule(world, "SAVARA V (Episode 1) @ Destroy Bosses", lambda state:
           can_deal_damage(state, world.player, world.damage_tables, active=254/15.0))
 
     # ===== ASSASSIN ==========================================================
-    logic_entrance_behind_location(world, "Can shop at ASSASSIN (Episode 1)", "ASSASSIN (Episode 1) - Boss")
-
-    logic_location_rule(world, "ASSASSIN (Episode 1) - Boss", lambda state:
+    logic_entrance_rule(world, "ASSASSIN (Episode 1) @ Destroy Boss", lambda state:
           can_deal_damage(state, world.player, world.damage_tables, 25.0))
 
-    # Difficulty-based armor requirements
-    wanted_armor = (9, 8, 7, 5, 5)[world.options.logic_difficulty.value - 1]
-    logic_location_rule(world, "ASSASSIN (Episode 1) - Boss", lambda state, armor=wanted_armor:
+    wanted_armor = get_difficulty_armor_choice(world, base=(9, 8, 7, 5))
+    logic_entrance_rule(world, "ASSASSIN (Episode 1) @ Destroy Boss", lambda state, armor=wanted_armor:
           has_armor_level(state, world.player, armor))
 
 # -----------------------------------------------------------------------------
 
 def episode_2_rules(world: "TyrianWorld") -> None:
     # ===== TORM ==============================================================
-    if not world.options.logic_boss_timeout:
-        logic_entrance_behind_location(world, "Can shop at TORM (Episode 2)", "TORM (Episode 2) - Boss")
-    # Boss time-out attainable with no items
-
     if world.options.logic_difficulty == LogicDifficulty.option_beginner:
         logic_location_exclude(world, "TORM (Episode 2) - Ship Fleeing Dragon Secret")
 
@@ -825,30 +862,42 @@ def episode_2_rules(world: "TyrianWorld") -> None:
           can_deal_damage(state, world.player, world.damage_tables, active=254/4.4))
 
     # Technically this boss has 254 health, but compensating for constant movement all over the screen
-    logic_location_rule(world, "TORM (Episode 2) - Boss", lambda state:
-          can_deal_damage(state, world.player, world.damage_tables, active=(254*1.75)/32.0))
+    if not world.options.logic_boss_timeout:
+        logic_entrance_rule(world, "TORM (Episode 2) @ Pass Boss (can time out)", lambda state:
+              can_deal_damage(state, world.player, world.damage_tables, active=(254*1.75)/32.0))
+    else:
+        # The actual time out is attainable with an empty loadout
+        logic_location_rule(world, "TORM (Episode 2) - Boss", lambda state:
+              can_deal_damage(state, world.player, world.damage_tables, active=(254*1.75)/32.0))
+
 
     # ===== GYGES =============================================================
-    logic_entrance_behind_location(world, "Can shop at GYGES (Episode 2)", "GYGES (Episode 2) - Boss")
-
     if world.options.logic_difficulty == LogicDifficulty.option_beginner:
         logic_location_exclude(world, "GYGES (Episode 2) - GEM WAR Warp Orb")
 
     enemy_health = scale_health(world, 10) * 6 # Orbsnakes
     logic_location_rule(world, "GYGES (Episode 2) - Orbsnake", lambda state, health=enemy_health:
-          can_deal_damage(state, world.player, world.damage_tables, active=health/5.0))
+          can_deal_damage(state, world.player, world.damage_tables, active=health/5.0)
+          or can_deal_damage(state, world.player, world.damage_tables, piercing=(health/6)/5.0))
 
-    logic_location_rule(world, "GYGES (Episode 2) - Boss", lambda state:
+    # Either the repulsor mitigates the bullets in the speed up section,
+    # or you have a decent loadout and can destroy a few things to make your life easier
+    logic_entrance_rule(world, "GYGES (Episode 2) @ After Speed Up Section", lambda state:
+          has_repulsor(state, world.player)
+          or can_deal_damage(state, world.player, world.damage_tables, active=8.0, passive=12.0))
+
+    logic_entrance_rule(world, "GYGES (Episode 2) @ Destroy Boss", lambda state:
           can_deal_damage(state, world.player, world.damage_tables, active=254/45.0))
 
     # ===== BONUS 1 ===========================================================
     # Temporary rule to keep this from occurring too early.
-    logic_entrance_rule(world, "Can shop at BONUS 1 (Episode 2)", lambda state:
+    logic_entrance_rule(world, "BONUS 1 (Episode 2) @ Destroy Patterns", lambda state:
           can_deal_damage(state, world.player, world.damage_tables, active=10.0, passive=10.0))
 
     # ===== ASTCITY ===========================================================
-    logic_entrance_behind_location(world, "Can shop at ASTCITY (Episode 2)", 
-          "ASTCITY (Episode 2) - Ending Turret Group")
+    wanted_armor = get_difficulty_armor_choice(world, base=(7, 7, 6, 5), hard_contact=(7, 7, 6, 5))
+    logic_entrance_rule(world, "ASTCITY (Episode 2) @ Base Requirements", lambda state, armor=wanted_armor:
+          has_armor_level(state, world.player, armor))
 
     if world.options.logic_difficulty == LogicDifficulty.option_beginner:
         logic_location_exclude(world, "ASTCITY (Episode 2) - MISTAKES Warp Orb")
@@ -857,189 +906,146 @@ def episode_2_rules(world: "TyrianWorld") -> None:
     logic_location_rule(world, "ASTCITY (Episode 2) - Warehouse 92", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/4.0))
 
-    # In all likelihood this can be obliterated with a superbomb that you obtain in the level, but we don't consider
-    # superbombs logic in any way, so
-    logic_location_rule(world, "ASTCITY (Episode 2) - Ending Turret Group", lambda state:
+    # In all likelihood this can be obliterated with a superbomb that you obtain in the level,
+    # but we don't consider superbombs logic in any way, so
+    logic_entrance_rule(world, "ASTCITY (Episode 2) @ Last Platform", lambda state:
           can_deal_damage(state, world.player, world.damage_tables, active=8.0, passive=14.0))
-
-    # Difficulty-based armor requirements
-    wanted_armor = (7, 7, 6, 5, 5)[world.options.logic_difficulty.value - 1]
-    logic_all_locations_rule(world, "ASTCITY (Episode 2)", lambda state, armor=wanted_armor:
-          has_armor_level(state, world.player, armor))
 
     # ===== BONUS 2 ===========================================================
     # (logicless - flythrough only, no items, easily doable without firing a shot)
 
     # ===== GEM WAR ===========================================================
-    logic_entrance_behind_location(world, "Can shop at GEM WAR (Episode 2)", 
-          "GEM WAR (Episode 2) - Blue Gem Boss 2")
+    wanted_armor = get_difficulty_armor_choice(world, base=(7, 7, 6, 5), hard_contact=(9, 9, 8, 6))
+    logic_entrance_rule(world, "GEM WAR (Episode 2) @ Base Requirements", lambda state, armor=wanted_armor:
+          has_armor_level(state, world.player, armor))
 
     # Red Gem Ships have 254 health; we compensate for their movement, and other enemies being nearby
     wanted_passive = 18.0 if world.options.contact_bypasses_shields else 12.0
-    logic_location_rule(world, "GEM WAR (Episode 2) - Red Gem Leader 1", lambda state, passive=wanted_passive:
-          can_deal_damage(state, world.player, world.damage_tables, active=(254*1.4)/17.5, passive=passive))
-    logic_location_rule(world, "GEM WAR (Episode 2) - Red Gem Leader 2", lambda state, passive=wanted_passive:
-          can_deal_damage(state, world.player, world.damage_tables, active=(254*1.4)/20.0, passive=passive))
-    logic_location_rule(world, "GEM WAR (Episode 2) - Red Gem Leader 3", lambda state, passive=wanted_passive:
-          can_deal_damage(state, world.player, world.damage_tables, active=(254*1.4)/20.0, passive=passive))
-    logic_location_rule(world, "GEM WAR (Episode 2) - Red Gem Leader 4", lambda state, passive=wanted_passive:
-          can_deal_damage(state, world.player, world.damage_tables, active=(254*1.4)/13.0, passive=passive))
+    logic_entrance_rule(world, "GEM WAR (Episode 2) @ Red Gem Leaders Easy", lambda state, passive=wanted_passive:
+          can_deal_damage(state, world.player, world.damage_tables, active=(254*1.4)/20.0, passive=passive))  # 2 and 3
+    logic_entrance_rule(world, "GEM WAR (Episode 2) @ Red Gem Leaders Medium", lambda state, passive=wanted_passive:
+          can_deal_damage(state, world.player, world.damage_tables, active=(254*1.4)/17.5, passive=passive))  # 1
+    logic_entrance_rule(world, "GEM WAR (Episode 2) @ Red Gem Leaders Hard", lambda state, passive=wanted_passive:
+          can_deal_damage(state, world.player, world.damage_tables, active=(254*1.4)/13.0, passive=passive))  # 4
 
+    # The boss ships are flanked by three ships with max health of 254,
+    # either you need to destroy the one in front, or have a piercing weapon
     enemy_health = scale_health(world, 20) # Center of boss ship
-    logic_location_rule(world, "GEM WAR (Episode 2) - Blue Gem Boss 1",
+    logic_entrance_rule(world, "GEM WAR (Episode 2) @ Blue Gem Bosses",
           lambda state, health=enemy_health, passive=wanted_passive:
-              can_deal_damage(state, world.player, world.damage_tables, active=(254+health)/20.0, passive=passive)
-              or can_deal_damage(state, world.player, world.damage_tables, piercing=health/20.0, passive=passive))
-    logic_location_rule(world, "GEM WAR (Episode 2) - Blue Gem Boss 2",
-          lambda state, health=enemy_health, passive=wanted_passive:
-              can_deal_damage(state, world.player, world.damage_tables, active=(254+health)/20.0, passive=passive)
-              or can_deal_damage(state, world.player, world.damage_tables, piercing=health/20.0, passive=passive))
-
-    # Difficulty-based (and option-based) armor requirements
-    wanted_armor = (7, 7, 6, 5, 5)[world.options.logic_difficulty.value - 1]
-    if world.options.contact_bypasses_shields:
-        wanted_armor = (9, 9, 8, 6, 5)[world.options.logic_difficulty.value - 1]
-    logic_all_locations_rule(world, "GEM WAR (Episode 2)", lambda state, armor=wanted_armor:
-          has_armor_level(state, world.player, armor))
+              can_deal_damage(state, world.player, world.damage_tables, active=(254+health)/16.0, passive=passive)
+              or can_deal_damage(state, world.player, world.damage_tables, piercing=health/16.0, passive=passive))
 
     # ===== MARKERS ===========================================================
     if world.options.logic_difficulty == LogicDifficulty.option_beginner:
         logic_location_exclude(world, "MARKERS (Episode 2) - Car Destroyer Secret")
 
+    # Flying through this stage is relatively easy *unless* HardContact is turned on.
+    wanted_armor = get_difficulty_armor_choice(world, base=(5, 5, 5, 5), hard_contact=(9, 8, 8, 6))
+    logic_entrance_rule(world, "MARKERS (Episode 2) @ Base Requirements", lambda state, armor=wanted_armor:
+          has_armor_level(state, world.player, armor))
+
     enemy_health = scale_health(world, 30) + (scale_health(world, 6) * 4) # Minelayer + estimated 4 mines
     logic_location_rule(world, "MARKERS (Episode 2) - Persistent Mine-Layer", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/7.1))
-
-    enemy_health = scale_health(world, 20) # Turrets
-    logic_location_rule(world, "MARKERS (Episode 2) - Right Path Turret", lambda state, health=enemy_health:
-          can_deal_damage(state, world.player, world.damage_tables, active=health/3.8))
-    logic_location_rule(world, "MARKERS (Episode 2) - Left Path Turret", lambda state, health=enemy_health:
-          can_deal_damage(state, world.player, world.damage_tables, active=health/3.8))
-    logic_location_rule(world, "MARKERS (Episode 2) - End Section Turret", lambda state, health=enemy_health:
-          can_deal_damage(state, world.player, world.damage_tables, active=health/3.8))
 
     enemy_health = scale_health(world, 10) # Cars
     logic_location_rule(world, "MARKERS (Episode 2) - Car Destroyer Secret", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/3.0))
 
-    # Flying through this stage is relatively easy *unless* HardContact is turned on.
-    if world.options.contact_bypasses_shields:
-        wanted_armor = (9, 8, 8, 5, 5)[world.options.logic_difficulty.value - 1]
-        logic_all_locations_rule(world, "MARKERS (Episode 2)", lambda state, armor=wanted_armor:
-              has_armor_level(state, world.player, armor))
-        logic_entrance_rule(world, "Can shop at MARKERS (Episode 2)", lambda state, armor=wanted_armor:
-              has_armor_level(state, world.player, armor))
+    enemy_health = scale_health(world, 20) # Turrets
+    logic_entrance_rule(world, "MARKERS (Episode 2) @ Destroy Turrets", lambda state, health=enemy_health:
+          can_deal_damage(state, world.player, world.damage_tables, active=health/3.8))
 
     # ===== MISTAKES ==========================================================
     if world.options.logic_difficulty == LogicDifficulty.option_beginner:
-        logic_location_exclude(world, "MISTAKES (Episode 2) - Orbsnakes - Trigger Enemy 1")
-        logic_location_exclude(world, "MISTAKES (Episode 2) - Claws - Trigger Enemy 1")
-        logic_location_exclude(world, "MISTAKES (Episode 2) - Claws - Trigger Enemy 2")
+        logic_location_exclude(world, "MISTAKES (Episode 2) - Orbsnakes, Trigger Enemy 1")
+        logic_location_exclude(world, "MISTAKES (Episode 2) - Claws, Trigger Enemy 1")
+        logic_location_exclude(world, "MISTAKES (Episode 2) - Claws, Trigger Enemy 2")
         logic_location_exclude(world, "MISTAKES (Episode 2) - Super Bubble Spawner")
     if world.options.logic_difficulty <= LogicDifficulty.option_standard:
-        logic_location_exclude(world, "MISTAKES (Episode 2) - Orbsnakes - Trigger Enemy 2")
+        logic_location_exclude(world, "MISTAKES (Episode 2) - Orbsnakes, Trigger Enemy 2")
         logic_location_exclude(world, "MISTAKES (Episode 2) - Anti-Softlock")
 
+    wanted_armor = get_difficulty_armor_choice(world, base=(6, 5, 5, 5), hard_contact=(9, 8, 7, 5))
+    logic_entrance_rule(world, "MISTAKES (Episode 2) @ Base Requirements", lambda state, armor=wanted_armor:
+          has_armor_level(state, world.player, armor)
+          or has_invulnerability(state, world.player))
+
     enemy_health = scale_health(world, 10) # Most trigger enemies
-    logic_location_rule(world, "MISTAKES (Episode 2) - Claws - Trigger Enemy 2", lambda state, health=enemy_health:
+    logic_entrance_rule(world, "MISTAKES (Episode 2) @ Bubble Spawner Path", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/1.2))
 
     enemy_health = scale_health(world, 10) * 6 # Orbsnakes
-    logic_location_rule(world, "MISTAKES (Episode 2) - Orbsnakes - Trigger Enemy 1", lambda state, health=enemy_health:
+    logic_location_rule(world, "MISTAKES (Episode 2) - Orbsnakes, Trigger Enemy 1", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/5.5)
           or can_deal_damage(state, world.player, world.damage_tables, piercing=(health/6)/5.5))
-    logic_location_rule(world, "MISTAKES (Episode 2) - Orbsnakes - Trigger Enemy 2", lambda state, health=enemy_health:
+    logic_entrance_rule(world, "MISTAKES (Episode 2) @ Softlock Path", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/0.8)
           or can_deal_damage(state, world.player, world.damage_tables, piercing=(health/6)/0.8))
-
-    # These two checks are locked behind only killing specific subsets of the above
-    logic_location_rule(world, "MISTAKES (Episode 2) - Super Bubble Spawner", lambda state:
-          state.can_reach("MISTAKES (Episode 2) - Claws - Trigger Enemy 2", "Location", world.player))
-    logic_location_rule(world, "MISTAKES (Episode 2) - Anti-Softlock", lambda state:
-          state.can_reach("MISTAKES (Episode 2) - Orbsnakes - Trigger Enemy 2", "Location", world.player))
-
-    if world.options.contact_bypasses_shields:
-        wanted_armor = (9, 9, 8, 5, 5)[world.options.logic_difficulty.value - 1]
-        logic_all_locations_rule(world, "MISTAKES (Episode 2)", lambda state, armor=wanted_armor:
-              has_armor_level(state, world.player, armor))
-        logic_entrance_rule(world, "Can shop at MISTAKES (Episode 2)", lambda state, armor=wanted_armor:
-              has_armor_level(state, world.player, armor))
 
     # ===== SOH JIN ===========================================================
     enemy_health = scale_health(world, 15) # Brown claw enemy
 
     # These enemies don't contain any items, but they home in on you and are a bit more difficult to dodge because
     # of that, so lock the whole level behind being able to destroy them; it's enough DPS to get locations here
-    logic_entrance_rule(world, "Can shop at SOH JIN (Episode 2)", lambda state, health=enemy_health:
-          can_deal_damage(state, world.player, world.damage_tables, active=health/2.0))
-    logic_all_locations_rule(world, "SOH JIN (Episode 2)", lambda state, health=enemy_health:
+    logic_entrance_rule(world, "SOH JIN (Episode 2) @ Base Requirements", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/2.0))
 
     enemy_health = scale_health(world, 100) # Paddle... things?
-
-    logic_all_locations_rule(world, "SOH JIN (Episode 2) - Paddle Destruction", lambda state, health=enemy_health:
+    logic_entrance_rule(world, "SOH JIN (Episode 2) @ Destroy Second Wave Paddles", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/9.0)
           or can_deal_damage(state, world.player, world.damage_tables, active=health/15.0, sideways=10.0))
 
-    logic_all_locations_rule(world, "SOH JIN (Episode 2) - Boss Orbs", lambda state:
+    # Dodging these orbs is surprisingly difficult, because of the erratic vertical movement with their oscillation
+    wanted_armor = get_difficulty_armor_choice(world, base=(9, 8, 7, 5), hard_contact=(11, 10, 9, 7))
+    logic_entrance_rule(world, "SOH JIN (Episode 2) @ Fly Through Third Wave Orbs", lambda state, armor=wanted_armor:
+          has_armor_level(state, world.player, armor)
+          or (
+              has_invulnerability(state, world.player)
+              and has_armor_level(state, world.player, armor-2)
+          ))
+    logic_entrance_rule(world, "SOH JIN (Episode 2) @ Destroy Third Wave Orbs", lambda state:
           can_deal_damage(state, world.player, world.damage_tables, active=254/20.0, sideways=254/20.0)) 
 
-    # Dodging these things is surprisingly difficult while attacking them, mostly because of the erratic pattern
-    # So on easier logics we add some more armor requirements
-    wanted_armor = (10, 9, 8, 5, 5)[world.options.logic_difficulty.value - 1]
-    logic_all_locations_rule(world, "SOH JIN (Episode 2) - Boss Orbs", lambda state, armor=wanted_armor:
-          has_armor_level(state, world.player, armor))
-
     # ===== BOTANY A ==========================================================
-    wanted_armor = (9, 9, 8, 6, 5)[world.options.logic_difficulty.value - 1]
-
-    if not world.options.logic_boss_timeout:
-        logic_entrance_behind_location(world, "Can shop at BOTANY A (Episode 2)",
-              "BOTANY A (Episode 2) - Boss")
-    else:
-        logic_entrance_rule(world, "Can shop at BOTANY A (Episode 2)", lambda state, armor=wanted_armor:
-              has_armor_level(state, world.player, armor))
-
     if world.options.logic_difficulty <= LogicDifficulty.option_standard:
         logic_all_locations_exclude(world, "BOTANY A (Episode 2) - End of Path Secret")
 
+    wanted_armor = get_difficulty_armor_choice(world, base=(9, 9, 8, 6))
+    wanted_generator = 3 if world.options.logic_difficulty <= LogicDifficulty.option_standard else 2
+    logic_entrance_rule(world, "BOTANY A (Episode 2) @ Beyond Starting Area", lambda state, armor=wanted_armor, generator=wanted_generator:
+          has_armor_level(state, world.player, armor)
+          or (
+              has_repulsor(state, world.player)
+              and has_generator_level(state, world.player, generator)  # For shield recovery
+          ))
+
     enemy_health = scale_health(world, 15, adjust_difficulty=+1) # Moving turret
-
-    # Presuming you'll damage it at least a bit before it goes off screen for a while
-    logic_location_rule(world, "BOTANY A (Episode 2) - Retreating Mobile Turret", lambda state, health=enemy_health:
-          can_deal_damage(state, world.player, world.damage_tables, active=health/2.2))
-
-    # Armor and generator is to get to that point, damage is to kill as it goes by
+    logic_entrance_rule(world, "BOTANY A (Episode 2) @ Can Destroy Turrets", lambda state, health=enemy_health:
+          can_deal_damage(state, world.player, world.damage_tables, active=health/2.0))
     logic_location_rule(world, "BOTANY A (Episode 2) - Mobile Turret Approaching Head-On", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/1.0))
 
-    logic_all_locations_rule(world, "BOTANY A (Episode 2) - End of Path Secret", lambda state, health=enemy_health:
-          can_deal_damage(state, world.player, world.damage_tables, active=health/2.0))
+    # This one comes before "Beyond Starting Area"...
+    logic_location_rule(world, "BOTANY A (Episode 2) - Retreating Mobile Turret", lambda state, health=enemy_health:
+          can_deal_damage(state, world.player, world.damage_tables, active=health/3.0))
 
-    enemy_health = scale_health(world, 20, adjust_difficulty=+1) # Green ship
     # The backmost ship is the one with the item, expect to destroy at least one other ship to reach it
+    # (except if you can do enough piercing damage, of course)
+    enemy_health = scale_health(world, 20, adjust_difficulty=+1) # Green ship
     logic_location_rule(world, "BOTANY A (Episode 2) - Green Ship Pincer", lambda state, health=enemy_health:
-          can_deal_damage(state, world.player, world.damage_tables, active=(health*2)/3.0))
+          can_deal_damage(state, world.player, world.damage_tables, active=(health*2)/3.0)
+          or can_deal_damage(state, world.player, world.damage_tables, piercing=health/3.0))
 
-    logic_location_rule(world, "BOTANY A (Episode 2) - Boss", lambda state:
-          can_deal_damage(state, world.player, world.damage_tables, active=(254*1.8)/24.0))
-
-    # Apply armor requirements to late locations too
-    logic_location_rule(world, "BOTANY A (Episode 2) - Mobile Turret Approaching Head-On", lambda state, armor=wanted_armor:
-          has_armor_level(state, world.player, armor))
-    logic_all_locations_rule(world, "BOTANY A (Episode 2) - End of Path Secret", lambda state, armor=wanted_armor:
-          has_armor_level(state, world.player, armor))
-    logic_location_rule(world, "BOTANY A (Episode 2) - Green Ship Pincer", lambda state, armor=wanted_armor:
-          has_armor_level(state, world.player, armor))
-    logic_location_rule(world, "BOTANY A (Episode 2) - Boss", lambda state, armor=wanted_armor:
-          has_armor_level(state, world.player, armor))
+    if not world.options.logic_boss_timeout:
+        logic_entrance_rule(world, "BOTANY A (Episode 2) @ Pass Boss (can time out)", lambda state:
+              can_deal_damage(state, world.player, world.damage_tables, active=(254*1.8)/24.0))
+    else:
+        logic_location_rule(world, "BOTANY A (Episode 2) - Boss", lambda state:
+              can_deal_damage(state, world.player, world.damage_tables, active=(254*1.8)/24.0))
 
     # ===== BOTANY B ==========================================================
-    if not world.options.logic_boss_timeout:
-        logic_entrance_behind_location(world, "Can shop at BOTANY B (Episode 2)", "BOTANY B (Episode 2) - Boss")
-    else:
-        logic_entrance_behind_location(world, "Can shop at BOTANY B (Episode 2)", "BOTANY B (Episode 2) - Main Platform Sensor 1")
-
     # Start of level, nothing nearby dangerous, only need to destroy it
     enemy_health = scale_health(world, 6, adjust_difficulty=+1) # Destructible sensor
     logic_location_rule(world, "BOTANY B (Episode 2) - Starting Platform Sensor", lambda state, health=enemy_health:
@@ -1048,27 +1054,24 @@ def episode_2_rules(world: "TyrianWorld") -> None:
     # Past this point is when the game starts demanding more of you.
     # Need enough damage to clear out the screen of turrets
     enemy_health = scale_health(world, 15, adjust_difficulty=+1) # Moving turret
-    logic_location_rule(world, "BOTANY B (Episode 2) - Main Platform Sensor 1", lambda state, health=enemy_health:
+    logic_entrance_rule(world, "BOTANY B (Episode 2) @ Beyond Starting Platform", lambda state, health=enemy_health:
           has_armor_level(state, world.player, 7)
           and (
               can_deal_damage(state, world.player, world.damage_tables, active=(health*4)/4.5)
               or can_deal_damage(state, world.player, world.damage_tables, passive=(health*4)/3.0)
           ))
-    logic_location_rule(world, "BOTANY B (Episode 2) - Main Platform Sensor 2", lambda state:
-          state.can_reach("BOTANY B (Episode 2) - Main Platform Sensor 1", "Location", world.player))
-    logic_location_rule(world, "BOTANY B (Episode 2) - Main Platform Sensor 3", lambda state:
-          state.can_reach("BOTANY B (Episode 2) - Main Platform Sensor 1", "Location", world.player))
-    logic_location_rule(world, "BOTANY B (Episode 2) - Super-Turret on Bridge", lambda state:
-          state.can_reach("BOTANY B (Episode 2) - Main Platform Sensor 1", "Location", world.player))
-    logic_location_rule(world, "BOTANY B (Episode 2) - Boss", lambda state:
-          state.can_reach("BOTANY B (Episode 2) - Main Platform Sensor 1", "Location", world.player)
-          and can_deal_damage(state, world.player, world.damage_tables, active=(254*1.8)/24.0))
+
+    if not world.options.logic_boss_timeout:
+        logic_entrance_rule(world, "BOTANY B (Episode 2) @ Pass Boss (can time out)", lambda state:
+              can_deal_damage(state, world.player, world.damage_tables, active=(254*1.8)/24.0))
+    else:
+        logic_location_rule(world, "BOTANY B (Episode 2) - Boss", lambda state:
+              can_deal_damage(state, world.player, world.damage_tables, active=(254*1.8)/24.0))
 
     # ===== GRYPHON ===========================================================
-    logic_entrance_behind_location(world, "Can shop at GRYPHON (Episode 2)", "GRYPHON (Episode 2) - Boss")
-
-    logic_all_locations_rule(world, "GRYPHON (Episode 2)", lambda state:
-          has_armor_level(state, world.player, 10)
+    wanted_armor = get_difficulty_armor_choice(world, base=(10, 9, 8, 7), hard_contact=(11, 10, 10, 8))
+    logic_entrance_rule(world, "GRYPHON (Episode 2) @ Base Requirements", lambda state, armor=wanted_armor:
+          has_armor_level(state, world.player, armor)
           and has_generator_level(state, world.player, 3)
           and can_deal_damage(state, world.player, world.damage_tables, active=22.0, passive=16.0))
 
@@ -1076,15 +1079,61 @@ def episode_2_rules(world: "TyrianWorld") -> None:
 
 def episode_3_rules(world: "TyrianWorld") -> None:
     # ===== GAUNTLET ==========================================================
+    enemy_health = scale_health(world, 10, adjust_difficulty=-1) # Capsule ships
+    logic_location_rule(world, "GAUNTLET (Episode 3) - Capsule Ships Near Mace", lambda state, health=enemy_health:
+          can_deal_damage(state, world.player, world.damage_tables, active=health/1.3))
+
+    enemy_health = scale_health(world, 20, adjust_difficulty=-1) # Gates
+    logic_location_rule(world, "GAUNTLET (Episode 3) - Doubled-up Gates", lambda state, health=enemy_health:
+          can_deal_damage(state, world.player, world.damage_tables, active=(health*2)/4.4)
+          or can_deal_damage(state, world.player, world.damage_tables, piercing=health/4.4))
+    logic_location_rule(world, "GAUNTLET (Episode 3) - Split Gates, Left", lambda state, health=enemy_health:
+          can_deal_damage(state, world.player, world.damage_tables, active=health/1.5))
+    logic_location_rule(world, "GAUNTLET (Episode 3) - Gate near Freebie Item", lambda state, health=enemy_health:
+          can_deal_damage(state, world.player, world.damage_tables, active=health/1.5))
+
+    enemy_health = scale_health(world, 6, adjust_difficulty=-1) # Weak-point orb
+    # Invulnerability lets you safely pass through without damaging
+    logic_entrance_rule(world, "GAUNTLET (Episode 3) @ Clear Orb Tree", lambda state, health=enemy_health:
+          has_invulnerability(state, world.player)
+          or can_deal_damage(state, world.player, world.damage_tables, active=health/0.5)
+          or can_deal_damage(state, world.player, world.damage_tables, piercing=health/1.2))
+    logic_location_rule(world, "GAUNTLET (Episode 3) - Tree of Spinning Orbs", lambda state, health=enemy_health:
+          can_deal_damage(state, world.player, world.damage_tables, active=health/0.5)
+          or can_deal_damage(state, world.player, world.damage_tables, piercing=health/1.2))
 
     # ===== IXMUCANE ==========================================================
+
+    # Backside of minelayers (weak point) - front has 254/max, dropped mine has double this
+    enemy_health = scale_health(world, 10)
+
+    # Sideways + active to be able to hit the weak points of the center minelayers while damaging other things,
+    # Piercing to hit those weak points through other things anyway, or just a lot of active damage altogether.
+    # Alternatively, Invulnerability can also fill piercing's role.
+    logic_entrance_rule(world, "IXMUCANE (Episode 3) @ Pass Minelayers Requirements", lambda state, health=enemy_health:
+          has_invulnerability(state, world.player)
+          or can_deal_damage(state, world.player, world.damage_tables, active=8.0, sideways=health/8.0)
+          or can_deal_damage(state, world.player, world.damage_tables, piercing=(health*2)/8.0)
+          or can_deal_damage(state, world.player, world.damage_tables, active=((health*6)+254)/8.0))
+
+    # This boss keeps itself guarded inside an indestructible rock at almost all times, and there's a second
+    # destructible target in front of the actual weak point... But none of this matters if you can pierce.
+    # It also summons a mass of tiny rocks as an attack, so if we aren't cheesing it, we want at least some passive.
     if not world.options.logic_boss_timeout:
-        logic_entrance_behind_location(world, "Can shop at IXMUCANE (Episode 3)", "IXMUCANE (Episode 3) - Boss")
+        logic_entrance_rule(world, "IXMUCANE (Episode 3) @ Pass Boss (can time out)", lambda state:
+              can_deal_damage(state, world.player, world.damage_tables, piercing=25/24.0)
+              or can_deal_damage(state, world.player, world.damage_tables, active=50/4.0, passive=8.0))
+    else:
+        # Piercing for cheese kill, or passive to destroy some rocks for safety while we wait
+        logic_entrance_rule(world, "IXMUCANE (Episode 3) @ Pass Boss (can time out)", lambda state:
+              has_invulnerability(state, world.player)
+              or can_deal_damage(state, world.player, world.damage_tables, piercing=25/24.0)
+              or can_deal_damage(state, world.player, world.damage_tables, passive=8.0))
+        logic_location_rule(world, "IXMUCANE (Episode 3) - Boss", lambda state:
+              can_deal_damage(state, world.player, world.damage_tables, piercing=25/24.0)
+              or can_deal_damage(state, world.player, world.damage_tables, active=50/4.0, passive=8.0))
 
     # ===== BONUS =============================================================
-    logic_entrance_behind_location(world, "Can shop at IXMUCANE (Episode 3)",
-          "BONUS (Episode 3) - Sonic Wave Hell Turret")
-
     if world.options.logic_difficulty <= LogicDifficulty.option_standard:
         logic_location_exclude(world, "BONUS (Episode 3) - Sonic Wave Hell Turret")
         logic_all_locations_exclude(world, "Shop - BONUS (Episode 3)")
@@ -1104,70 +1153,50 @@ def episode_3_rules(world: "TyrianWorld") -> None:
         or can_deal_damage(state, world.player, world.damage_tables, piercing=0.2))
 
     # To pass the turret onslaught
-    logic_location_rule(world, "BONUS (Episode 3) - Behind Onslaught 1", lambda state:
-          has_armor_level(state, world.player, 8) and has_generator_level(state, world.player, 3))
-    logic_location_rule(world, "BONUS (Episode 3) - Behind Onslaught 2", lambda state:
-          has_armor_level(state, world.player, 8) and has_generator_level(state, world.player, 3))
-    logic_location_rule(world, "BONUS (Episode 3) - Lone Turret 2", lambda state:
-          has_armor_level(state, world.player, 8) and has_generator_level(state, world.player, 3))
-
     enemy_health = (scale_health(world, 25) - 10) # Two-wide turret, to take down to damaged (non-firing) state
-    logic_location_rule(world, "BONUS (Episode 3) - Lone Turret 2", lambda state, health=enemy_health:
+    logic_entrance_rule(world, "BONUS (Episode 3) @ Pass Onslaughts", lambda state, health=enemy_health:
           has_repulsor(state, world.player)
           or can_deal_damage(state, world.player, world.damage_tables, active=(health*4)/3.6))
+    logic_entrance_rule(world, "BONUS (Episode 3) @ Pass Onslaughts", lambda state:
+          has_generator_level(state, world.player, 3)  # For shield recovery
+          and has_armor_level(state, world.player, 8)) 
 
     # Do you have knowledge of the safe spot through this section? Master assumes you do, anything else doesn't.
-    # For Master logic apply the above to Sonic Wave Hell Turret too.
-    if world.options.logic_difficulty >= LogicDifficulty.option_master:
-        logic_location_rule(world, "BONUS (Episode 3) - Sonic Wave Hell Turret", lambda state:
-              has_armor_level(state, world.player, 8) and has_generator_level(state, world.player, 3))
-        logic_location_rule(world, "BONUS (Episode 3) - Sonic Wave Hell Turret", lambda state, health=enemy_health:
+    # If we're not assuming safe spot knowledge, we need the repulsor, or some sideways DPS and more armor.
+    if world.options.logic_difficulty < LogicDifficulty.option_master:
+        logic_entrance_rule(world, "BONUS (Episode 3) @ Sonic Wave Hell", lambda state, health=enemy_health:
               has_repulsor(state, world.player)
-              or can_deal_damage(state, world.player, world.damage_tables, active=health/3.6))
-    else: # We need the repulsor or a sideways damage source and a lot of health.
-        logic_location_rule(world, "BONUS (Episode 3) - Sonic Wave Hell Turret", lambda state:
-              has_generator_level(state, world.player, 3))
-        logic_location_rule(world, "BONUS (Episode 3) - Sonic Wave Hell Turret", lambda state, health=enemy_health:
-              (
-                  has_repulsor(state, world.player)
-                  and has_armor_level(state, world.player, 8)
-              ) or (
+              or (
                   has_armor_level(state, world.player, 12)
                   and can_deal_damage(state, world.player, world.damage_tables, active=health/3.6, sideways=4.0)
               ))
 
     # To actually get the items from turret onslaught
-    enemy_health = scale_health(world, 25) + scale_health(world, 3) # Single two-tile turret, plus item ship
-    logic_location_rule(world, "BONUS (Episode 3) - Behind Onslaught 1", lambda state, health=enemy_health:
-          can_deal_damage(state, world.player, world.damage_tables, active=health/1.8))
-    logic_location_rule(world, "BONUS (Episode 3) - Behind Onslaught 2", lambda state, health=enemy_health:
+    enemy_health = (scale_health(world, 25) * 2) + scale_health(world, 3) # Two two-tile turrets, plus item ship
+    logic_entrance_rule(world, "BONUS (Episode 3) @ Get Items from Onslaughts", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/1.8))
 
     # ===== STARGATE ==========================================================
-    logic_entrance_behind_location(world, "Can shop at STARGATE (Episode 3)",
-        "STARGATE (Episode 3) - Super Bubble Spawner")
-
     # Just need some way of combating the bubble spam that happens after the last normal location
-    logic_location_rule(world, "STARGATE (Episode 3) - Super Bubble Spawner", lambda state:
+    logic_entrance_rule(world, "STARGATE (Episode 3) @ Reach Bubble Spawner", lambda state:
         can_deal_damage(state, world.player, world.damage_tables, passive=7.0))
 
     # ===== AST. CITY =========================================================
+    # TODO
 
     # ===== SAWBLADES =========================================================
+    # TODO
     if world.options.logic_difficulty == LogicDifficulty.option_beginner:
         logic_location_exclude(world, "SAWBLADES (Episode 3) - SuperCarrot Drop")
 
     # ===== CAMANIS ===========================================================
-    if not world.options.logic_boss_timeout:
-        logic_entrance_behind_location(world, "Can shop at CAMANIS (Episode 3)", "CAMANIS (Episode 3) - Boss")
+    # TODO
 
     # ===== MACES =============================================================
     # (logicless - purely a test of dodging skill)
 
     # ===== TYRIAN X ==========================================================
-    if not world.options.logic_boss_timeout:
-        logic_entrance_behind_location(world, "Can shop at TYRIAN X (Episode 3)", "TYRIAN X (Episode 3) - Boss")
-
+    # TODO
     if world.options.logic_difficulty == LogicDifficulty.option_beginner:
         logic_location_exclude(world, "TYRIAN X (Episode 3) - First U-Ship Secret")
         logic_location_exclude(world, "TYRIAN X (Episode 3) - Second Secret, Same as the First")
@@ -1175,18 +1204,16 @@ def episode_3_rules(world: "TyrianWorld") -> None:
         logic_location_exclude(world, "TYRIAN X (Episode 3) - Tank Turn-and-fire Secret")
 
     # ===== SAVARA Y ==========================================================
-    if not world.options.logic_boss_timeout:
-        logic_entrance_behind_location(world, "Can shop at SAVARA Y (Episode 3)", "SAVARA Y (Episode 3) - Boss")
+    # TODO
 
     # ===== NEW DELI ==========================================================
-    logic_entrance_behind_location(world, "Can shop at NEW DELI (Episode 3)", "NEW DELI (Episode 3) - Boss")
+    # TODO
 
     # ===== FLEET =============================================================
-    logic_entrance_behind_location(world, "Can shop at FLEET (Episode 3)", "FLEET (Episode 3) - Boss")
-
-    logic_location_rule(world, "FLEET (Episode 3) - Boss", lambda state:
+    # TODO
+    logic_entrance_rule(world, "FLEET (Episode 3) @ Destroy Boss", lambda state:
           has_armor_level(state, world.player, 12) and has_generator_level(state, world.player, 4))
-    logic_location_rule(world, "FLEET (Episode 3) - Boss", lambda state:
+    logic_entrance_rule(world, "FLEET (Episode 3) @ Destroy Boss", lambda state:
           can_deal_damage(state, world.player, world.damage_tables, active=50.0))
 
 # -----------------------------------------------------------------------------
