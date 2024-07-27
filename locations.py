@@ -53,7 +53,7 @@ class LevelRegion:
     locations: Dict[str, Any]  # List of strings to location or sub-region names
     shop_setups: List[str]  # See base_shop_setups_list above
 
-    def __init__(self, episode: Episode, locations: List[str], shop_setups: List[str] = ["F", "H", "K", "L"]):
+    def __init__(self, episode: Episode, locations: Dict[str, Any], shop_setups: List[str] = ["F", "H", "K", "L"]):
         self.episode = episode
         self.locations = locations
         self.shop_setups = shop_setups
@@ -248,7 +248,7 @@ class LevelLocationData:
         "SAVARA II (Episode 1)": LevelRegion(episode=Episode.Escape, locations={
             "SAVARA II (Episode 1) @ Base Requirements": {
                 "SAVARA II (Episode 1) - Launched Planes 1": 100,
-                "SAVARA II (Episode 1) - Large Plane Amidst Turrets": 102,
+                "SAVARA II (Episode 1) - Huge Plane Amidst Turrets": 102,
                 "SAVARA II (Episode 1) - Vulcan Planes Near Blimp": 103,
                 "SAVARA II (Episode 1) - Launched Planes 2": 104,
 
@@ -594,9 +594,16 @@ class LevelLocationData:
         }),
 
         "SAWBLADES (Episode 3)": LevelRegion(episode=Episode.MissionSuicide, locations={
-            # !!! TODO !!!
-            "SAWBLADES (Episode 3) - SuperCarrot Drop": 330,
-            "Shop - SAWBLADES (Episode 3)": (1330, 1331, 1332, 1333, 1334),
+            "SAWBLADES (Episode 3) @ Base Requirements": {            
+                "SAWBLADES (Episode 3) - Small Enemy 1": 330,
+                "SAWBLADES (Episode 3) - Small Enemy 2": 331,
+                "SAWBLADES (Episode 3) - Turret 1": 332,
+                "SAWBLADES (Episode 3) - Waving Sawblade": 333,
+                "SAWBLADES (Episode 3) - Turret 2": 334,
+                "SAWBLADES (Episode 3) - Small Enemy 3": 335,
+                "SAWBLADES (Episode 3) - SuperCarrot Secret Drop": 336,
+                "Shop - SAWBLADES (Episode 3)": (1330, 1331, 1332, 1333, 1334),
+            }
         }),
 
         "CAMANIS (Episode 3)": LevelRegion(episode=Episode.MissionSuicide, locations={
@@ -615,9 +622,9 @@ class LevelLocationData:
         "MACES (Episode 3)": LevelRegion(episode=Episode.MissionSuicide, locations={
             "MACES (Episode 3) - Third Mace's Path": 350,
             "MACES (Episode 3) - Sixth Mace's Path": 351,
-            "MACES (Episode 3) - A Brief Reprieve 1": 352,
-            "MACES (Episode 3) - A Brief Reprieve 2": 353,
-            "MACES (Episode 3) - A Brief Reprieve 3": 354,
+            "MACES (Episode 3) - A Brief Reprieve, Left": 352,
+            "MACES (Episode 3) - A Brief Reprieve, Center": 353,
+            "MACES (Episode 3) - A Brief Reprieve, Right": 354,
             "Shop - MACES (Episode 3)": (1350, 1351, 1352, 1353, 1354),
         }),
 
@@ -627,9 +634,11 @@ class LevelLocationData:
             "TYRIAN X (Episode 3) - Side-flying Ship Near Landers": 362,
             "TYRIAN X (Episode 3) - Platform Spinner Sequence": 363,
             "TYRIAN X (Episode 3) - Ships Between Platforms": 364,
-            "TYRIAN X (Episode 3) - Tank Near Purple Structure": 365,
-            "TYRIAN X (Episode 3) - Tank Turn-and-fire Secret": 366,
 
+            "TYRIAN X (Episode 3) @ Tanks Behind Structures": {
+                "TYRIAN X (Episode 3) - Tank Near Purple Structure": 365,
+                "TYRIAN X (Episode 3) - Tank Turn-and-fire Secret": 366,
+            },
             "TYRIAN X (Episode 3) @ Pass Boss (can time out)": {
                 "TYRIAN X (Episode 3) - Boss": 367,
                 "Shop - TYRIAN X (Episode 3)": (1360, 1361, 1362, 1363, 1364),
@@ -637,11 +646,22 @@ class LevelLocationData:
         }),
 
         "SAVARA Y (Episode 3)": LevelRegion(episode=Episode.MissionSuicide, locations={
-            # !!! TODO !!!
-            "SAVARA Y (Episode 3) @ Pass Boss (can time out)": {
-                "SAVARA Y (Episode 3) - Boss": 370,
-                "Shop - SAVARA Y (Episode 3)": (1370, 1371, 1372, 1373, 1374),
-            },
+            "SAVARA Y (Episode 3) - White Formation Leader": 370,
+            "SAVARA Y (Episode 3) - Flying Between Huge Planes": 371,
+            "SAVARA Y (Episode 3) - Vulcan Plane Set": 372,
+
+            "SAVARA Y (Episode 3) @ Through Blimp Blockade": {
+                "SAVARA Y (Episode 3) - Boss Ship Fly-By": 373,
+
+                "SAVARA Y (Episode 3) @ Death Plane Set": {
+                    "SAVARA Y (Episode 3) - Death Plane Set, Right": 374,
+                    "SAVARA Y (Episode 3) - Death Plane Set, Center": 375,                
+                },
+                "SAVARA Y (Episode 3) @ Pass Boss (can time out)": {
+                    "SAVARA Y (Episode 3) - Boss": 376,
+                    "Shop - SAVARA Y (Episode 3)": (1370, 1371, 1372, 1373, 1374),
+                },
+            }
         }),
 
         "NEW DELI (Episode 3)": LevelRegion(episode=Episode.MissionSuicide, locations={
@@ -660,10 +680,10 @@ class LevelLocationData:
         }),
 
         "FLEET (Episode 3)": LevelRegion(episode=Episode.MissionSuicide, locations={
-            "FLEET (Episode 3) - Attractor Crane 1": 390,
+            "FLEET (Episode 3) - Attractor Crane, Entrance": 390,
             "FLEET (Episode 3) - Enemy 1": 391,
             "FLEET (Episode 3) - Enemy 2": 392,
-            "FLEET (Episode 3) - Attractor Crane 2": 393,
+            "FLEET (Episode 3) - Attractor Crane, Mid-Fleet": 393,
 
             "FLEET (Episode 3) @ Destroy Boss": {
                 "FLEET (Episode 3) - Boss": 394,
@@ -848,7 +868,7 @@ class LevelLocationData:
 
         "SAVARA (Episode 5)": LevelRegion(episode=Episode.HazudraFodder, locations={
             "SAVARA (Episode 5) - Green Vulcan Plane 1": 610,
-            "SAVARA (Episode 5) - Large Plane Formation": 611,
+            "SAVARA (Episode 5) - Huge Plane Formation": 611,
             "SAVARA (Episode 5) - Surrounded Vulcan Plane": 612,
             "SAVARA (Episode 5) - Unknown 1": 613,
             "SAVARA (Episode 5) - Unknown 2": 614,
@@ -959,7 +979,7 @@ class LevelLocationData:
         "TORM (Episode 2) - Ship Fleeing Dragon Secret": """
             One plane will stick around long enough for a dragon to fly towards it. Shoot it as it starts to flee.
         """,
-        "SAWBLADES (Episode 3) - SuperCarrot Drop": """
+        "SAWBLADES (Episode 3) - SuperCarrot Secret Drop": """
             Throughout the level, carrot-shaped ships will fly towards you.
             Destroy all of them, and the last will yield this item.
         """,
