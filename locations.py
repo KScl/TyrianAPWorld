@@ -4,14 +4,14 @@
 # and is released under the terms of the zlib license.
 # See "LICENSE" for more details.
 
-from typing import TYPE_CHECKING, Dict, List, Set, Tuple, Any
+from typing import TYPE_CHECKING, Any, Dict, List, Set, Tuple
 
-from BaseClasses import LocationProgressType as LP
+from BaseClasses import LocationProgressType as LPType
 
 from .items import Episode
 
 if TYPE_CHECKING:
-    from . import TyrianWorld, TyrianLocation
+    from . import TyrianLocation, TyrianWorld
 
 
 class LevelRegion:
@@ -63,7 +63,7 @@ class LevelRegion:
     def set_random_shop_price(self, world: "TyrianWorld", location: "TyrianLocation") -> None:
         setup_choice = world.random.choice(self.shop_setups)
         if len(setup_choice) > 1:
-            location.progress_type = LP.PRIORITY if setup_choice[-1] == "!" else LP.EXCLUDED
+            location.progress_type = LPType.PRIORITY if setup_choice[-1] == "!" else LPType.EXCLUDED
         location.shop_price = min(world.random.randrange(*self.base_shop_setup_list[setup_choice[0]]), 65535)
 
     # Gets a flattened dict of all locations, id: name
@@ -88,6 +88,7 @@ class LevelRegion:
     # Returns just names from the above.
     def get_location_names(self) -> Set[str]:
         return {name for name in self.get_locations()}
+
 
 class LevelLocationData:
 
@@ -120,7 +121,7 @@ class LevelLocationData:
                 "BUBBLES (Episode 1) - Orbiting Bubbles": 10,
                 "BUBBLES (Episode 1) - Shooting Bubbles": 11,
                 "BUBBLES (Episode 1) - Final Bubble Line": 15,
-                "Shop - BUBBLES (Episode 1)": (1010, 1011, 1012, 1013, 1014),            
+                "Shop - BUBBLES (Episode 1)": (1010, 1011, 1012, 1013, 1014),
 
                 "BUBBLES (Episode 1) @ Speed Up Section": {
                     "BUBBLES (Episode 1) - Coin Rain 1": 12,
@@ -142,7 +143,7 @@ class LevelLocationData:
 
                 "HOLES (Episode 1) @ Destroy Boss Ships": {
                     "HOLES (Episode 1) - Boss Ship Fly-By 1": 23,
-                    "HOLES (Episode 1) - Boss Ship Fly-By 2": 25,                
+                    "HOLES (Episode 1) - Boss Ship Fly-By 2": 25,
                 },
             },
         }, shop_setups=["C", "D", "D", "E", "F", "F", "H"]),
@@ -199,7 +200,7 @@ class LevelLocationData:
 
                 "ASTEROID? (Episode 1) @ Quick Shots": {
                     "ASTEROID? (Episode 1) - Quick Shot 1": 64,
-                    "ASTEROID? (Episode 1) - Quick Shot 2": 65,            
+                    "ASTEROID? (Episode 1) - Quick Shot 2": 65,
                 },
                 "ASTEROID? (Episode 1) @ Final Gauntlet": {
                     "Shop - ASTEROID? (Episode 1)": (1060, 1061, 1062, 1063, 1064),
@@ -553,7 +554,7 @@ class LevelLocationData:
                 "IXMUCANE (Episode 3) @ Pass Boss (can time out)": {
                     "IXMUCANE (Episode 3) - Boss": 296,
                     "Shop - IXMUCANE (Episode 3)": (1290, 1291, 1292, 1293, 1294),
-                },            
+                },
             }
         }),
 
@@ -594,7 +595,7 @@ class LevelLocationData:
         }),
 
         "SAWBLADES (Episode 3)": LevelRegion(episode=Episode.MissionSuicide, locations={
-            "SAWBLADES (Episode 3) @ Base Requirements": {            
+            "SAWBLADES (Episode 3) @ Base Requirements": {
                 "SAWBLADES (Episode 3) - Small Enemy 1": 330,
                 "SAWBLADES (Episode 3) - Small Enemy 2": 331,
                 "SAWBLADES (Episode 3) - Turret 1": 332,
@@ -655,7 +656,7 @@ class LevelLocationData:
 
                 "SAVARA Y (Episode 3) @ Death Plane Set": {
                     "SAVARA Y (Episode 3) - Death Plane Set, Right": 374,
-                    "SAVARA Y (Episode 3) - Death Plane Set, Center": 375,                
+                    "SAVARA Y (Episode 3) - Death Plane Set, Center": 375,
                 },
                 "SAVARA Y (Episode 3) @ Pass Boss (can time out)": {
                     "SAVARA Y (Episode 3) - Boss": 376,
@@ -887,9 +888,9 @@ class LevelLocationData:
         }),
 
         # Remains here for possible future use (corresponds to unused level)
-        #"CANYONRUN (Episode 5)": LevelRegion(episode=Episode.HazudraFodder, locations={
-        #    "Shop - CANYONRUN (Episode 5)": (1630, 1631, 1632, 1633, 1634),
-        #})
+#       "CANYONRUN (Episode 5)": LevelRegion(episode=Episode.HazudraFodder, locations={
+#           "Shop - CANYONRUN (Episode 5)": (1630, 1631, 1632, 1633, 1634),
+#       })
 
         "STATION (Episode 5)": LevelRegion(episode=Episode.HazudraFodder, locations={
             "STATION (Episode 5) - Pulse-Turret 1": 640,

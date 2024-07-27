@@ -4,11 +4,12 @@
 # and is released under the terms of the zlib license.
 # See "LICENSE" for more details.
 
-from typing import TYPE_CHECKING, List, Dict, Any
 from enum import IntEnum
+from typing import TYPE_CHECKING, Any, Dict, List
 
 if TYPE_CHECKING:
     from . import TyrianWorld
+
 
 class SpecialValues(IntEnum):
     # These are specials that can be used as twiddles, with their associated internal numbers.
@@ -43,6 +44,7 @@ class SpecialValues(IntEnum):
     SoulOfZinglon = 3
     XegaBall = 14
 
+
 class TwidDir(IntEnum):
     Up = 1
     Down = 2
@@ -53,6 +55,7 @@ class TwidDir(IntEnum):
     LeftFire = 7
     RightFire = 8
     Neutral = 9
+
 
 class Twiddle:
     name: str
@@ -92,6 +95,7 @@ class Twiddle:
             "Command": [int(cmd) for cmd in self.command],
             "Cost": int(self.cost)
         }
+
 
 vanilla_twiddle_list: List[List[Twiddle]] = [
     [
@@ -154,6 +158,7 @@ vanilla_twiddle_list: List[List[Twiddle]] = [
               command=[TwidDir.Neutral, TwidDir.RightFire])
     ],
 ]
+
 
 def generate_twiddles(world: "TyrianWorld", chaos_mode: bool = False) -> List[Twiddle]:
     random_value = world.random.randrange(100)

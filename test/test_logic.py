@@ -4,12 +4,13 @@
 # and is released under the terms of the zlib license.
 # See "LICENSE" for more details.
 
-from . import TyrianTestBase
 from ..logic import can_deal_damage
+from . import TyrianTestBase
 
 # =============================================================================
 # Testing Tyrian 2000 specific things
 # =============================================================================
+
 
 class TestTyrian2000Data(TyrianTestBase):
     options = {
@@ -19,7 +20,7 @@ class TestTyrian2000Data(TyrianTestBase):
         "episode_3": "goal",
         "episode_4": "goal",
         "episode_5": "goal",
-    }   
+    }
 
     # At least one Tyrian 2000 item should be in the pool.
     def test_tyrian_2000_items_in_pool(self) -> None:
@@ -39,6 +40,7 @@ class TestTyrian2000Data(TyrianTestBase):
 # Testing base game things
 # =============================================================================
 
+
 class TestTyrianData(TyrianTestBase):
     options = {
         "enable_tyrian_2000_support": False,
@@ -46,7 +48,7 @@ class TestTyrianData(TyrianTestBase):
         "episode_2": "goal",
         "episode_3": "goal",
         "episode_4": "goal",
-        "episode_5": "on", # Should be automatically turned off
+        "episode_5": "on",  # Should be automatically turned off
     }
 
     # No Tyrian 2000 items should ever be in the pool -- Tyrian 2.1 data cannot support them.
@@ -112,10 +114,10 @@ class TestTyrianData(TyrianTestBase):
         self.collect(self.get_item_by_name("Atomic RailGun"))
         active_dps_check = can_deal_damage(self.multiworld.state, self.player, damage_tables, active=90.0)
         self.assertEqual(active_dps_check, False, "Atomic RailGun:11 should not be usable with Standard MR-9")
-        self.collect(generators[0:2]) # Still shouldn't be enough
+        self.collect(generators[0:2])  # Still shouldn't be enough
         active_dps_check = can_deal_damage(self.multiworld.state, self.player, damage_tables, active=90.0)
         self.assertEqual(active_dps_check, False, "Atomic RailGun:11 should not be usable with Gencore Custom MR-12")
-        self.collect(generators[2:4]) # Advanced MicroFusion should be enough to use and thus meet target DPS
+        self.collect(generators[2:4])  # Advanced MicroFusion should be enough to use and thus meet target DPS
         active_dps_check = can_deal_damage(self.multiworld.state, self.player, damage_tables, active=90.0)
         self.assertEqual(active_dps_check, True, "Atomic RailGun:11 should be usable with Advanced MicroFusion")
 
@@ -170,17 +172,17 @@ class TestTyrianData(TyrianTestBase):
         self.assertEqual(mixed_dps_check, False, "No combination of weapons can simultaneously fulfill active 12.0 and passive 12.0")
 
         # Should succeed (Protron Z:1 + Starburst:1 = 14.0/0.0 + 0.0/15.3 = 14.0/15.3)
-        self.collect(generators[0:3]) # To Standard MicroFusion (25 base)
+        self.collect(generators[0:3])  # To Standard MicroFusion (25 base)
         mixed_dps_check = can_deal_damage(self.multiworld.state, self.player, damage_tables, active=12.0, passive=12.0)
         self.assertEqual(mixed_dps_check, True, "Protron Z:1 + Starburst:1 should be 14.0/15.3 DPS together, but failed 12.0/12.0")
-        self.remove(generators[0:3]) # To Standard MR-9 (10 base)
+        self.remove(generators[0:3])  # To Standard MR-9 (10 base)
 
         # Should fail (shouldn't be able to make this work with just power 1)
         mixed_dps_check = can_deal_damage(self.multiworld.state, self.player, damage_tables, active=22.0, passive=5.0)
         self.assertEqual(mixed_dps_check, False, "No combination of weapons can simultaneously fulfill active 22.0 and passive 5.0")
 
         # Should succeed (Pulse-Cannon:3 + Fireball:2 = 18.7/0.0 + 6.0/6.0 = 24.7/6.0)
-        self.collect(powerups[0:2]) # To Maximum Power 3
+        self.collect(powerups[0:2])  # To Maximum Power 3
         mixed_dps_check = can_deal_damage(self.multiworld.state, self.player, damage_tables, active=22.0, passive=5.0)
         self.assertEqual(mixed_dps_check, True, "Pulse-Cannon:3 + Starburst:2 should be 24.7/6.0 DPS together, but failed 22.0/5.0")
 
@@ -189,6 +191,6 @@ class TestTyrianData(TyrianTestBase):
         # Without weighting active over passive, Banana Blast (Front):11 will get picked over Pulse-Cannon:11
         # because it satisfies significantly more passive DPS than the Pulse-Cannon does, but if it does pick that
         # then it can't satisfy the 40.0 active DPS requirement
-        self.collect(powerups[2:10]) # To Maximum Power 11
+        self.collect(powerups[2:10])  # To Maximum Power 11
         mixed_dps_check = can_deal_damage(self.multiworld.state, self.player, damage_tables, active=40.0, passive=50.0)
         self.assertEqual(mixed_dps_check, True, "Pulse-Cannon:11 + Starburst:2 should be 47.3/55.2 DPS together, but failed 40.0/50.0")

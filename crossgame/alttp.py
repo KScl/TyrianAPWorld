@@ -4,13 +4,14 @@
 # and is released under the terms of the zlib license.
 # See "LICENSE" for more details.
 
-import logging
 import itertools
-from typing import NamedTuple, List, Tuple, Dict
+import logging
+from typing import Dict, List, NamedTuple, Tuple
 
 from .. import TyrianWorld
 
 # =================================================================================================
+
 
 class TyrianALTTPText(NamedTuple):
     pedestal: str
@@ -18,6 +19,7 @@ class TyrianALTTPText(NamedTuple):
     potion_shop: str
     zora: str
     flute_spot: str
+
 
 # Items associated with text strings -> list of strings to give to ALTTP world
 alttp_item_texts: List[Tuple[List[str], TyrianALTTPText]] = [
@@ -44,7 +46,7 @@ alttp_item_texts: List[Tuple[List[str], TyrianALTTPText]] = [
     # - "Beno Wallop Beam"
     # - "Beno Protron System -B-"
 
-    ( # Levels
+    (  # Levels
         ["TYRIAN (Episode 1)", "BUBBLES (Episode 1)", "HOLES (Episode 1)", "SOH JIN (Episode 1)",
               "ASTEROID1 (Episode 1)", "ASTEROID2 (Episode 1)", "ASTEROID? (Episode 1)", "MINEMAZE (Episode 1)",
               "WINDY (Episode 1)", "SAVARA (Episode 1)", "SAVARA II (Episode 1)", "BONUS (Episode 1)",
@@ -70,7 +72,7 @@ alttp_item_texts: List[Tuple[List[str], TyrianALTTPText]] = [
               zora="ship coordinates for sale",
               flute_spot="star boy finds planet again")
     ),
-    ( # Pulse Weapons
+    (  # Pulse Weapons
         ["Pulse-Cannon", "Multi-Cannon (Front)", "Mega Pulse (Front)", "Hyper Pulse", "NortShip Super Pulse",
               "Multi-Cannon (Rear)", "Mega Pulse (Rear)", "NortShip Spreader", "NortShip Spreader B", "Pulse Blast",
               "Single Shot Option", "Dual Shot Option"],
@@ -81,7 +83,7 @@ alttp_item_texts: List[Tuple[List[str], TyrianALTTPText]] = [
               zora="pulse gun for sale",
               flute_spot="pulse boy goes pew pew again")
     ),
-    ( # Protron Weapons
+    (  # Protron Weapons
         ["Protron Z", "Protron (Front)", "Protron Wave", "Protron (Rear)", "Pearl Wind", "Protron Dispersal"],
         TyrianALTTPText(
               pedestal="and the orb shooter",
@@ -90,7 +92,7 @@ alttp_item_texts: List[Tuple[List[str], TyrianALTTPText]] = [
               zora="orb maker for sale",
               flute_spot="orb boy throws sphere again")
     ),
-    ( # Vulcan Weapons
+    (  # Vulcan Weapons
         ["Vulcan Cannon (Front)", "Vulcan Cannon (Rear)", "Dual Vulcan", "Vulcan Shot Option"],
         TyrianALTTPText(
               pedestal="and the quick shooter",
@@ -99,7 +101,7 @@ alttp_item_texts: List[Tuple[List[str], TyrianALTTPText]] = [
               zora="rapid shooter for sale",
               flute_spot="vulcan boy shoots fast again")
     ),
-    ( # Laser Weapons
+    (  # Laser Weapons
         ["Laser", "Zica Laser", "Needle Laser", "MegaLaser Dual", "MegaLaser", "SDF Main Gun", "Zica Supercharger"],
         TyrianALTTPText(
               pedestal="and the space laser",
@@ -108,7 +110,7 @@ alttp_item_texts: List[Tuple[List[str], TyrianALTTPText]] = [
               zora="laser beams for sale",
               flute_spot="laser boy shines beam again")
     ),
-    ( # Missile Weapons
+    (  # Missile Weapons
         ["Missile Launcher", "Heavy Missile Launcher (Front)", "Heavy Missile Launcher (Rear)", "Missile Pod",
               "MegaMissile", "Atom Bombs", "Mini-Missile", "Buster Rocket"],
         TyrianALTTPText(
@@ -118,7 +120,7 @@ alttp_item_texts: List[Tuple[List[str], TyrianALTTPText]] = [
               zora="rocket launcher for sale",
               flute_spot="rocket boy fires missile again")
     ),
-    ( # Guided Bomb Weapons
+    (  # Guided Bomb Weapons
         ["Guided Bombs", "Guided Micro Bombs", "Heavy Guided Bombs"],
         TyrianALTTPText(
               pedestal="and the guided booms",
@@ -127,7 +129,7 @@ alttp_item_texts: List[Tuple[List[str], TyrianALTTPText]] = [
               zora="guided bombs for sale",
               flute_spot="homing boy finds target again")
     ),
-    ( # Lightning Weapons
+    (  # Lightning Weapons
         ["Lightning Cannon", "Lightning Zone"],
         TyrianALTTPText(
               pedestal="and the zap cannon",
@@ -136,7 +138,7 @@ alttp_item_texts: List[Tuple[List[str], TyrianALTTPText]] = [
               zora="very very frightening",
               flute_spot="wizard boy zaps things again")
     ),
-    ( # Audio Weapons
+    (  # Audio Weapons
         ["Sonic Impulse", "Sonic Wave"],
         TyrianALTTPText(
               pedestal="and the audio device",
@@ -145,7 +147,7 @@ alttp_item_texts: List[Tuple[List[str], TyrianALTTPText]] = [
               zora="noise complaints for sale",
               flute_spot="loud boy makes noise again")
     ),
-    ( # Fruit Weapons
+    (  # Fruit Weapons
         ["Banana Blast (Front)", "The Orange Juicer", "Banana Blast (Rear)", "Banana Bomb", "Orange Shield",
               "Tropical Cherry Companion"],
         TyrianALTTPText(
@@ -155,7 +157,7 @@ alttp_item_texts: List[Tuple[List[str], TyrianALTTPText]] = [
               zora="space fruit for sale",
               flute_spot="fruit boy wastes food again")
     ),
-    ( # Snack-food Weapons
+    (  # Snack-food Weapons
         ["HotDog (Front)", "Pretzel Missile", "HotDog (Rear)", "People Pretzels", "Super Pretzel", "Bubble Gum-Gun"],
         TyrianALTTPText(
               pedestal="and the snack shooter",
@@ -164,7 +166,7 @@ alttp_item_texts: List[Tuple[List[str], TyrianALTTPText]] = [
               zora="space snack for sale",
               flute_spot="snack boy wastes food again")
     ),
-    ( # Ninja Weapons
+    (  # Ninja Weapons
         ["Shuriken Field", "Poison Bomb", "Blade Field"],
         TyrianALTTPText(
               pedestal="and the ninja tools",
@@ -173,7 +175,7 @@ alttp_item_texts: List[Tuple[List[str], TyrianALTTPText]] = [
               zora="ninja gear for sale",
               flute_spot="ninja boy hides again")
     ),
-    ( # Ball Weapons
+    (  # Ball Weapons
         ["RetroBall", "Wild Ball", "Xega Ball"],
         TyrianALTTPText(
               pedestal="and the funky ball",
@@ -182,7 +184,7 @@ alttp_item_texts: List[Tuple[List[str], TyrianALTTPText]] = [
               zora="strange ball for sale",
               flute_spot="funky boy tosses ball again")
     ),
-    ( # Dragon Weapons
+    (  # Dragon Weapons
         ["Dragon Frost", "Dragon Flame", "Dragon Lightning"],
         TyrianALTTPText(
               pedestal="and the dragon breath",
@@ -191,7 +193,7 @@ alttp_item_texts: List[Tuple[List[str], TyrianALTTPText]] = [
               zora="dragon breath for sale",
               flute_spot="dragon boy breathes again")
     ),
-    ( # MicroBombs
+    (  # MicroBombs
         ["MicroBomb", "8-Way MicroBomb"],
         TyrianALTTPText(
               pedestal="and the tiny bomb",
@@ -200,7 +202,7 @@ alttp_item_texts: List[Tuple[List[str], TyrianALTTPText]] = [
               zora="mini boom for sale",
               flute_spot="mini boy goes boom again")
     ),
-    ( # Companion Ships
+    (  # Companion Ships
         ["Companion Ship Warfly", "Companion Ship Gerund", "Companion Ship Quicksilver"],
         TyrianALTTPText(
               pedestal="and the companion",
@@ -209,7 +211,7 @@ alttp_item_texts: List[Tuple[List[str], TyrianALTTPText]] = [
               zora="companionship for sale",
               flute_spot="lonely boy has friend again")
     ),
-    ( # Generators
+    (  # Generators
         ["Advanced MR-12", "Gencore Custom MR-12", "Standard MicroFusion", "Advanced MicroFusion",
               "Gravitron Pulse-Wave", "Progressive Generator"],
         TyrianALTTPText(
@@ -219,7 +221,7 @@ alttp_item_texts: List[Tuple[List[str], TyrianALTTPText]] = [
               zora="power plant for sale",
               flute_spot="energy boy makes power again")
     ),
-    ( # Money
+    (  # Money
         ["50 Credits", "75 Credits", "100 Credits", "150 Credits", "200 Credits", "300 Credits", "375 Credits",
               "500 Credits", "750 Credits", "800 Credits", "1000 Credits", "2000 Credits", "5000 Credits",
               "7500 Credits", "10000 Credits", "20000 Credits", "40000 Credits"],
@@ -230,7 +232,7 @@ alttp_item_texts: List[Tuple[List[str], TyrianALTTPText]] = [
               zora="bad exchange rate for sale",
               flute_spot="space boy sends money again")
     ),
-    ( # Large Money
+    (  # Large Money
         ["75000 Credits", "100000 Credits", "1000000 Credits"],
         TyrianALTTPText(
               pedestal="and the space jackpot",

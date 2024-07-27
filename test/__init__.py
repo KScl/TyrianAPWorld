@@ -6,5 +6,6 @@
 
 from test.bases import WorldTestBase
 
+
 class TyrianTestBase(WorldTestBase):
     game = "Tyrian"

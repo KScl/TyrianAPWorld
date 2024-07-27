@@ -1,0 +1,46 @@
+line-length = 120
+
+[lint]
+select = ["E", "F", "W", "I", "N", "Q", "UP", "RUF", "ISC", "T20"]
+ignore = [
+	# See style in README.md: We use multiple statements on one line to emulate switch statements
+	# when we can visually align them and stay under the line limit.
+	"E701",  # Multiple statements on one line (colon)
+
+	# Frequently trips on Options classes
+	"RUF012",  # Mutable class attributes should be annotated with 'typing.ClassVar'
+
+	# Don't remove noqa statements that may affect other linters
+	"RUF100",  # Unused `noqa` directive
+
+	# Aligning multiple lines results in much easier to read tables, switch-like statements, etc.
+	# Therefore we heavily disagree with rules that aim to remove that, and ignore them.
+	# They're all currently in preview anyway, but just in case...
+	"E201",  # Whitespace after '['
+	"E221",  # Multiple spaces before operator
+	"E241",  # Multiple spaces after comma
+	"E271",  # Multiple spaces after keyword
+	"E272"  # Multiple spaces before keyword
+]
+
+[lint.per-file-ignores]
+"options.py" = [
+	# Currently requires breaking line length limit in docstrings.
+	"E501"  # Line too long (* > 120)
+]
+
+"logic.py" = [
+	# Logic conditions can and frequently do exceed the line length limit,
+	# and formatting them to fit it makes them far more difficult to read.
+	"E501",  # Line too long (* > 120)
+
+	# Currently disabling these, may re-enable later.
+	"E226",  # Missing whitespace around arithmetic operator
+	"E302",  # Expected 2 blank lines
+	"E305"  # Expected 2 blank lines after class or function definition
+]
+
+"test/*" = [
+	# Likewise, conditions for testing frequently exceed it too
+	"E501"  # Line too long (* > 120)
+]

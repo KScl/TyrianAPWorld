@@ -10,6 +10,7 @@ from . import TyrianTestBase
 # Testing Option: Data Cube Hunt
 # =============================================================================
 
+
 class TestDataCubeHuntAbsolute(TyrianTestBase):
     options = {
         "episode_1": "on",
@@ -52,6 +53,7 @@ class TestDataCubeHuntAbsolute(TyrianTestBase):
 # Testing Option: Shops
 # =============================================================================
 
+
 class TestShopsNormal(TyrianTestBase):
     options = {
         "shop_mode": "standard",
@@ -63,14 +65,15 @@ class TestShopsNormal(TyrianTestBase):
         # Get all shop locations, split out "Shop - " and " - Item #", and store in a set.
         # When done iterating, this should always contain the same number of items as world.all_levels.
         unique_shop_levels = {location.name.split("-")[1] for location in self.multiworld.get_locations(self.player)
-              if getattr(location, 'shop_price', None) is not None}
+              if getattr(location, "shop_price", None) is not None}
         self.assertEqual(len(unique_shop_levels), len(self.world.all_levels), msg="Found level with no shop items")
 
     # There should always be shop_item_count amount of locations to check.
     def test_shop_item_count_matches(self) -> None:
         shop_locations = [location for location in self.multiworld.get_locations(self.player)
-              if getattr(location, 'shop_price', None) is not None]
+              if getattr(location, "shop_price", None) is not None]
         self.assertEqual(len(shop_locations), 80, msg="Shop item count doesn't match number of locations added")
+
 
 class TestShopsLow(TyrianTestBase):
     options = {
@@ -83,14 +86,15 @@ class TestShopsLow(TyrianTestBase):
         # Get all shop locations, split out "Shop - " and " - Item #", and store in a set.
         # When done iterating, this should always match shop_item_count (16).
         unique_shop_levels = {location.name.split("-")[1] for location in self.multiworld.get_locations(self.player)
-              if getattr(location, 'shop_price', None) is not None}
+              if getattr(location, "shop_price", None) is not None}
         self.assertEqual(len(unique_shop_levels), 16, msg="Some shops contain more than one item")
 
     # There should always be shop_item_count amount of locations to check.
     def test_shop_item_count_matches(self) -> None:
         shop_locations = [location for location in self.multiworld.get_locations(self.player)
-              if getattr(location, 'shop_price', None) is not None]
+              if getattr(location, "shop_price", None) is not None]
         self.assertEqual(len(shop_locations), 16, msg="Shop item count doesn't match number of locations added")
+
 
 class TestShopsOff(TyrianTestBase):
     options = {
@@ -100,8 +104,9 @@ class TestShopsOff(TyrianTestBase):
     # Obviously, no shop locations should exist at all.
     def test_no_shop_locations_present(self) -> None:
         shop_locations = [location for location in self.multiworld.get_locations(self.player)
-              if getattr(location, 'shop_price', None) is not None]
+              if getattr(location, "shop_price", None) is not None]
         self.assertEqual(len(shop_locations), 0, msg="Shop items present when shop_mode is none")
+
 
 class TestShopsOnly(TyrianTestBase):
     # shop_item_count was originally 228/325, however rarely that causes a FillError
@@ -119,7 +124,7 @@ class TestShopsOnly(TyrianTestBase):
 
     def test_locations_in_level_only_have_credits(self) -> None:
         level_locations = [location for location in self.multiworld.get_locations(self.player)
-              if location.address is not None and getattr(location, 'shop_price', None) is None]
+              if location.address is not None and getattr(location, "shop_price", None) is None]
         locations_with_credits = [location for location in level_locations
               if location.item and location.item.name.endswith(" Credits")]
         self.assertEqual(len(locations_with_credits), len(level_locations), msg="Some in-level locations contain non-Credits items")

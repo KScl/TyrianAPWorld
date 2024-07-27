@@ -8,23 +8,23 @@ import json
 import logging
 import math
 import os
-from typing import TYPE_CHECKING, cast, TextIO, Optional, List, Dict, Mapping, Set, Tuple, Any
+from typing import TYPE_CHECKING, Any, Dict, List, Mapping, Optional, Set, TextIO, cast
 
 from BaseClasses import Item, Location, Region, Tutorial
-from BaseClasses import ItemClassification as IC
-from BaseClasses import LocationProgressType as LP
+from BaseClasses import ItemClassification as IClass
+from BaseClasses import LocationProgressType as LPType
 from Fill import fast_fill
 
-from .items import LocalItemData, LocalItem, Episode
+from worlds.AutoWorld import WebWorld, World
+
+from .items import Episode, LocalItem, LocalItemData
 from .locations import LevelLocationData, LevelRegion
 from .logic import DamageTables, set_level_rules
 from .options import TyrianOptions, tyrian_option_groups
 from .twiddles import Twiddle, generate_twiddles
 
-from worlds.AutoWorld import World, WebWorld
-
 if TYPE_CHECKING:
-    from BaseClasses import MultiWorld, CollectionState
+    from BaseClasses import MultiWorld
 
 
 class TyrianItem(Item):
@@ -120,7 +120,7 @@ class TyrianWorld(World):
 
     def create_event(self, name: str, region: Region) -> TyrianLocation:
         loc = TyrianLocation(self.player, name[0:9], None, region)
-        loc.place_locked_item(TyrianItem(name, IC.progression, None, self.player))
+        loc.place_locked_item(TyrianItem(name, IClass.progression, None, self.player))
 
         region.locations.append(loc)
         return loc
@@ -130,13 +130,13 @@ class TyrianWorld(World):
     # ================================================================================================================
 
     def get_dict_contents_as_items(self, target_dict: Mapping[str, LocalItem]) -> List[str]:
-        itemList = []
+        item_list = []
 
         for (name, item) in target_dict.items():
             if item.count > 0:
-                itemList.extend([name] * item.count)
+                item_list.extend([name] * item.count)
 
-        return itemList
+        return item_list
 
     def get_junk_items(self, total_checks: int, total_money: int, allow_superbombs: bool = True) -> List[str]:
         total_money = int(total_money * (self.options.money_pool_scale / 100))
@@ -167,7 +167,7 @@ class TyrianWorld(World):
             # the average, just pick the next highest one above the average. That'll help ensure we're always over
             # the target value, and never under it.
             if len(possible_choices) == 0:
-                item_choice = [i for i in valid_money_amounts if i >= average][0]
+                item_choice = next(i for i in valid_money_amounts if i >= average)
             else:
                 item_choice = self.random.choice(possible_choices)
 
@@ -177,7 +177,7 @@ class TyrianWorld(World):
 
         # No point being random here. Just pick the first credit value that puts us over the target value.
         if total_checks == 1:
-            item_choice = [i for i in valid_money_amounts if i >= total_money][0]
+            item_choice = next(i for i in valid_money_amounts if i >= total_money)
             junk_list.append(f"{item_choice} Credits")
 
         return junk_list
@@ -475,25 +475,25 @@ class TyrianWorld(World):
     def stage_assert_generate(cls, multiworld: "MultiWorld") -> None:
         # Import code that affects other worlds; must happen after all worlds are loaded
         # See crossgame/__init__.py for more info
-        from .crossgame import alttp
+        from .crossgame import alttp  # noqa: F401
 
     def generate_early(self) -> None:
         if not self.options.enable_tyrian_2000_support:
             self.options.episode_5.value = 0
 
         self.goal_episodes = set()
-        self.goal_episodes.add(1) if self.options.episode_1 == 2 else None
-        self.goal_episodes.add(2) if self.options.episode_2 == 2 else None
-        self.goal_episodes.add(3) if self.options.episode_3 == 2 else None
-        self.goal_episodes.add(4) if self.options.episode_4 == 2 else None
-        self.goal_episodes.add(5) if self.options.episode_5 == 2 else None
+        if self.options.episode_1 == 2: self.goal_episodes.add(Episode.Escape)
+        if self.options.episode_2 == 2: self.goal_episodes.add(Episode.Treachery)
+        if self.options.episode_3 == 2: self.goal_episodes.add(Episode.MissionSuicide)
+        if self.options.episode_4 == 2: self.goal_episodes.add(Episode.AnEndToFate)
+        if self.options.episode_5 == 2: self.goal_episodes.add(Episode.HazudraFodder)
 
         self.play_episodes = set()
-        self.play_episodes.add(1) if self.options.episode_1 != 0 else None
-        self.play_episodes.add(2) if self.options.episode_2 != 0 else None
-        self.play_episodes.add(3) if self.options.episode_3 != 0 else None
-        self.play_episodes.add(4) if self.options.episode_4 != 0 else None
-        self.play_episodes.add(5) if self.options.episode_5 != 0 else None
+        if self.options.episode_1 != 0: self.play_episodes.add(Episode.Escape)
+        if self.options.episode_2 != 0: self.play_episodes.add(Episode.Treachery)
+        if self.options.episode_3 != 0: self.play_episodes.add(Episode.MissionSuicide)
+        if self.options.episode_4 != 0: self.play_episodes.add(Episode.AnEndToFate)
+        if self.options.episode_5 != 0: self.play_episodes.add(Episode.HazudraFodder)
 
         # Beta: Warn on generating seeds with incomplete logic
         def warn_incomplete_logic(episode_name: str) -> None:
@@ -501,16 +501,15 @@ class TyrianWorld(World):
                             f"Logic for {episode_name} is not yet complete. "
                             f"There will probably be issues, and the seed may be impossible as a result.")
 
-        if 3 in self.play_episodes: warn_incomplete_logic("Episode 3 (Mission: Suicide)")
-        if 4 in self.play_episodes: warn_incomplete_logic("Episode 4 (An End to Fate)")
-        if 5 in self.play_episodes: warn_incomplete_logic("Episode 5 (Hazudra Fodder)")
+        if Episode.AnEndToFate in self.play_episodes:   warn_incomplete_logic("Episode 4 (An End to Fate)")
+        if Episode.HazudraFodder in self.play_episodes: warn_incomplete_logic("Episode 5 (Hazudra Fodder)")
 
         # Default to at least playing episode 1
         if len(self.play_episodes) == 0:
             logging.warning(f"No episodes were enabled in {self.multiworld.get_player_name(self.player)}'s "
-                            f"Tyrian world. Defaulting to Episode 1.")
-            self.play_episodes = {1}
-            self.goal_episodes = {1}
+                            f"Tyrian world. Defaulting to Episode 1 (Escape).")
+            self.play_episodes = {Episode.Escape}
+            self.goal_episodes = {Episode.Escape}
 
         # If no goals, make all selected episodes goals by default
         if len(self.goal_episodes) == 0:
@@ -518,11 +517,11 @@ class TyrianWorld(World):
                             f"Tyrian world. Defaulting to all playable pisodes.")
             self.goal_episodes = self.play_episodes
 
-        if 1 in self.play_episodes:   self.default_start_level = "TYRIAN (Episode 1)"
-        elif 2 in self.play_episodes: self.default_start_level = "TORM (Episode 2)"
-        elif 3 in self.play_episodes: self.default_start_level = "GAUNTLET (Episode 3)"
-        elif 4 in self.play_episodes: self.default_start_level = "SURFACE (Episode 4)"
-        else:                         self.default_start_level = "ASTEROIDS (Episode 5)"
+        if Episode.Escape in self.play_episodes:           self.default_start_level = "TYRIAN (Episode 1)"
+        elif Episode.Treachery in self.play_episodes:      self.default_start_level = "TORM (Episode 2)"
+        elif Episode.MissionSuicide in self.play_episodes: self.default_start_level = "GAUNTLET (Episode 3)"
+        elif Episode.AnEndToFate in self.play_episodes:    self.default_start_level = "SURFACE (Episode 4)"
+        else:                                              self.default_start_level = "ASTEROIDS (Episode 5)"
 
         self.weapon_costs = self.get_weapon_costs()
         self.total_money_needed = max(self.weapon_costs.values()) * 220
@@ -638,11 +637,11 @@ class TyrianWorld(World):
             # One of the "always_x" choices, add each level shop exactly x times
             if self.options.shop_item_count <= -1:
                 times_to_add = abs(self.options.shop_item_count)
-                items_per_shop = {name: times_to_add for name in self.all_levels}
+                items_per_shop = dict.fromkeys(self.all_levels, times_to_add)
 
             # Not enough items for one in every shop
             elif self.options.shop_item_count < len(self.all_levels):
-                items_per_shop = {name: 0 for name in self.all_levels}
+                items_per_shop = dict.fromkeys(self.all_levels, 0)
                 for level in self.random.sample(self.all_levels, self.options.shop_item_count.value):
                     items_per_shop[level] = 1
 
@@ -652,7 +651,7 @@ class TyrianWorld(World):
                 total_item_count: int = min(self.options.shop_item_count.value, len(self.all_levels) * 5)
 
                 # First guarantee every shop has at least one
-                items_per_shop = {name: 1 for name in self.all_levels}
+                items_per_shop = dict.fromkeys(self.all_levels, 1)
                 total_item_count -= len(self.all_levels)
 
                 # Then get a random sample of a list where every level is present four times
@@ -768,6 +767,7 @@ class TyrianWorld(World):
         if self.options.specials == "on":  # Get a random special, no others
             possible_specials = self.get_dict_contents_as_items(LocalItemData.special_weapons)
             self.single_special_weapon = self.random.choice(possible_specials)
+            assert self.single_special_weapon is not None  # Tautological (but clues mypy in that None isn't possible)
             self.multiworld.push_precollected(self.create_item(self.single_special_weapon))
 
         # Mark some levels as local only, based on Local Level %
@@ -792,7 +792,7 @@ class TyrianWorld(World):
             if num_to_toss > len(tossable_items):  # Toss all we can, it's the best we can do.
                 num_to_toss = len(tossable_items)
 
-            tossed = [pop_from_pool(i) for i in self.random.sample(tossable_items, num_to_toss)]
+            [pop_from_pool(i) for i in self.random.sample(tossable_items, num_to_toss)]
             logging.warning(f"Trimming {num_to_toss} item{'' if num_to_toss == 1 else 's'} "
                             f"from {self.multiworld.get_player_name(self.player)}'s Tyrian world.")
 
@@ -899,7 +899,7 @@ class TyrianWorld(World):
                                   if loc.name.startswith(f"Shop - {level_name} - ")]
 
                 for location in shop_locations:
-                    location.progress_type = LP.EXCLUDED
+                    location.progress_type = LPType.EXCLUDED
 
     def generate_output(self, output_directory: str) -> None:
         if self.multiworld.players != 1:

@@ -4,19 +4,21 @@
 # and is released under the terms of the zlib license.
 # See "LICENSE" for more details.
 
-from typing import TYPE_CHECKING, Callable, Optional, List, Dict, Tuple
 from enum import IntFlag
 from itertools import product
+from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Tuple
 
 from BaseClasses import LocationProgressType as LPType
+
 from worlds.generic.Rules import add_rule
 
 from .items import Episode
-from .options import LogicDifficulty, GameDifficulty
+from .options import GameDifficulty, LogicDifficulty
 from .twiddles import SpecialValues
 
 if TYPE_CHECKING:
     from BaseClasses import CollectionState
+
     from . import TyrianWorld
 
 
@@ -534,7 +536,7 @@ def can_deal_damage(state: "CollectionState", player: int, damage_tables: Damage
     best_front_dps_list = damage_tables.get_dps_shot_types(target_dps, owned_front, power_level_max, start_energy)
     for (used_energy, rest_dps) in best_front_dps_list.items():
         if rest_dps == damage_tables.dps_result_success:
-            return True # Found positive result from just front weapon, instant pass
+            return True  # Found positive result from just front weapon, instant pass
 
         rest_energy = start_energy - used_energy
         if damage_tables.can_meet_dps(rest_dps, owned_rear, power_level_max, rest_energy):
@@ -596,16 +598,16 @@ def episode_1_rules(world: "TyrianWorld") -> None:
     # Four trigger enemies among the starting U-Ship sets, need enough damage to clear them out
     # Below game difficulty Hard, the level layout is different
     if world.options.difficulty >= GameDifficulty.option_hard:
-        enemy_health = scale_health(world, 19) # Not tied to a specific enemy
+        enemy_health = scale_health(world, 19)  # Not tied to a specific enemy
         logic_location_rule(world, "TYRIAN (Episode 1) - HOLES Warp Orb", lambda state, health=enemy_health:
               can_deal_damage(state, world.player, world.damage_tables, active=health/2.0)
               or can_deal_damage(state, world.player, world.damage_tables, passive=health/1.5))
 
-    enemy_health = scale_health(world, 20) # Health of rock
+    enemy_health = scale_health(world, 20)  # Health of rock
     logic_location_rule(world, "TYRIAN (Episode 1) - BUBBLES Warp Rock", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/3.6))
 
-    boss_health = scale_health(world, 100) + 254 # Health of one wing + boss
+    boss_health = scale_health(world, 100) + 254  # Health of one wing + boss
     if not world.options.logic_boss_timeout:
         logic_entrance_rule(world, "TYRIAN (Episode 1) @ Pass Boss (can time out)", lambda state, health=boss_health:
               can_deal_damage(state, world.player, world.damage_tables, active=health/30.0)
@@ -625,7 +627,7 @@ def episode_1_rules(world: "TyrianWorld") -> None:
     if world.options.logic_difficulty == LogicDifficulty.option_beginner:
         logic_all_locations_exclude(world, "BUBBLES (Episode 1) - Coin Rain")
 
-    enemy_health = scale_health(world, 20) # Health of red bubbles (in all cases)
+    enemy_health = scale_health(world, 20)  # Health of red bubbles (in all cases)
     logic_entrance_rule(world, "BUBBLES (Episode 1) @ Pass Bubble Lines", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/4.0))
     logic_entrance_rule(world, "BUBBLES (Episode 1) @ Speed Up Section", lambda state, health=enemy_health:
@@ -645,33 +647,33 @@ def episode_1_rules(world: "TyrianWorld") -> None:
     wanted_armor = get_difficulty_armor_choice(world, base=(5, 5, 5, 5), hard_contact=(8, 7, 6, 5))
     logic_entrance_rule(world, "HOLES (Episode 1) @ Pass Spinner Gauntlet", lambda state, armor=wanted_armor:
           has_armor_level(state, world.player, armor))
-   
-    boss_health = scale_health(world, 100) + 254 # Health of one wing + boss
+
+    boss_health = scale_health(world, 100) + 254  # Health of one wing + boss
     logic_entrance_rule(world, "HOLES (Episode 1) @ Destroy Boss Ships", lambda state, health=boss_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/5.0, passive=21.0))
 
     # ===== SOH JIN ===========================================================
-    enemy_health = scale_health(world, 40) # Single wall tile
+    enemy_health = scale_health(world, 40)  # Single wall tile
     logic_entrance_rule(world, "SOH JIN (Episode 1) @ Destroy Walls", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/4.6))
 
     # ===== ASTEROID1 =========================================================
-    enemy_health = scale_health(world, 25) + (scale_health(world, 5) * 2) # Face rock, plus tiles before it
+    enemy_health = scale_health(world, 25) + (scale_health(world, 5) * 2)  # Face rock, plus tiles before it
     logic_location_rule(world, "ASTEROID1 (Episode 1) - ASTEROID? Warp Orb", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/4.4))
 
-    boss_health = scale_health(world, 100) # Only the boss dome
+    boss_health = scale_health(world, 100)  # Only the boss dome
     logic_entrance_rule(world, "ASTEROID1 (Episode 1) @ Destroy Boss", lambda state, health=boss_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/30.0))
 
-    # ===== ASTEROID2 =========================================================    
+    # ===== ASTEROID2 =========================================================
     if world.options.logic_difficulty == LogicDifficulty.option_beginner:
         logic_location_exclude(world, "ASTEROID2 (Episode 1) - Tank Turn-around Secret 1")
         logic_location_exclude(world, "ASTEROID2 (Episode 1) - Tank Turn-around Secret 2")
     if world.options.logic_difficulty <= LogicDifficulty.option_standard:
         logic_location_exclude(world, "ASTEROID2 (Episode 1) - Tank Assault Right Tank Secret")
 
-    enemy_health = scale_health(world, 30) # All tanks
+    enemy_health = scale_health(world, 30)  # All tanks
     logic_location_rule(world, "ASTEROID2 (Episode 1) - Tank Bridge", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/2.1))
 
@@ -683,7 +685,7 @@ def episode_1_rules(world: "TyrianWorld") -> None:
         logic_location_rule(world, "ASTEROID2 (Episode 1) - Tank Turn-around Secret 2", lambda state, health=enemy_health:
               can_deal_damage(state, world.player, world.damage_tables, active=health/3.9))
 
-    enemy_health = scale_health(world, 25) # Only the face rock containing the orb
+    enemy_health = scale_health(world, 25)  # Only the face rock containing the orb
     logic_location_rule(world, "ASTEROID2 (Episode 1) - MINEMAZE Warp Orb", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/4.4))
 
@@ -694,7 +696,7 @@ def episode_1_rules(world: "TyrianWorld") -> None:
     if world.options.logic_difficulty == LogicDifficulty.option_beginner:
         logic_location_exclude(world, "ASTEROID? (Episode 1) - WINDY Warp Orb")
 
-    enemy_health = scale_health(world, 40) # Launchers, and the secret ships
+    enemy_health = scale_health(world, 40)  # Launchers, and the secret ships
     logic_entrance_rule(world, "ASTEROID? (Episode 1) @ Initial Welcome", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/3.5))
     logic_entrance_rule(world, "ASTEROID? (Episode 1) @ Quick Shots", lambda state, health=enemy_health:
@@ -705,12 +707,12 @@ def episode_1_rules(world: "TyrianWorld") -> None:
           has_armor_level(state, world.player, armor))
 
     # ===== MINEMAZE ==========================================================
-    enemy_health = scale_health(world, 20) # Gates
+    enemy_health = scale_health(world, 20)  # Gates
     logic_entrance_rule(world, "MINEMAZE (Episode 1) @ Destroy Gates", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/3.8))
 
     # ===== WINDY =============================================================
-    enemy_health = scale_health(world, 20) # Question mark block health
+    enemy_health = scale_health(world, 20)  # Question mark block health
     logic_location_rule(world, "WINDY (Episode 1) - Central Question Mark", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/1.4))
 
@@ -734,7 +736,7 @@ def episode_1_rules(world: "TyrianWorld") -> None:
         if exclude_question_mark:
             logic_location_exclude(world, "WINDY (Episode 1) - Central Question Mark")
 
-    enemy_health = scale_health(world, 10) # Regular block health
+    enemy_health = scale_health(world, 10)  # Regular block health
     logic_entrance_rule(world, "WINDY (Episode 1) @ Fly Through", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/1.4))
 
@@ -743,12 +745,12 @@ def episode_1_rules(world: "TyrianWorld") -> None:
           has_armor_level(state, world.player, armor))
 
     # ===== SAVARA ============================================================
-    enemy_health = scale_health(world, 60) # Huge planes
+    enemy_health = scale_health(world, 60)  # Huge planes
     logic_location_rule(world, "SAVARA (Episode 1) - Huge Plane, Speeds By", lambda state, health=enemy_health:
           has_generator_level(state, world.player, 3)
           and can_deal_damage(state, world.player, world.damage_tables, active=health/1.025))
 
-    enemy_health = scale_health(world, 14) # Vulcan plane with item
+    enemy_health = scale_health(world, 14)  # Vulcan plane with item
     # The vulcan shots hurt a lot, so optimal kill would be with passive DPS if possible
     logic_location_rule(world, "SAVARA (Episode 1) - Vulcan Plane", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/1.6)
@@ -756,7 +758,7 @@ def episode_1_rules(world: "TyrianWorld") -> None:
 
     # Damage estimate: 254 health for the boss, shooting through 15 ticks and 4 missiles
     boss_health = 254 + (scale_health(world, 6) * 15) + (scale_health(world, 10) * 4)
-    enemy_health = scale_health(world, 6) # Homing ticks from boss
+    enemy_health = scale_health(world, 6)  # Homing ticks from boss
     if not world.options.logic_boss_timeout:
         logic_entrance_rule(world, "SAVARA (Episode 1) @ Pass Boss (can time out)", lambda state, health=boss_health:
               can_deal_damage(state, world.player, world.damage_tables, active=health/30.0))
@@ -778,11 +780,11 @@ def episode_1_rules(world: "TyrianWorld") -> None:
     logic_entrance_rule(world, "SAVARA II (Episode 1) @ Destroy Green Planes", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=7.0))
 
-    enemy_health = scale_health(world, 60, adjust_difficulty=-1) # Huge planes
+    enemy_health = scale_health(world, 60, adjust_difficulty=-1)  # Huge planes
     logic_location_rule(world, "SAVARA II (Episode 1) - Huge Plane Amidst Turrets", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/2.3))
 
-    enemy_health = scale_health(world, 14) # Vulcan plane with item
+    enemy_health = scale_health(world, 14)  # Vulcan plane with item
     # The vulcan shots hurt a lot, so optimal kill would be with passive DPS if possible
     logic_location_rule(world, "SAVARA II (Episode 1) - Vulcan Planes Near Blimp", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/1.6)
@@ -790,7 +792,7 @@ def episode_1_rules(world: "TyrianWorld") -> None:
 
     # Damage estimate: 254 health for the boss, shooting through 15 ticks and 4 missiles
     boss_health = 254 + (scale_health(world, 6) * 15) + (scale_health(world, 10) * 4)
-    enemy_health = scale_health(world, 6) # Homing ticks from boss
+    enemy_health = scale_health(world, 6)  # Homing ticks from boss
     if not world.options.logic_boss_timeout:
         logic_entrance_rule(world, "SAVARA II (Episode 1) @ Pass Boss (can time out)", lambda state, health=boss_health:
               can_deal_damage(state, world.player, world.damage_tables, active=health/30.0))
@@ -810,7 +812,7 @@ def episode_1_rules(world: "TyrianWorld") -> None:
           can_deal_damage(state, world.player, world.damage_tables, active=10.0, passive=10.0))
 
     # ===== MINES =============================================================
-    enemy_health = scale_health(world, 20) # Rotating Orbs
+    enemy_health = scale_health(world, 20)  # Rotating Orbs
     logic_entrance_rule(world, "MINES (Episode 1) @ Destroy First Orb", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/1.0)
           or can_deal_damage(state, world.player, world.damage_tables, piercing=health/2.7))
@@ -826,11 +828,11 @@ def episode_1_rules(world: "TyrianWorld") -> None:
     if world.options.logic_difficulty == LogicDifficulty.option_beginner:
         logic_location_exclude(world, "DELIANI (Episode 1) - Tricky Rail Turret")
 
-    enemy_health = scale_health(world, 30) # Rail turret
+    enemy_health = scale_health(world, 30)  # Rail turret
     logic_location_rule(world, "DELIANI (Episode 1) - Tricky Rail Turret", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/2.2))
 
-    enemy_health = scale_health(world, 25) # Two-tile wide turret ships
+    enemy_health = scale_health(world, 25)  # Two-tile wide turret ships
     logic_entrance_rule(world, "DELIANI (Episode 1) @ Pass Ambush", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/1.6))
 
@@ -838,12 +840,12 @@ def episode_1_rules(world: "TyrianWorld") -> None:
     logic_entrance_rule(world, "DELIANI (Episode 1) @ Pass Ambush", lambda state, armor=wanted_armor:
           has_armor_level(state, world.player, armor))
 
-    boss_health = (scale_health(world, 80) * 3) + scale_health(world, 200) # Repulsor orbs and boss
+    boss_health = (scale_health(world, 80) * 3) + scale_health(world, 200)  # Repulsor orbs and boss
     logic_entrance_rule(world, "DELIANI (Episode 1) @ Destroy Boss", lambda state, health=boss_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/26.0))
 
     # ===== SAVARA V ==========================================================
-    enemy_health = scale_health(world, 70) # Blimp
+    enemy_health = scale_health(world, 70)  # Blimp
     logic_location_rule(world, "SAVARA V (Episode 1) - Super Blimp", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/1.5))
 
@@ -883,12 +885,11 @@ def episode_2_rules(world: "TyrianWorld") -> None:
         logic_location_rule(world, "TORM (Episode 2) - Boss", lambda state:
               can_deal_damage(state, world.player, world.damage_tables, active=(254*1.75)/32.0))
 
-
     # ===== GYGES =============================================================
     if world.options.logic_difficulty == LogicDifficulty.option_beginner:
         logic_location_exclude(world, "GYGES (Episode 2) - GEM WAR Warp Orb")
 
-    enemy_health = scale_health(world, 10) * 6 # Orbsnakes
+    enemy_health = scale_health(world, 10) * 6  # Orbsnakes
     logic_location_rule(world, "GYGES (Episode 2) - Orbsnake", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/5.0)
           or can_deal_damage(state, world.player, world.damage_tables, piercing=(health/6)/5.0))
@@ -915,7 +916,7 @@ def episode_2_rules(world: "TyrianWorld") -> None:
     if world.options.logic_difficulty == LogicDifficulty.option_beginner:
         logic_location_exclude(world, "ASTCITY (Episode 2) - MISTAKES Warp Orb")
 
-    enemy_health = scale_health(world, 30, adjust_difficulty=-1) # Building
+    enemy_health = scale_health(world, 30, adjust_difficulty=-1)  # Building
     logic_location_rule(world, "ASTCITY (Episode 2) - Warehouse 92", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/4.0))
 
@@ -943,7 +944,7 @@ def episode_2_rules(world: "TyrianWorld") -> None:
 
     # The boss ships are flanked by three ships with max health of 254,
     # either you need to destroy the one in front, or have a piercing weapon
-    enemy_health = scale_health(world, 20) # Center of boss ship
+    enemy_health = scale_health(world, 20)  # Center of boss ship
     logic_entrance_rule(world, "GEM WAR (Episode 2) @ Blue Gem Bosses", lambda state, health=enemy_health, passive=wanted_passive:
           can_deal_damage(state, world.player, world.damage_tables, active=(254+health)/16.0, passive=passive)
           or can_deal_damage(state, world.player, world.damage_tables, piercing=health/16.0, passive=passive))
@@ -957,15 +958,15 @@ def episode_2_rules(world: "TyrianWorld") -> None:
     logic_entrance_rule(world, "MARKERS (Episode 2) @ Base Requirements", lambda state, armor=wanted_armor:
           has_armor_level(state, world.player, armor))
 
-    enemy_health = scale_health(world, 30) + (scale_health(world, 6) * 4) # Minelayer + estimated 4 mines
+    enemy_health = scale_health(world, 30) + (scale_health(world, 6) * 4)  # Minelayer + estimated 4 mines
     logic_location_rule(world, "MARKERS (Episode 2) - Persistent Mine-Layer", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/7.1))
 
-    enemy_health = scale_health(world, 10) # Cars
+    enemy_health = scale_health(world, 10)  # Cars
     logic_location_rule(world, "MARKERS (Episode 2) - Car Destroyer Secret", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/3.0))
 
-    enemy_health = scale_health(world, 20) # Turrets
+    enemy_health = scale_health(world, 20)  # Turrets
     logic_entrance_rule(world, "MARKERS (Episode 2) @ Destroy Turrets", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/3.8))
 
@@ -984,11 +985,11 @@ def episode_2_rules(world: "TyrianWorld") -> None:
           has_armor_level(state, world.player, armor)
           or has_invulnerability(state, world.player))
 
-    enemy_health = scale_health(world, 10) # Most trigger enemies
+    enemy_health = scale_health(world, 10)  # Most trigger enemies
     logic_entrance_rule(world, "MISTAKES (Episode 2) @ Bubble Spawner Path", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/1.2))
 
-    enemy_health = scale_health(world, 10) * 6 # Orbsnakes
+    enemy_health = scale_health(world, 10) * 6  # Orbsnakes
     logic_location_rule(world, "MISTAKES (Episode 2) - Orbsnakes, Trigger Enemy 1", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/5.5)
           or can_deal_damage(state, world.player, world.damage_tables, piercing=(health/6)/5.5))
@@ -997,14 +998,14 @@ def episode_2_rules(world: "TyrianWorld") -> None:
           or can_deal_damage(state, world.player, world.damage_tables, piercing=(health/6)/0.8))
 
     # ===== SOH JIN ===========================================================
-    enemy_health = scale_health(world, 15) # Brown claw enemy
+    enemy_health = scale_health(world, 15)  # Brown claw enemy
 
     # These enemies don't contain any items, but they home in on you and are a bit more difficult to dodge because
     # of that, so lock the whole level behind being able to destroy them; it's enough DPS to get locations here
     logic_entrance_rule(world, "SOH JIN (Episode 2) @ Base Requirements", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/2.0))
 
-    enemy_health = scale_health(world, 100) # Paddle... things?
+    enemy_health = scale_health(world, 100)  # Paddle... things?
     logic_entrance_rule(world, "SOH JIN (Episode 2) @ Destroy Second Wave Paddles", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/9.0)
           or can_deal_damage(state, world.player, world.damage_tables, active=health/15.0, sideways=10.0))
@@ -1018,7 +1019,7 @@ def episode_2_rules(world: "TyrianWorld") -> None:
               and has_armor_level(state, world.player, armor-2)
           ))
     logic_entrance_rule(world, "SOH JIN (Episode 2) @ Destroy Third Wave Orbs", lambda state:
-          can_deal_damage(state, world.player, world.damage_tables, active=254/20.0, sideways=254/20.0)) 
+          can_deal_damage(state, world.player, world.damage_tables, active=254/20.0, sideways=254/20.0))
 
     # ===== BOTANY A ==========================================================
     if world.options.logic_difficulty <= LogicDifficulty.option_standard:
@@ -1033,7 +1034,7 @@ def episode_2_rules(world: "TyrianWorld") -> None:
               and has_generator_level(state, world.player, generator)  # For shield recovery
           ))
 
-    enemy_health = scale_health(world, 15, adjust_difficulty=+1) # Moving turret
+    enemy_health = scale_health(world, 15, adjust_difficulty=+1)  # Moving turret
     logic_entrance_rule(world, "BOTANY A (Episode 2) @ Can Destroy Turrets", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/2.0))
     logic_location_rule(world, "BOTANY A (Episode 2) - Mobile Turret Approaching Head-On", lambda state, health=enemy_health:
@@ -1045,7 +1046,7 @@ def episode_2_rules(world: "TyrianWorld") -> None:
 
     # The backmost ship is the one with the item, expect to destroy at least one other ship to reach it
     # (except if you can do enough piercing damage, of course)
-    enemy_health = scale_health(world, 20, adjust_difficulty=+1) # Green ship
+    enemy_health = scale_health(world, 20, adjust_difficulty=+1)  # Green ship
     logic_location_rule(world, "BOTANY A (Episode 2) - Green Ship Pincer", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=(health*2)/3.0)
           or can_deal_damage(state, world.player, world.damage_tables, piercing=health/3.0))
@@ -1059,13 +1060,13 @@ def episode_2_rules(world: "TyrianWorld") -> None:
 
     # ===== BOTANY B ==========================================================
     # Start of level, nothing nearby dangerous, only need to destroy it
-    enemy_health = scale_health(world, 6, adjust_difficulty=+1) # Destructible sensor
+    enemy_health = scale_health(world, 6, adjust_difficulty=+1)  # Destructible sensor
     logic_location_rule(world, "BOTANY B (Episode 2) - Starting Platform Sensor", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/4.0))
 
     # Past this point is when the game starts demanding more of you.
     # Need enough damage to clear out the screen of turrets
-    enemy_health = scale_health(world, 15, adjust_difficulty=+1) # Moving turret
+    enemy_health = scale_health(world, 15, adjust_difficulty=+1)  # Moving turret
     logic_entrance_rule(world, "BOTANY B (Episode 2) @ Beyond Starting Platform", lambda state, health=enemy_health:
           has_armor_level(state, world.player, 7)
           and (
@@ -1091,11 +1092,11 @@ def episode_2_rules(world: "TyrianWorld") -> None:
 
 def episode_3_rules(world: "TyrianWorld") -> None:
     # ===== GAUNTLET ==========================================================
-    enemy_health = scale_health(world, 10, adjust_difficulty=-1) # Capsule ships
+    enemy_health = scale_health(world, 10, adjust_difficulty=-1)  # Capsule ships
     logic_location_rule(world, "GAUNTLET (Episode 3) - Capsule Ships Near Mace", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/1.3))
 
-    enemy_health = scale_health(world, 20, adjust_difficulty=-1) # Gates
+    enemy_health = scale_health(world, 20, adjust_difficulty=-1)  # Gates
     logic_location_rule(world, "GAUNTLET (Episode 3) - Doubled-up Gates", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=(health*2)/4.4)
           or can_deal_damage(state, world.player, world.damage_tables, piercing=health/4.4))
@@ -1104,7 +1105,7 @@ def episode_3_rules(world: "TyrianWorld") -> None:
     logic_location_rule(world, "GAUNTLET (Episode 3) - Gate near Freebie Item", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/1.5))
 
-    enemy_health = scale_health(world, 6, adjust_difficulty=-1) # Weak-point orb
+    enemy_health = scale_health(world, 6, adjust_difficulty=-1)  # Weak-point orb
     # Invulnerability lets you safely pass through without damaging
     logic_entrance_rule(world, "GAUNTLET (Episode 3) @ Clear Orb Tree", lambda state, health=enemy_health:
           has_invulnerability(state, world.player)
@@ -1165,13 +1166,13 @@ def episode_3_rules(world: "TyrianWorld") -> None:
           or can_deal_damage(state, world.player, world.damage_tables, piercing=0.2))
 
     # To pass the turret onslaught
-    enemy_health = (scale_health(world, 25) - 10) # Two-wide turret, to take down to damaged (non-firing) state
+    enemy_health = (scale_health(world, 25) - 10)  # Two-wide turret, to take down to damaged (non-firing) state
     logic_entrance_rule(world, "BONUS (Episode 3) @ Pass Onslaughts", lambda state, health=enemy_health:
           has_repulsor(state, world.player)
           or can_deal_damage(state, world.player, world.damage_tables, active=(health*4)/3.6))
     logic_entrance_rule(world, "BONUS (Episode 3) @ Pass Onslaughts", lambda state:
           has_generator_level(state, world.player, 3)  # For shield recovery
-          and has_armor_level(state, world.player, 8)) 
+          and has_armor_level(state, world.player, 8))
 
     # Do you have knowledge of the safe spot through this section? Master assumes you do, anything else doesn't.
     # If we're not assuming safe spot knowledge, we need the repulsor, or some sideways DPS and more armor.
@@ -1184,7 +1185,7 @@ def episode_3_rules(world: "TyrianWorld") -> None:
               ))
 
     # To actually get the items from turret onslaught
-    enemy_health = (scale_health(world, 25) * 2) + scale_health(world, 3) # Two two-tile turrets, plus item ship
+    enemy_health = (scale_health(world, 25) * 2) + scale_health(world, 3)  # Two two-tile turrets, plus item ship
     logic_entrance_rule(world, "BONUS (Episode 3) @ Get Items from Onslaughts", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/1.8))
 
@@ -1207,7 +1208,7 @@ def episode_3_rules(world: "TyrianWorld") -> None:
           has_armor_level(state, world.player, armor)
           and can_deal_damage(state, world.player, world.damage_tables, active=10.0, passive=12.0))
 
-    enemy_health = scale_health(world, 60) # Blue sawblade
+    enemy_health = scale_health(world, 60)  # Blue sawblade
     logic_location_rule(world, "SAWBLADES (Episode 3) - Waving Sawblade", lambda state, health=enemy_health:
         can_deal_damage(state, world.player, world.damage_tables, active=health/4.1, passive=12.0))
 
@@ -1253,7 +1254,7 @@ def episode_3_rules(world: "TyrianWorld") -> None:
               or can_deal_damage(state, world.player, world.damage_tables, piercing=254/30.0))
 
     # ===== SAVARA Y ==========================================================
-    enemy_health = scale_health(world, 70) # Blimp
+    enemy_health = scale_health(world, 70)  # Blimp
     if world.options.logic_difficulty <= LogicDifficulty.option_expert:
         logic_entrance_rule(world, "SAVARA Y (Episode 3) @ Through Blimp Blockade", lambda state, health=enemy_health:
               has_invulnerability(state, world.player)
@@ -1263,7 +1264,7 @@ def episode_3_rules(world: "TyrianWorld") -> None:
     logic_location_rule(world, "SAVARA Y (Episode 3) - Boss Ship Fly-By", lambda state:
           can_deal_damage(state, world.player, world.damage_tables, active=254/4.4))
 
-    enemy_health = scale_health(world, 14) # Vulcan planes with items
+    enemy_health = scale_health(world, 14)  # Vulcan planes with items
     # As in Episode 1, prefer kills with passive
     logic_location_rule(world, "SAVARA Y (Episode 3) - Vulcan Plane Set", lambda state, health=enemy_health:
           can_deal_damage(state, world.player, world.damage_tables, active=health/1.6)
@@ -1273,7 +1274,7 @@ def episode_3_rules(world: "TyrianWorld") -> None:
 
     # Same boss as Episode 1 Savaras; here, though, the boss here has no patience and leaves VERY fast
     boss_health = 254 + (scale_health(world, 6) * 10) + (scale_health(world, 10) * 3)
-    enemy_health = scale_health(world, 6) # Homing ticks from boss
+    enemy_health = scale_health(world, 6)  # Homing ticks from boss
     if not world.options.logic_boss_timeout:
         logic_entrance_rule(world, "SAVARA Y (Episode 3) @ Pass Boss (can time out)", lambda state, health=boss_health:
               can_deal_damage(state, world.player, world.damage_tables, active=health/15.0))

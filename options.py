@@ -7,16 +7,29 @@
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from Options import OptionGroup, Visibility, PerGameCommonOptions, \
-      Toggle, DefaultOnToggle, Choice, Range, NamedRange, TextChoice, ItemDict, DeathLink
+from Options import (
+    Choice,
+    DeathLink,
+    DefaultOnToggle,
+    ItemDict,
+    NamedRange,
+    OptionGroup,
+    PerGameCommonOptions,
+    Range,
+    TextChoice,
+    Toggle,
+    Visibility,
+)
 
 if TYPE_CHECKING:
     from BaseClasses import PlandoOptions
+
     from worlds.AutoWorld import World
 
 # =============
 # === Goals ===
 # =============
+
 
 class EnableTyrian2000Support(Toggle):
     """
@@ -24,6 +37,7 @@ class EnableTyrian2000Support(Toggle):
     Episode 5. All of Tyrian 2000's weapons and new items will also be added to the item pool.
     """
     display_name = "Enable Tyrian 2000 support"
+
 
 class GoalEpisode1(Choice):
     """
@@ -36,6 +50,7 @@ class GoalEpisode1(Choice):
     option_off = 0
     default = 2
 
+
 class GoalEpisode2(Choice):
     """
     Add Episode 2 (Treachery) levels to the pool.
@@ -46,6 +61,7 @@ class GoalEpisode2(Choice):
     option_on = 1
     option_off = 0
     default = 2
+
 
 class GoalEpisode3(Choice):
     """
@@ -58,6 +74,7 @@ class GoalEpisode3(Choice):
     option_off = 0
     default = 2
 
+
 class GoalEpisode4(Choice):
     """
     Add Episode 4 (An End to Fate) levels to the pool.
@@ -68,6 +85,7 @@ class GoalEpisode4(Choice):
     option_on = 1
     option_off = 0
     default = 2
+
 
 class GoalEpisode5(Choice):
     """
@@ -80,6 +98,7 @@ class GoalEpisode5(Choice):
     option_off = 0
     default = 0
 
+
 class DataCubeHunt(Toggle):
     """
     If enabled, goal levels will not be in the item pool, but will be locked behind collecting a given amount of
@@ -87,12 +106,14 @@ class DataCubeHunt(Toggle):
     """
     display_name = "Data Cube Hunt"
 
+
 class DataCubesRequired(Range):
     """The amount of data cubes that must be collected to access goal levels in Data Cube Hunt mode."""
     display_name = "Data Cubes Required"
     range_start = 1
     range_end = 99
     default = 40
+
 
 class DataCubesTotal(NamedRange):
     """
@@ -106,6 +127,7 @@ class DataCubesTotal(NamedRange):
         "percentage": 0,
     }
     default = 0
+
 
 class DataCubesTotalPercent(Range):
     """
@@ -122,6 +144,7 @@ class DataCubesTotalPercent(Range):
 # === Item Pool Adjustments ===
 # =============================
 
+
 class RemoveFromItemPool(ItemDict):
     """
     Allows customizing the item pool by removing unwanted items from it.
@@ -131,12 +154,14 @@ class RemoveFromItemPool(ItemDict):
     display_name = "Remove From Item Pool"
     verify_item_name = True
 
+
 class StartingMoney(Range):
     """Change the amount of money you start the seed with."""
     display_name = "Starting Money"
     range_start = 0
     range_end = 9999999
     default = 10000
+
 
 class StartingMaxPower(Range):
     """
@@ -147,6 +172,7 @@ class StartingMaxPower(Range):
     range_start = 1
     range_end = 11
     default = 1
+
 
 class RandomStartingWeapon(Toggle):
     """
@@ -159,6 +185,7 @@ class RandomStartingWeapon(Toggle):
     """
     display_name = "Random Starting Weapon"
 
+
 class ProgressiveItems(DefaultOnToggle):
     """
     How items with multiple tiers (in this game, only generators) should be rewarded.
@@ -168,6 +195,7 @@ class ProgressiveItems(DefaultOnToggle):
     If 'on', each "Progressive" item will move you up to the next tier, regardless of which one you find.
     """
     display_name = "Progressive Items"
+
 
 class Specials(Choice):
     """
@@ -184,6 +212,7 @@ class Specials(Choice):
     alias_true = 1
     alias_false = 0
     default = 2
+
 
 class Twiddles(Choice):
     """
@@ -203,6 +232,7 @@ class Twiddles(Choice):
     alias_false = 0
     default = 1
 
+
 class LocalLevelPercent(Range):
     """
     Set some percentage of levels, chosen randomly, to be local to your own world.
@@ -217,6 +247,7 @@ class LocalLevelPercent(Range):
 # =======================
 # === Shops and Money ===
 # =======================
+
 
 class ShopMode(Choice):
     """
@@ -237,6 +268,7 @@ class ShopMode(Choice):
     alias_true = 1
     alias_false = 0
     default = 1
+
 
 class ShopItemCount(NamedRange):
     """
@@ -263,6 +295,7 @@ class ShopItemCount(NamedRange):
             return ["Always One", "Always Two", "Always Three", "Always Four", "Always Five"][abs(self.value) - 1]
         return str(self.value)
 
+
 class MoneyPoolScale(Range):
     """
     Change the amount of money in the pool, as a percentage.
@@ -274,6 +307,7 @@ class MoneyPoolScale(Range):
     range_start = 20
     range_end = 400
     default = 100
+
 
 class BaseWeaponCost(TextChoice):
     """
@@ -300,7 +334,7 @@ class BaseWeaponCost(TextChoice):
             if int(self.value) >= 0:
                 return
         except ValueError:
-            pass # Don't include this (expected) exception in the stack trace
+            pass  # Don't include this (expected) exception in the stack trace
 
         raise ValueError(f"Could not find option '{self.value}' for '{self.__class__.__name__}', "
                          f"known options are {', '.join(self.options)}, <any positive integer>")
@@ -308,6 +342,7 @@ class BaseWeaponCost(TextChoice):
 # =========================
 # === Logic Adjustments ===
 # =========================
+
 
 class LogicDifficulty(Choice):
     """
@@ -332,6 +367,7 @@ class LogicDifficulty(Choice):
     option_no_logic = 5
     default = 2
 
+
 class LogicBossTimeout(Toggle):
     """
     If enabled, bosses that can be timed out may logically require you to do so; requiring you to dodge them until the
@@ -342,6 +378,7 @@ class LogicBossTimeout(Toggle):
 # ===================================
 # === Game Difficulty Adjustments ===
 # ===================================
+
 
 class GameDifficulty(Choice):
     """
@@ -359,6 +396,7 @@ class GameDifficulty(Choice):
     alias_zinglon = option_lord_of_game
     default = 2
 
+
 class HardContact(Toggle):
     """
     Direct contact with an enemy or anything else will completely power down your shields and deal armor damage.
@@ -367,6 +405,7 @@ class HardContact(Toggle):
     given throughout the game if this is enabled.
     """
     display_name = "Contact Bypasses Shields"
+
 
 class ExcessArmor(DefaultOnToggle):
     """
@@ -381,6 +420,7 @@ class ExcessArmor(DefaultOnToggle):
 # === Visual tweaks and other things ===
 # ======================================
 
+
 class ForceGameSpeed(Choice):
     """Force the game to stay at a specific speed setting, or "off" to allow it to be freely chosen."""
     display_name = "Force Game Speed"
@@ -390,25 +430,29 @@ class ForceGameSpeed(Choice):
     option_slow = 3
     option_normal = 4
     option_turbo = 5
-    #option_unbounded = 6
+#   option_unbounded = 6
     alias_true = 4
     alias_false = 0
     default = 0
+
 
 class ShowTwiddleInputs(DefaultOnToggle):
     """If twiddles are enabled, show their inputs in "Ship Info" next to the name of each twiddle."""
     display_name = "Show Twiddle Inputs"
     visibility = Visibility.all ^ Visibility.spoiler  # Visual only
 
+
 class ArchipelagoRadar(DefaultOnToggle):
     """Shows a bright outline around any enemy that contains an Archipelago Item. Recommended for beginners."""
     display_name = "Archipelago Radar"
     visibility = Visibility.all ^ Visibility.spoiler  # Visual only
 
+
 class Christmas(Toggle):
     """Use the Christmas set of graphics and sound effects."""
     display_name = "Christmas Mode"
     visibility = Visibility.all ^ Visibility.spoiler  # Visual only
+
 
 class TyrianDeathLink(DeathLink):
     """
@@ -417,6 +461,7 @@ class TyrianDeathLink(DeathLink):
     """
 
 # =============================================================================
+
 
 @dataclass
 class TyrianOptions(PerGameCommonOptions):
