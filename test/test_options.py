@@ -109,8 +109,8 @@ class TestShopsOff(TyrianTestBase):
 
 
 class TestShopsOnly(TyrianTestBase):
-    # shop_item_count was originally 228/325, however rarely that causes a FillError
-    # because starts in this mode are far more restrictive than normal and AP doesn't handle that well yet
+    # this mode is, by design, extremely restrictive.
+    # it is designed for "no logic" mode, but we want to make sure it can still function with some logic settings.
     options = {
         "enable_tyrian_2000_support": True,
         "episode_1": "goal",
@@ -120,6 +120,8 @@ class TestShopsOnly(TyrianTestBase):
         "episode_5": "goal",
         "shop_mode": "shops_only",
         "shop_item_count": "always_five",
+        "logic_difficulty": "master",
+        "logic_boss_timeout": "on"
     }
 
     def test_locations_in_level_only_have_credits(self) -> None:

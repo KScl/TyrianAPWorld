@@ -32,16 +32,16 @@ if TYPE_CHECKING:
 
 
 class EnableTyrian2000Support(Toggle):
-    """
-    Use Tyrian 2000's data instead of Tyrian 2.1. Turning this on is mandatory if you want to do anything with
-    Episode 5. All of Tyrian 2000's weapons and new items will also be added to the item pool.
+    """Use Tyrian 2000's data instead of Tyrian 2.1.
+
+    Turning this on is mandatory if you want to do anything with Episode 5. All of Tyrian 2000's weapons and new items will also be added to the item pool.
     """
     display_name = "Enable Tyrian 2000 support"
 
 
 class GoalEpisode1(Choice):
-    """
-    Add Episode 1 (Escape) levels to the pool.
+    """Add Episode 1 (Escape) levels to the pool.
+
     If "goal" is chosen, you'll need to complete "ASSASSIN" (in addition to other episode goals) to win.
     """
     display_name = "Episode 1"
@@ -52,8 +52,8 @@ class GoalEpisode1(Choice):
 
 
 class GoalEpisode2(Choice):
-    """
-    Add Episode 2 (Treachery) levels to the pool.
+    """Add Episode 2 (Treachery) levels to the pool.
+
     If "goal" is chosen, you'll need to complete "GRYPHON" (in addition to other episode goals) to win.
     """
     display_name = "Episode 2"
@@ -64,8 +64,8 @@ class GoalEpisode2(Choice):
 
 
 class GoalEpisode3(Choice):
-    """
-    Add Episode 3 (Mission: Suicide) levels to the pool.
+    """Add Episode 3 (Mission: Suicide) levels to the pool.
+
     If "goal" is chosen, you'll need to complete "FLEET" (in addition to other episode goals) to win.
     """
     display_name = "Episode 3"
@@ -78,6 +78,7 @@ class GoalEpisode3(Choice):
 class GoalEpisode4(Choice):
     """
     Add Episode 4 (An End to Fate) levels to the pool.
+
     If "goal" is chosen, you'll need to complete "NOSE DRIP" (in addition to other episode goals) to win.
     """
     display_name = "Episode 4"
@@ -88,8 +89,9 @@ class GoalEpisode4(Choice):
 
 
 class GoalEpisode5(Choice):
-    """
-    Add Episode 5 (Hazudra Fodder) levels to the pool. This requires you to enable Tyrian 2000 support.
+    """Add Episode 5 (Hazudra Fodder) levels to the pool.
+
+    This requires you to enable Tyrian 2000 support.
     If "goal" is chosen, you'll need to complete "FRUIT" (in addition to other episode goals) to win.
     """
     display_name = "Episode 5"
@@ -100,9 +102,9 @@ class GoalEpisode5(Choice):
 
 
 class DataCubeHunt(Toggle):
-    """
-    If enabled, goal levels will not be in the item pool, but will be locked behind collecting a given amount of
-    "Data Cube" items. See data_cubes_required, data_cubes_total_percent, and data_cubes_total for more information.
+    """If enabled, goal levels will not be in the item pool, but will be locked behind collecting a given amount of "Data Cube" items.
+
+    See data_cubes_required, data_cubes_total_percent, and data_cubes_total for more information.
     """
     display_name = "Data Cube Hunt"
 
@@ -116,8 +118,8 @@ class DataCubesRequired(Range):
 
 
 class DataCubesTotal(NamedRange):
-    """
-    How many data cubes should be added to the pool in Data Cube Hunt mode, as an absolute amount.
+    """How many data cubes should be added to the pool in Data Cube Hunt mode, as an absolute amount.
+
     You may specify 'percentage' to use the value from data_cubes_total_percent instead.
     """
     display_name = "Data Cubes Total"
@@ -130,8 +132,8 @@ class DataCubesTotal(NamedRange):
 
 
 class DataCubesTotalPercent(Range):
-    """
-    How many data cubes should be added to the pool in Data Cube Hunt mode, as a percentage of the required amount.
+    """How many data cubes should be added to the pool in Data Cube Hunt mode, as a percentage of the required amount.
+
     100 adds in exactly the number of data cubes required, 200 adds in twice that amount, etc.
     """
     display_name = "Data Cubes Total %"
@@ -146,8 +148,7 @@ class DataCubesTotalPercent(Range):
 
 
 class RemoveFromItemPool(ItemDict):
-    """
-    Allows customizing the item pool by removing unwanted items from it.
+    """Allows customizing the item pool by removing unwanted items from it.
 
     Note: Items in starting inventory are automatically removed from the pool; you don't need to remove them here too.
     """
@@ -164,8 +165,8 @@ class StartingMoney(Range):
 
 
 class StartingMaxPower(Range):
-    """
-    Change the maximum power level you're allowed to upgrade weapons to when you start the seed.
+    """Change the maximum power level you're allowed to upgrade weapons to when you start the seed.
+
     Increasing this can result in more varied seeds, and/or easier starts.
     """
     display_name = "Starting Maximum Power Level"
@@ -175,31 +176,26 @@ class StartingMaxPower(Range):
 
 
 class RandomStartingWeapon(Toggle):
-    """
-    Choose whether you start with the default Pulse-Cannon or something random; how random depends on logic difficulty
-    settings, among other things. In particular, adding generators to your start inventory may result in a better
-    selection for lower logic difficulties.
+    """Choose whether you start with the default Pulse-Cannon, or some other random weapon.
 
-    Note: If your start inventory contains a front weapon, you will not receive another starting weapon (and therefore,
-    this option will be ignored).
+    The weapon you receive depends on logic difficulty settings, among other things. In particular, adding generators to your start inventory may result in a better selection for lower logic difficulties.
+
+    Note: If your start inventory contains a front weapon, you will not receive another starting weapon (and therefore, this option will be ignored).
     """
     display_name = "Random Starting Weapon"
 
 
 class ProgressiveItems(DefaultOnToggle):
-    """
-    How items with multiple tiers (in this game, only generators) should be rewarded.
+    """How items with multiple tiers (in this game, only generators) should be rewarded.
 
-    If 'off', each item can be independently picked up, letting you skip tiers. Picking up an item of a lower tier
-    after an item of a higher tier does nothing.
+    If 'off', each item can be independently picked up, letting you skip tiers. Picking up an item of a lower tier after an item of a higher tier does nothing.
     If 'on', each "Progressive" item will move you up to the next tier, regardless of which one you find.
     """
     display_name = "Progressive Items"
 
 
 class Specials(Choice):
-    """
-    Enable or disable specials (extra behaviors when starting to fire).
+    """Enable or disable specials (extra behaviors when starting to fire).
 
     If 'on', your ship will have a random special from the start.
     If 'as_items', specials will be added to the item pool, and can be freely chosen once acquired.
@@ -215,13 +211,10 @@ class Specials(Choice):
 
 
 class Twiddles(Choice):
-    """
-    Enable or disable twiddles (Street Fighter-esque button combinations).
+    """Enable or disable twiddles (Street Fighter-esque button combinations).
 
-    If 'on', your ship will have up to three random twiddles. Their button combinations will be the same as in the
-    original game; as will their use costs.
-    If 'chaos', your ship will have up to three random twiddles with new inputs. They may have new, unique behaviors;
-    and they may have different use costs.
+    If 'on', your ship will have up to three random twiddles. Their button combinations will be the same as in the original game; as will their use costs.
+    If 'chaos', your ship will have up to three random twiddles with new inputs. They may have new, unique behaviors; and they may have different use costs.
     If 'off', no twiddles will be available.
     """
     display_name = "Twiddles"
@@ -234,10 +227,9 @@ class Twiddles(Choice):
 
 
 class LocalLevelPercent(Range):
-    """
-    Set some percentage of levels, chosen randomly, to be local to your own world.
-    Increasing this may reduce the chance of being in BK mode (having no checks available), but may also result in less
-    interaction with other worlds.
+    """Set some percentage of levels, chosen randomly, to be local to your own world.
+
+    Increasing this may reduce the chance of being in BK mode (having no checks available), but may also result in less interaction with other worlds.
     """
     display_name = "Local Level %"
     range_start = 0
@@ -250,15 +242,12 @@ class LocalLevelPercent(Range):
 
 
 class ShopMode(Choice):
-    """
-    Determine if shops exist and how they behave.
+    """Determine if shops exist and how they behave.
 
     If 'none', shops will not exist; credits will only be used to upgrade weapons.
-    If 'standard', each level will contain a shop that is accessible after clearing it. The shop will contain anywhere
-    from 1 to 5 additional checks for the multiworld.
+    If 'standard', each level will contain a shop that is accessible after clearing it. The shop will contain anywhere from 1 to 5 additional checks for the multiworld.
     If 'hidden', shops will behave as above, but will not tell you what you're buying until after you spend credits.
-    If 'shops_only', shops will be the only location checks available; items within levels will only contain varying
-    amounts of money for yourself.
+    If 'shops_only', shops will be the only location checks available; items within levels will only contain varying amounts of money for yourself. Note that this mode is designed for "no logic", and is extremely restrictive; you may need to tweak your logic difficulty settings when playing solo.
     """
     display_name = "Shop Mode"
     option_none = 0
@@ -271,11 +260,10 @@ class ShopMode(Choice):
 
 
 class ShopItemCount(NamedRange):
-    """
-    The number of shop location checks that will be added.
+    """The number of shop location checks that will be added.
+
     All levels are guaranteed to have at least one shop item if there's more shop location checks than levels.
-    You may also specify 'always_one', 'always_two', 'always_three', 'always_four', or 'always_five' to
-    guarantee that shops will have exactly that many items.
+    You may also specify 'always_one', 'always_two', 'always_three', 'always_four', or 'always_five' to guarantee that shops will have exactly that many items.
     """
     display_name = "Shop Item Count"
     range_start = 1
@@ -297,11 +285,9 @@ class ShopItemCount(NamedRange):
 
 
 class MoneyPoolScale(Range):
-    """
-    Change the amount of money in the pool, as a percentage.
+    """Change the amount of money in the pool, as a percentage.
 
-    At 100 (100%), the total amount of money in the pool will be equal to the cost of upgrading the most expensive
-    front weapon to the maximum level, plus the cost of purchasing all items from every shop.
+    At 100 (100%), the total amount of money in the pool will be equal to the cost of upgrading the most expensive front weapon to the maximum level, plus the cost of purchasing all items from every shop.
     """
     display_name = "Money Pool Scaling"
     range_start = 20
@@ -310,13 +296,12 @@ class MoneyPoolScale(Range):
 
 
 class BaseWeaponCost(TextChoice):
-    """
-    Change the amount that weapons (and, in turn, weapon power upgrades) cost.
+    """Change the amount that weapons (and, in turn, weapon power upgrades) cost.
 
     If 'original', weapons will cost the same amount that they do in the original game.
-    If 'balanced', prices will be changed around such that generally more powerful and typically used weapons
-    (Laser, etc.) will cost more.
+    If 'balanced', prices will be changed around such that generally more powerful and typically used weapons (Laser, etc.) will cost more.
     If 'randomized', weapons will have random prices.
+
     You may also input a positive integer to force all base weapon prices to that amount.
     """
     display_name = "Base Weapon Cost"
@@ -345,19 +330,13 @@ class BaseWeaponCost(TextChoice):
 
 
 class LogicDifficulty(Choice):
-    """
-    Select how difficult the logic will be.
+    """Select how difficult the logic will be.
 
-    If 'beginner', most secret locations will be excluded by default, and additional leeway will be provided when
-    calculating damage to ensure you can destroy things required to obtain checks.
-    If 'standard', only a few incredibly obscure locations will be excluded by default. There will always logically be
-    a weapon loadout you can use to obtain checks that your current generator can handle (shields notwithstanding).
-    If 'expert', all locations will be in logic, and it will be expected that you can manage a weapon loadout that
-    creates a power drain on your current generator.
-    If 'master', logic will be as in 'expert' but you will also be expected to know technical things like specific
-    triggers for secrets and other minute details, and little to no leeway will be provided with damage calculation.
-    If 'no_logic', all locations within a level will be assumed attainable if you can access that level at all, with
-    zero regard for loadout or anything else. This is *extremely* dangerous and should be used with caution.
+    If 'beginner', most secret locations will be excluded by default, and additional leeway will be provided when calculating damage to ensure you can destroy things required to obtain checks.
+    If 'standard', only a few incredibly obscure locations will be excluded by default. There will always logically be a weapon loadout you can use to obtain checks that your current generator can handle (shields notwithstanding).
+    If 'expert', almost all locations will be in logic, and it will be expected that you can manage a weapon loadout that creates a power drain on your current generator.
+    If 'master', all locations will always be in logic, and you will also be expected to know technical things like specific triggers for secrets and other minute details. Little to no leeway will be provided with damage calculation.
+    If 'no_logic', all locations within a level will be assumed attainable if you can access that level at all, with zero regard for loadout or anything else. This is *extremely* dangerous and should be used with caution.
     """
     display_name = "Logic Difficulty"
     option_beginner = 1
@@ -369,10 +348,7 @@ class LogicDifficulty(Choice):
 
 
 class LogicBossTimeout(Toggle):
-    """
-    If enabled, bosses that can be timed out may logically require you to do so; requiring you to dodge them until the
-    level automatically completes to obtain items from a shop afterward.
-    """
+    """If enabled, bosses that can be timed out may logically require you to do so; requiring you to dodge them until the level automatically completes to obtain items from a shop afterward."""
     display_name = "Boss Timeout in Logic"
 
 # ===================================
@@ -381,9 +357,9 @@ class LogicBossTimeout(Toggle):
 
 
 class GameDifficulty(Choice):
-    """
-    Select the base difficulty of the game. Anything beyond Impossible is VERY STRONGLY not recommended unless you
-    know what you're doing.
+    """Select the base difficulty of the game.
+
+    Anything beyond Impossible is VERY STRONGLY not recommended unless you know what you're doing.
     """
     display_name = "Game Difficulty"
     option_easy = 1  # 75% enemy health
@@ -398,21 +374,18 @@ class GameDifficulty(Choice):
 
 
 class HardContact(Toggle):
-    """
-    Direct contact with an enemy or anything else will completely power down your shields and deal armor damage.
+    """Direct contact with an enemy or anything else will completely power down your shields and deal armor damage.
 
-    Note that this makes the game significantly harder. Additional "Enemy approaching from behind" callouts will be
-    given throughout the game if this is enabled.
+    Note that this makes the game significantly harder. Additional "Enemy approaching from behind" callouts will be given throughout the game if this is enabled.
     """
     display_name = "Contact Bypasses Shields"
 
 
 class ExcessArmor(DefaultOnToggle):
-    """
-    Twiddles, pickups, etc. can cause your ship to have more armor than its maximum armor rating.
+    """Twiddles, pickups, etc. can cause your ship to have more armor than its maximum armor rating.
 
-    Enabling this is vanilla behavior. If disabled, a red line over the Armor meter will show the maximum armor level
-    that you are allowed to attain, if not already at maximum armor.
+    Enabling this is vanilla behavior.
+    If disabled, a red line over the Armor meter will show the maximum armor level that you are allowed to attain, if not already at maximum armor.
     """
     display_name = "Allow Excess Armor"
 
@@ -455,8 +428,8 @@ class Christmas(Toggle):
 
 
 class TyrianDeathLink(DeathLink):
-    """
-    When you die, everyone else with DeathLink enabled also dies. The reverse is also true.
+    """When you die, everyone else with DeathLink enabled also dies. The reverse is also true.
+
     Can be toggled off in the Options menu, if enabled.
     """
 
