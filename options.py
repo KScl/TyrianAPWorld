@@ -26,6 +26,7 @@ if TYPE_CHECKING:
 
     from worlds.AutoWorld import World
 
+
 # =============
 # === Goals ===
 # =============
@@ -142,6 +143,7 @@ class DataCubesTotalPercent(Range):
     range_end = 200
     default = 100
 
+
 # =============================
 # === Item Pool Adjustments ===
 # =============================
@@ -236,6 +238,7 @@ class LocalLevelPercent(Range):
     range_end = 100
     default = 0
 
+
 # =======================
 # === Shops and Money ===
 # =======================
@@ -324,6 +327,7 @@ class BaseWeaponCost(TextChoice):
         raise ValueError(f"Could not find option '{self.value}' for '{self.__class__.__name__}', "
                          f"known options are {', '.join(self.options)}, <any positive integer>")
 
+
 # =========================
 # === Logic Adjustments ===
 # =========================
@@ -350,6 +354,7 @@ class LogicDifficulty(Choice):
 class LogicBossTimeout(Toggle):
     """If enabled, bosses that can be timed out may logically require you to do so; requiring you to dodge them until the level automatically completes to obtain items from a shop afterward."""
     display_name = "Boss Timeout in Logic"
+
 
 # ===================================
 # === Game Difficulty Adjustments ===
@@ -388,6 +393,7 @@ class ExcessArmor(DefaultOnToggle):
     If disabled, a red line over the Armor meter will show the maximum armor level that you are allowed to attain, if not already at maximum armor.
     """
     display_name = "Allow Excess Armor"
+
 
 # ======================================
 # === Visual tweaks and other things ===
@@ -432,6 +438,7 @@ class TyrianDeathLink(DeathLink):
 
     Can be toggled off in the Options menu, if enabled.
     """
+
 
 # =============================================================================
 

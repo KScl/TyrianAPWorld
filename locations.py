@@ -51,12 +51,31 @@ class LevelRegion:
 
     episode: Episode
     locations: Dict[str, Any]  # List of strings to location or sub-region names
+    flattened_locations: Dict[str, int]  # Only location names, ignoring sub-regions
     shop_setups: List[str]  # See base_shop_setups_list above
 
     def __init__(self, episode: Episode, locations: Dict[str, Any], shop_setups: List[str] = ["F", "H", "K", "L"]):
         self.episode = episode
         self.locations = locations
         self.shop_setups = shop_setups
+
+        # Immediately create a flattened location list
+        def shop_locations(name: str, all_ids: Tuple[Any]) -> Dict[str, int]:
+            # Turns "Shop - LEVELNAME (Episode 1)": (...) into individual location names
+            return {f"{name} - Item {(shop_id - all_ids[0]) + 1}": shop_id for shop_id in all_ids}
+
+        def flatten(locations: Dict[str, Any]) -> Dict[str, int]:
+            results: Dict[str, int] = {}
+            for name, value in locations.items():
+                if type(value) is dict:
+                    results.update(flatten(value))
+                elif type(value) is tuple:
+                    results.update(shop_locations(name, value))
+                else:
+                    results[name] = value
+            return results
+
+        self.flattened_locations = flatten(locations)
 
     # Gets a random price based on this level's shop setups, and assigns it to the locaton.
     # Also changes location to prioritized/excluded automatically based on the setup rolled.
@@ -68,26 +87,11 @@ class LevelRegion:
 
     # Gets a flattened dict of all locations, id: name
     def get_locations(self, base_id: int = 0) -> Dict[str, int]:
-        # Turns "Shop - LEVELNAME (Episode 1)": (...) into individual location names
-        def shop_locations(name: str, all_ids: Tuple[Any]) -> Dict[str, int]:
-            return {f"{name} - Item {(shop_id - all_ids[0]) + 1}": (shop_id + base_id) for shop_id in all_ids}
-
-        def flatten(locations: Dict[str, Any]) -> Dict[str, int]:
-            results: Dict[str, int] = {}
-            for name, value in locations.items():
-                if type(value) is dict:
-                    results.update(flatten(value))
-                elif type(value) is tuple:
-                    results.update(shop_locations(name, value))
-                else:
-                    results[name] = value + base_id
-            return results
-
-        return flatten(self.locations)
+        return {name: base_id + location_id for (name, location_id) in self.flattened_locations.items()}
 
     # Returns just names from the above.
     def get_location_names(self) -> Set[str]:
-        return {name for name in self.get_locations()}
+        return {name for name in self.flattened_locations.keys()}
 
 
 class LevelLocationData:
@@ -590,8 +594,21 @@ class LevelLocationData:
         }),
 
         "AST. CITY (Episode 3)": LevelRegion(episode=Episode.MissionSuicide, locations={
-            # !!! TODO !!!
-            "Shop - AST. CITY (Episode 3)": (1320, 1321, 1322, 1323, 1324),
+            "AST. CITY (Episode 3) @ Base Requirements": {
+                "AST. CITY (Episode 3) - Shield Ship, Start": 320,
+                "AST. CITY (Episode 3) - Shield Ship, After Boss Dome 1": 322,
+                "AST. CITY (Episode 3) - Shield Ship, Before Boss Dome 2": 323,
+                "AST. CITY (Episode 3) - Shield Ship, Near Boss Dome 2": 325,
+                "AST. CITY (Episode 3) - Shield Ship, Near Boss Dome 3": 327,
+                "Shop - AST. CITY (Episode 3)": (1320, 1321, 1322, 1323, 1324),
+
+                "AST. CITY (Episode 3) @ Destroy Boss Domes": {
+                    "AST. CITY (Episode 3) - Boss Dome 1": 321,
+                    "AST. CITY (Episode 3) - Boss Dome 2": 324,
+                    "AST. CITY (Episode 3) - Boss Dome 3": 326,
+                    "AST. CITY (Episode 3) - Boss Dome 4": 328,
+                }
+            }
         }),
 
         "SAWBLADES (Episode 3)": LevelRegion(episode=Episode.MissionSuicide, locations={
@@ -608,16 +625,18 @@ class LevelLocationData:
         }),
 
         "CAMANIS (Episode 3)": LevelRegion(episode=Episode.MissionSuicide, locations={
-            "CAMANIS (Episode 3) - Ice Spitter 1": 340,
-            "CAMANIS (Episode 3) - Snowfield Ship Assault": 341,
-            "CAMANIS (Episode 3) - Ice Spitter 2": 342,
-            "CAMANIS (Episode 3) - Roaming Snowball": 343,
-            "CAMANIS (Episode 3) - Ice Spitter 3": 344,
+            "CAMANIS (Episode 3) @ Base Requirements": {
+                "CAMANIS (Episode 3) - Ice Spitter, Start": 340,
+                "CAMANIS (Episode 3) - Blizzard Ship Assault": 341,
+                "CAMANIS (Episode 3) - Ice Spitter, After Blizzard": 342,
+                "CAMANIS (Episode 3) - Roaming Snowball": 343,
+                "CAMANIS (Episode 3) - Ice Spitter, Ending": 344,
 
-            "CAMANIS (Episode 3) @ Pass Boss (can time out)": {
-                "CAMANIS (Episode 3) - Boss": 345,
-                "Shop - CAMANIS (Episode 3)": (1340, 1341, 1342, 1343, 1344),
-            },
+                "CAMANIS (Episode 3) @ Pass Boss (can time out)": {
+                    "CAMANIS (Episode 3) - Boss": 345,
+                    "Shop - CAMANIS (Episode 3)": (1340, 1341, 1342, 1343, 1344),
+                }
+            }
         }),
 
         "MACES (Episode 3)": LevelRegion(episode=Episode.MissionSuicide, locations={
@@ -630,20 +649,22 @@ class LevelLocationData:
         }),
 
         "TYRIAN X (Episode 3)": LevelRegion(episode=Episode.MissionSuicide, locations={
-            "TYRIAN X (Episode 3) - First U-Ship Secret": 360,
-            "TYRIAN X (Episode 3) - Second Secret, Same as the First": 361,
-            "TYRIAN X (Episode 3) - Side-flying Ship Near Landers": 362,
-            "TYRIAN X (Episode 3) - Platform Spinner Sequence": 363,
-            "TYRIAN X (Episode 3) - Ships Between Platforms": 364,
+            "TYRIAN X (Episode 3) @ Base Requirements": {
+                "TYRIAN X (Episode 3) - First U-Ship Secret": 360,
+                "TYRIAN X (Episode 3) - Second Secret, Same as the First": 361,
+                "TYRIAN X (Episode 3) - Side-flying Ship Near Landers": 362,
+                "TYRIAN X (Episode 3) - Platform Spinner Sequence": 363,
+                "TYRIAN X (Episode 3) - Ships Between Platforms": 364,
 
-            "TYRIAN X (Episode 3) @ Tanks Behind Structures": {
-                "TYRIAN X (Episode 3) - Tank Near Purple Structure": 365,
-                "TYRIAN X (Episode 3) - Tank Turn-and-fire Secret": 366,
-            },
-            "TYRIAN X (Episode 3) @ Pass Boss (can time out)": {
-                "TYRIAN X (Episode 3) - Boss": 367,
-                "Shop - TYRIAN X (Episode 3)": (1360, 1361, 1362, 1363, 1364),
-            },
+                "TYRIAN X (Episode 3) @ Tanks Behind Structures": {
+                    "TYRIAN X (Episode 3) - Tank Near Purple Structure": 365,
+                    "TYRIAN X (Episode 3) - Tank Turn-and-fire Secret": 366,
+                },
+                "TYRIAN X (Episode 3) @ Pass Boss (can time out)": {
+                    "TYRIAN X (Episode 3) - Boss": 367,
+                    "Shop - TYRIAN X (Episode 3)": (1360, 1361, 1362, 1363, 1364),
+                },
+            }
         }),
 
         "SAVARA Y (Episode 3)": LevelRegion(episode=Episode.MissionSuicide, locations={
@@ -666,31 +687,37 @@ class LevelLocationData:
         }),
 
         "NEW DELI (Episode 3)": LevelRegion(episode=Episode.MissionSuicide, locations={
-            # !!! TODO !!!
-            "NEW DELI (Episode 3) - First Turret Wave 1": 380,
-            "NEW DELI (Episode 3) - First Turret Wave 2": 381,
-            "NEW DELI (Episode 3) - Second Turret Wave 1": 382,
-            "NEW DELI (Episode 3) - Second Turret Wave 2": 383,
-            "NEW DELI (Episode 3) - Second Turret Wave 3": 384,
-            "NEW DELI (Episode 3) - Second Turret Wave 4": 385,
+            "NEW DELI (Episode 3) @ Base Requirements": {
+                "NEW DELI (Episode 3) - First Turret Wave 1": 380,
+                "NEW DELI (Episode 3) - First Turret Wave 2": 381,
 
-            "NEW DELI (Episode 3) @ Destroy Boss": {
-                "NEW DELI (Episode 3) - Boss": 386,
-                "Shop - NEW DELI (Episode 3)": (1380, 1381, 1382, 1383, 1384),
-            },
+                "NEW DELI (Episode 3) @ The Gauntlet Begins": {
+                    "NEW DELI (Episode 3) - Second Turret Wave 1": 382,
+                    "NEW DELI (Episode 3) - Second Turret Wave 2": 383,
+                    "NEW DELI (Episode 3) - Second Turret Wave 3": 384,
+                    "NEW DELI (Episode 3) - Second Turret Wave 4": 385,
+
+                    "NEW DELI (Episode 3) @ Destroy Boss": {
+                        "NEW DELI (Episode 3) - Boss": 386,
+                        "Shop - NEW DELI (Episode 3)": (1380, 1381, 1382, 1383, 1384),
+                    },
+                }
+            }
         }),
 
         "FLEET (Episode 3)": LevelRegion(episode=Episode.MissionSuicide, locations={
-            "FLEET (Episode 3) - Attractor Crane, Entrance": 390,
-            "FLEET (Episode 3) - Enemy 1": 391,
-            "FLEET (Episode 3) - Enemy 2": 392,
-            "FLEET (Episode 3) - Attractor Crane, Mid-Fleet": 393,
+            "FLEET (Episode 3) @ Base Requirements": {
+                "FLEET (Episode 3) - Attractor Crane, Entrance": 390,
+                "FLEET (Episode 3) - Enemy 1": 391,
+                "FLEET (Episode 3) - Enemy 2": 392,
+                "FLEET (Episode 3) - Attractor Crane, Mid-Fleet": 393,
 
-            "FLEET (Episode 3) @ Destroy Boss": {
-                "FLEET (Episode 3) - Boss": 394,
-                "Shop - FLEET (Episode 3)": (1390, 1391, 1392, 1393, 1394),
-                # Event: "Episode 3 (Mission: Suicide) Complete"
-            },
+                "FLEET (Episode 3) @ Destroy Boss": {
+                    "FLEET (Episode 3) - Boss": 394,
+                    "Shop - FLEET (Episode 3)": (1390, 1391, 1392, 1393, 1394),
+                    # Event: "Episode 3 (Mission: Suicide) Complete"
+                },
+            }
         }, shop_setups=["S", "V", "X"]),
 
         # =============================================================================================

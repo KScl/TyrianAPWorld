@@ -32,12 +32,7 @@ ignore = [
 "logic.py" = [
 	# Logic conditions can and frequently do exceed the line length limit,
 	# and formatting them to fit it makes them far more difficult to read.
-	"E501",  # Line too long (* > 120)
-
-	# Currently disabling these, may re-enable later.
-	"E226",  # Missing whitespace around arithmetic operator
-	"E302",  # Expected 2 blank lines
-	"E305"  # Expected 2 blank lines after class or function definition
+	"E501"  # Line too long (* > 120)
 ]
 
 "test/*" = [
