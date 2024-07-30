@@ -47,10 +47,10 @@ class DPS:
         new_dps.passive = max(self.passive - other.passive, 0.0)
         new_dps.sideways = max(self.sideways - other.sideways, 0.0)
         new_dps.piercing = max(self.piercing - other.piercing, 0.0)
-        new_dps._type_active = self._type_active
-        new_dps._type_passive = self._type_passive
-        new_dps._type_sideways = self._type_sideways
-        new_dps._type_piercing = self._type_piercing
+        new_dps._type_active = (new_dps.active > 0.0)
+        new_dps._type_passive = (new_dps.passive > 0.0)
+        new_dps._type_sideways = (new_dps.sideways > 0.0)
+        new_dps._type_piercing = (new_dps.piercing > 0.0)
         return new_dps
 
     def meets_requirements(self, requirements: "DPS") -> Tuple[bool, float]:
@@ -605,11 +605,6 @@ def logic_location_rule(world: "TyrianWorld", location_name: str, rule: Callable
 def logic_location_exclude(world: "TyrianWorld", location_name: str) -> None:
     location = world.multiworld.get_location(location_name, world.player)
     location.progress_type = LPType.EXCLUDED
-
-
-def logic_all_locations_rule(world: "TyrianWorld", location_name_base: str, rule: Callable[..., bool]) -> None:
-    for location in [i for i in world.multiworld.get_locations(world.player) if i.name.startswith(location_name_base)]:
-        add_rule(location, rule)
 
 
 def logic_all_locations_exclude(world: "TyrianWorld", location_name_base: str) -> None:
@@ -1370,6 +1365,7 @@ def episode_3_rules(world: "TyrianWorld") -> None:
     dps_mixed = world.damage_tables.make_dps(active=10.0, passive=12.0)
     logic_entrance_rule(world, "SAWBLADES (Episode 3) @ Base Requirements", lambda state, dps1=dps_mixed, armor=wanted_armor:
           has_armor_level(state, world.player, armor)
+          and has_generator_level(state, world.player, 2)
           and can_deal_damage(state, world.player, world.damage_tables, dps1))
 
     # Blue Sawblade: 60
@@ -1514,14 +1510,47 @@ def episode_3_rules(world: "TyrianWorld") -> None:
           can_deal_damage(state, world.player, world.damage_tables, dps1))
 
     # ===== FLEET =============================================================
+    # Item ships: 20 -- These flee quickly; and using them to lock off the entire level is convenient
     wanted_armor = get_difficulty_armor_choice(world, base=(11, 10, 10, 7), hard_contact=(13, 12, 11, 9))
     wanted_energy = 4 if world.options.logic_difficulty <= LogicDifficulty.option_expert else 3
-    logic_entrance_rule(world, "FLEET (Episode 3) @ Base Requirements", lambda state, armor=wanted_armor, energy=wanted_energy:
+    dps_active = world.damage_tables.make_dps(active=scale_health(world, 20) / 1.5)
+    logic_entrance_rule(world, "FLEET (Episode 3) @ Base Requirements", lambda state, dps1=dps_active, armor=wanted_armor, energy=wanted_energy:
           has_armor_level(state, world.player, armor)
-          and has_generator_level(state, world.player, energy))
+          and has_generator_level(state, world.player, energy)
+          and can_deal_damage(state, world.player, world.damage_tables, dps1))
 
-    # TODO
-    dps_active = world.damage_tables.make_dps(active=50.0)
+    # Attractor crane: 50; arms are invulnerable, damage that can be dealt to it is limited
+    # Piercing option is always available for both attractor cranes
+    # If you have invulnerability, you can also use that to pierce briefly.
+    dps_pierceopt = world.damage_tables.make_dps(piercing=scale_health(world, 50) / 10.0)
+    dps_invulnopt = world.damage_tables.make_dps(active=scale_health(world, 50) / 3.0)
+    dps_active = world.damage_tables.make_dps(active=scale_health(world, 50) / 1.6)
+
+    if world.options.logic_difficulty == LogicDifficulty.option_master:
+        # You have invulnerability at the start of the level. Exploit it.
+        logic_location_rule(world, "FLEET (Episode 3) - Attractor Crane, Entrance", lambda state, dps1=dps_pierceopt, dps2=dps_invulnopt:
+              can_deal_damage(state, world.player, world.damage_tables, dps1)
+              or can_deal_damage(state, world.player, world.damage_tables, dps2))
+    else:
+        logic_location_rule(world, "FLEET (Episode 3) - Attractor Crane, Entrance", lambda state, dps1=dps_pierceopt, dps2=dps_invulnopt, dps3=dps_active:
+              can_deal_damage(state, world.player, world.damage_tables, dps1)
+              or (
+                  has_invulnerability(state, world.player)
+                  and can_deal_damage(state, world.player, world.damage_tables, dps2)
+              )
+              or can_deal_damage(state, world.player, world.damage_tables, dps3))
+
+    logic_location_rule(world, "FLEET (Episode 3) - Attractor Crane, Mid-Fleet", lambda state, dps1=dps_pierceopt, dps2=dps_invulnopt, dps3=dps_active:
+          can_deal_damage(state, world.player, world.damage_tables, dps1)
+          or (
+              has_invulnerability(state, world.player)
+              and can_deal_damage(state, world.player, world.damage_tables, dps2)
+          )
+          or can_deal_damage(state, world.player, world.damage_tables, dps3))
+
+
+    # This boss regularly heals, spams enemies across the screen, etc...
+    dps_active = world.damage_tables.make_dps(active=(254 * 1.5) / 8.0)
     logic_entrance_rule(world, "FLEET (Episode 3) @ Destroy Boss", lambda state, dps1=dps_active:
           can_deal_damage(state, world.player, world.damage_tables, dps1))
 
