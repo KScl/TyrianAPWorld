@@ -255,11 +255,11 @@ class LevelLocationData:
                 "SAVARA II (Episode 1) - Launched Planes 1": 100,
                 "SAVARA II (Episode 1) - Huge Plane Amidst Turrets": 102,
                 "SAVARA II (Episode 1) - Vulcan Planes Near Blimp": 103,
-                "SAVARA II (Episode 1) - Launched Planes 2": 104,
+                "SAVARA II (Episode 1) - Launched Planes 2": 105,
 
                 "SAVARA II (Episode 1) @ Destroy Green Planes": {
                     "SAVARA II (Episode 1) - Green Plane Sequence 1": 101,
-                    "SAVARA II (Episode 1) - Green Plane Sequence 2": 105,
+                    "SAVARA II (Episode 1) - Green Plane Sequence 2": 104,
                 },
                 "SAVARA II (Episode 1) @ Pass Boss (can time out)": {
                     "SAVARA II (Episode 1) - Boss": 106,
@@ -546,14 +546,14 @@ class LevelLocationData:
         }, shop_setups=["A#", "B", "C", "D", "D", "E", "F", "F", "G", "I!"]),
 
         "IXMUCANE (Episode 3)": LevelRegion(episode=Episode.MissionSuicide, locations={
-            "IXMUCANE (Episode 3) - Enemy 1": 290,
+            "IXMUCANE (Episode 3) - Pebble Ship, Start": 290,
 
             "IXMUCANE (Episode 3) @ Pass Minelayers Requirements": {
-                "IXMUCANE (Episode 3) - Enemy 2": 291,
-                "IXMUCANE (Episode 3) - Enemy 3": 292,
-                "IXMUCANE (Episode 3) - Enemy 4": 293,
-                "IXMUCANE (Episode 3) - Enemy 5": 294,
-                "IXMUCANE (Episode 3) - Enemy 6": 295,
+                "IXMUCANE (Episode 3) - Pebble Ship, Speed Up Section": 291,
+                "IXMUCANE (Episode 3) - Enemy From Behind": 292,
+                "IXMUCANE (Episode 3) - Sideways Minelayer, Domes": 293,
+                "IXMUCANE (Episode 3) - Pebble Ship, Domes": 294,
+                "IXMUCANE (Episode 3) - Sideways Minelayer, Before Boss": 295,
 
                 "IXMUCANE (Episode 3) @ Pass Boss (can time out)": {
                     "IXMUCANE (Episode 3) - Boss": 296,
@@ -613,12 +613,12 @@ class LevelLocationData:
 
         "SAWBLADES (Episode 3)": LevelRegion(episode=Episode.MissionSuicide, locations={
             "SAWBLADES (Episode 3) @ Base Requirements": {
-                "SAWBLADES (Episode 3) - Small Enemy 1": 330,
-                "SAWBLADES (Episode 3) - Small Enemy 2": 331,
-                "SAWBLADES (Episode 3) - Turret 1": 332,
+                "SAWBLADES (Episode 3) - Pebble Ship, Start 1": 330,
+                "SAWBLADES (Episode 3) - Pebble Ship, Start 2": 331,
+                "SAWBLADES (Episode 3) - Light Turret, Gravitium Rocks": 332,
                 "SAWBLADES (Episode 3) - Waving Sawblade": 333,
-                "SAWBLADES (Episode 3) - Turret 2": 334,
-                "SAWBLADES (Episode 3) - Small Enemy 3": 335,
+                "SAWBLADES (Episode 3) - Light Turret, After Sawblades": 334,
+                "SAWBLADES (Episode 3) - Pebble Ship, After Sawblades": 335,
                 "SAWBLADES (Episode 3) - SuperCarrot Secret Drop": 336,
                 "Shop - SAWBLADES (Episode 3)": (1330, 1331, 1332, 1333, 1334),
             }
@@ -626,7 +626,7 @@ class LevelLocationData:
 
         "CAMANIS (Episode 3)": LevelRegion(episode=Episode.MissionSuicide, locations={
             "CAMANIS (Episode 3) @ Base Requirements": {
-                "CAMANIS (Episode 3) - Ice Spitter, Start": 340,
+                "CAMANIS (Episode 3) - Ice Spitter, Near Plasma Guns": 340,
                 "CAMANIS (Episode 3) - Blizzard Ship Assault": 341,
                 "CAMANIS (Episode 3) - Ice Spitter, After Blizzard": 342,
                 "CAMANIS (Episode 3) - Roaming Snowball": 343,
@@ -708,8 +708,8 @@ class LevelLocationData:
         "FLEET (Episode 3)": LevelRegion(episode=Episode.MissionSuicide, locations={
             "FLEET (Episode 3) @ Base Requirements": {
                 "FLEET (Episode 3) - Attractor Crane, Entrance": 390,
-                "FLEET (Episode 3) - Enemy 1": 391,
-                "FLEET (Episode 3) - Enemy 2": 392,
+                "FLEET (Episode 3) - Fire Shooter, Between Ships": 391,
+                "FLEET (Episode 3) - Fire Shooter, Near Massive Ship": 392,
                 "FLEET (Episode 3) - Attractor Crane, Mid-Fleet": 393,
 
                 "FLEET (Episode 3) @ Destroy Boss": {

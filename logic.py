@@ -1346,7 +1346,7 @@ def episode_3_rules(world: "TyrianWorld") -> None:
           can_deal_damage(state, world.player, world.damage_tables, dps1))
 
     # ===== AST. CITY =========================================================
-    wanted_armor = get_difficulty_armor_choice(world, base=(7, 7, 6, 5), hard_contact=(9, 9, 8, 5))
+    wanted_armor = get_difficulty_armor_choice(world, base=(7, 6, 6, 5), hard_contact=(8, 8, 7, 5))
     logic_entrance_rule(world, "AST. CITY (Episode 3) @ Base Requirements", lambda state, armor=wanted_armor:
           has_armor_level(state, world.player, armor))
 
