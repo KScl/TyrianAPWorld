@@ -75,7 +75,7 @@ class TyrianWorld(World):
     location_descriptions = LevelLocationData.secret_descriptions
 
     # Raise this to force outdated clients to update.
-    aptyrian_net_version = 4
+    aptyrian_net_version = 5
 
     # --------------------------------------------------------------------------------------------
 
