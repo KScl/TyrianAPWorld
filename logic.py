@@ -928,9 +928,12 @@ def episode_1_rules(world: "TyrianWorld") -> None:
 
     # ===== ASSASSIN ==========================================================
     wanted_armor = get_difficulty_armor_choice(world, base=(9, 8, 7, 5))
+    wanted_energy = 3 if world.options.logic_difficulty == LogicDifficulty.option_beginner else 2
     dps_active = world.damage_tables.make_dps(active=508 / 20.0)
-    logic_entrance_rule(world, "ASSASSIN (Episode 1) @ Destroy Boss", lambda state, dps1=dps_active, armor=wanted_armor:
-          can_deal_damage(state, world.player, world.damage_tables, dps1))
+    logic_entrance_rule(world, "ASSASSIN (Episode 1) @ Destroy Boss", lambda state, dps1=dps_active, armor=wanted_armor, energy=wanted_energy:
+          has_armor_level(state, world.player, armor)
+          and has_generator_level(state, world.player, energy)
+          and can_deal_damage(state, world.player, world.damage_tables, dps1))
 
 
 # =================================================================================================
