@@ -212,3 +212,31 @@ class TestTyrianData(TyrianTestBase):
         self.collect(powerups[2:10])  # To Maximum Power 11
         mixed_dps_check = can_deal_damage(self.multiworld.state, self.player, damage_tables, dps_test_setups[4])
         self.assertEqual(mixed_dps_check, True, "Pulse-Cannon:11 + Starburst:2 should be 47.3/55.2 DPS together, but failed 40.0/50.0")
+
+    def test_excluded_weapon_logic(self) -> None:
+        damage_tables = self.multiworld.worlds[self.player].damage_tables
+        self.collect(self.get_items_by_name(["Progressive Generator"] * 5))
+        self.collect(self.get_items_by_name(["Maximum Power Up"] * 10))
+
+        dps_test_setups = [
+            DPS(active=0.2),
+            DPS(active=120.0)
+        ]
+
+        # Should succeed (Pulse-Cannon:11 obviously provides more than 0.2 active)
+        active_dps_check = can_deal_damage(self.multiworld.state, self.player, damage_tables, dps_test_setups[0])
+        self.assertEqual(active_dps_check, True, "Pulse-Cannon:11 has max active DPS of 32.1, yet failed 0.2 DPS check")
+
+        # Should fail (all weapons are excluded)
+        active_dps_check = can_deal_damage(self.multiworld.state, self.player, damage_tables, dps_test_setups[0], exclude=["Pulse-Cannon"])
+        self.assertEqual(active_dps_check, False, "Passed 0.2 DPS check with all collected weapons excluded")
+
+        self.collect(self.get_item_by_name("Atomic RailGun"))
+
+        # Should succeed (Atomic RailGun + all generators + all power ups easily clears 120 active on its own)
+        active_dps_check = can_deal_damage(self.multiworld.state, self.player, damage_tables, dps_test_setups[1])
+        self.assertEqual(active_dps_check, True, "Atomic Railgun:11 has max active DPS of 140.0, yet failed 120.0 DPS check")
+
+        # Should fail (with Atomic RailGun excluded, only Pulse-Cannon remains, and it cannot reach 120 active)
+        active_dps_check = can_deal_damage(self.multiworld.state, self.player, damage_tables, dps_test_setups[1], exclude=["Atomic RailGun"])
+        self.assertEqual(active_dps_check, False, "Passed 120.0 DPS check despite excluding collected Atomic RailGun from test")

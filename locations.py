@@ -381,11 +381,8 @@ class LevelLocationData:
                 "ASTCITY (Episode 2) - Shield Ship Canyon 2": 196,
                 "ASTCITY (Episode 2) - Shield Ship Canyon 3": 197,
                 "ASTCITY (Episode 2) - MISTAKES Warp Orb": 198,
-
-                "ASTCITY (Episode 2) @ Last Platform": {
-                    "ASTCITY (Episode 2) - Ending Turret Group": 199,
-                    "Shop - ASTCITY (Episode 2)": (1190, 1191, 1192, 1193, 1194),
-                },
+                "ASTCITY (Episode 2) - Ending Turret Group": 199,
+                "Shop - ASTCITY (Episode 2)": (1190, 1191, 1192, 1193, 1194),
             },
         }),
 
@@ -417,14 +414,14 @@ class LevelLocationData:
 
         "MARKERS (Episode 2)": LevelRegion(episode=Episode.Treachery, locations={
             "MARKERS (Episode 2) @ Base Requirements": {
-                "MARKERS (Episode 2) - Persistent Mine-Layer": 221,
-                "MARKERS (Episode 2) - Car Destroyer Secret": 222,
-                "Shop - MARKERS (Episode 2)": (1220, 1221, 1222, 1223, 1224),
+                "MARKERS (Episode 2) - Right Path Turret": 220,
 
-                "MARKERS (Episode 2) @ Destroy Turrets": {
-                    "MARKERS (Episode 2) - Right Path Turret": 220,
+                "MARKERS (Episode 2) @ Through Minelayer Blockade": {
+                    "MARKERS (Episode 2) - Persistent Minelayer": 221,
+                    "MARKERS (Episode 2) - Car Destroyer Secret": 222,
                     "MARKERS (Episode 2) - Left Path Turret": 223,
                     "MARKERS (Episode 2) - End Section Turret": 224,
+                    "Shop - MARKERS (Episode 2)": (1220, 1221, 1222, 1223, 1224),
                 },
             },
         }),
