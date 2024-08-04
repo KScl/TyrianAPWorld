@@ -1277,6 +1277,10 @@ def episode_3_rules(world: "TyrianWorld") -> None:
           or can_deal_damage(state, world.player, world.damage_tables, dps2)
           or can_deal_damage(state, world.player, world.damage_tables, dps3))
 
+    dps_active = world.damage_tables.make_dps(active=scale_health(world, 20) / 0.7)
+    logic_location_rule(world, "IXMUCANE (Episode 3) - Enemy From Behind", lambda state, dps1=dps_active:
+          can_deal_damage(state, world.player, world.damage_tables, dps1))
+
     # This boss keeps itself guarded inside an indestructible rock at almost all times, and there's a second
     # destructible target in front of the actual weak point... But none of this matters if you can pierce.
     # It also summons a mass of tiny rocks as an attack, so if we aren't cheesing it, we want at least some passive.
