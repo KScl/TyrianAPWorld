@@ -1367,7 +1367,7 @@ def episode_3_rules(world: "TyrianWorld") -> None:
 
     # ===== SAWBLADES =========================================================
     if world.options.logic_difficulty == LogicDifficulty.option_beginner:
-        logic_location_exclude(world, "SAWBLADES (Episode 3) - SuperCarrot Drop")
+        logic_location_exclude(world, "SAWBLADES (Episode 3) - SuperCarrot Secret Drop")
 
     # Periodically, tiny rocks get spammed all over the screen throughout this level.
     # We need to have some passive and some armor to be able to deal with these moments.
