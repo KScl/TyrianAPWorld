@@ -240,3 +240,56 @@ class TestTyrianData(TyrianTestBase):
         # Should fail (with Atomic RailGun excluded, only Pulse-Cannon remains, and it cannot reach 120 active)
         active_dps_check = can_deal_damage(self.multiworld.state, self.player, damage_tables, dps_test_setups[1], exclude=["Atomic RailGun"])
         self.assertEqual(active_dps_check, False, "Passed 120.0 DPS check despite excluding collected Atomic RailGun from test")
+
+# =============================================================================
+# Test each logic difficulty for generation
+# =============================================================================
+
+
+class TestGenerationBeginnerLogic(TyrianTestBase):
+    options = {
+        "enable_tyrian_2000_support": True,
+        "episode_1": "goal",
+        "episode_2": "goal",
+        "episode_3": "goal",
+        "episode_4": "goal",
+        "episode_5": "goal",
+        "logic_difficulty": "beginner",
+    }
+
+
+class TestGenerationStandardLogic(TyrianTestBase):
+    options = {
+        "enable_tyrian_2000_support": True,
+        "episode_1": "goal",
+        "episode_2": "goal",
+        "episode_3": "goal",
+        "episode_4": "goal",
+        "episode_5": "goal",
+        "logic_difficulty": "standard",
+    }
+
+
+class TestGenerationExpertLogic(TyrianTestBase):
+    options = {
+        "enable_tyrian_2000_support": True,
+        "episode_1": "goal",
+        "episode_2": "goal",
+        "episode_3": "goal",
+        "episode_4": "goal",
+        "episode_5": "goal",
+        "logic_difficulty": "expert",
+    }
+
+
+class TestGenerationMasterLogic(TyrianTestBase):
+    options = {
+        "enable_tyrian_2000_support": True,
+        "episode_1": "goal",
+        "episode_2": "goal",
+        "episode_3": "goal",
+        "episode_4": "goal",
+        "episode_5": "goal",
+        "logic_difficulty": "master",
+    }
+
