@@ -251,8 +251,8 @@ class TyrianWorld(World):
         return self.random.choice(possible_choices)
 
     def get_filler_item_name(self) -> str:
-        filler_items = ["SuperBomb", "50 Credits", "75 Credits", "100 Credits", "150 Credits", "200 Credits",
-                        "300 Credits", "375 Credits", "500 Credits", "750 Credits"]
+        filler_items = (["50 Credits", "75 Credits", "100 Credits", "150 Credits", "200 Credits", "300 Credits",
+                         "375 Credits", "500 Credits", "750 Credits"] * 2) + ["1000 Credits", "SuperBomb"]
         return self.random.choice(filler_items)
 
     # ================================================================================================================
