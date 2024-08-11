@@ -14,6 +14,7 @@ from BaseClasses import Item, Location, Region, Tutorial
 from BaseClasses import ItemClassification as IClass
 from BaseClasses import LocationProgressType as LPType
 from Fill import fast_fill
+from Options import OptionError
 
 from worlds.AutoWorld import WebWorld, World
 
@@ -739,7 +740,8 @@ class TyrianWorld(World):
         # Remove items we've been requested to remove from the pool.
         for (removed_item, remove_count) in self.options.remove_from_item_pool.items():
             if removed_item in LocalItemData.levels:
-                raise Exception(f"Cannot remove levels from the item pool (tried to remove '{removed_item}')")
+                raise OptionError(f"Cannot remove levels from the item pool"
+                                  f" (tried to remove '{removed_item}')")
             for i in range(remove_count):
                 pop_from_pool(removed_item)
 
@@ -762,7 +764,8 @@ class TyrianWorld(World):
             if start_weapon is not None:  # Not actually tautological, this can happen if someone removes Pulse-Cannon
                 self.multiworld.push_precollected(self.create_item(start_weapon))
             else:
-                raise Exception(f"Starting weapon ({start_weapon_name}) not in pool")
+                raise OptionError(f"Cannot remove starting weapon from the item pool"
+                                  f" (tried to remove '{start_weapon_name}')")
 
         if self.options.specials == "on":  # Get a random special, no others
             possible_specials = self.get_dict_contents_as_items(LocalItemData.special_weapons)

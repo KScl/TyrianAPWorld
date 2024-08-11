@@ -318,14 +318,15 @@ class BaseWeaponCost(TextChoice):
     def verify(self, world: type["World"], player_name: str, plando_options: "PlandoOptions") -> None:
         if isinstance(self.value, int):
             return
+
         try:
             if int(self.value) >= 0:
                 return
         except ValueError:
-            pass  # Don't include this (expected) exception in the stack trace
+            pass  # Catch this error and return a more helpful KeyError
 
-        raise ValueError(f"Could not find option '{self.value}' for '{self.__class__.__name__}', "
-                         f"known options are {', '.join(self.options)}, <any positive integer>")
+        raise KeyError(f"Could not find option '{self.value}' for '{self.__class__.__name__}', "
+                       f"known options are {', '.join(self.options)}, <any positive integer>")
 
 
 # =========================
