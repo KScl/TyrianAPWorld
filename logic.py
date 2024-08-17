@@ -602,6 +602,13 @@ def has_repulsor(state: "CollectionState", player: int) -> bool:
 # =================================================================================================
 
 
+def can_ever_have_invulnerability(world: "TyrianWorld") -> bool:
+    return has_invulnerability(world.multiworld.get_all_state(True), world.player)
+
+
+# =================================================================================================
+
+
 def logic_entrance_rule(world: "TyrianWorld", entrance_name: str, rule: Callable[..., bool]) -> None:
     entrance = world.multiworld.get_entrance(entrance_name, world.player)
     add_rule(entrance, rule)
@@ -793,19 +800,16 @@ def episode_1_rules(world: "TyrianWorld") -> None:
         logic_entrance_rule(world, "WINDY (Episode 1) @ Phase Through Walls", lambda state, armor=wanted_armor:
               has_invulnerability(state, world.player) or has_armor_level(state, world.player, armor))
     else:
-        # If we don't have a way to get invulnerability, exclude the location even on expert.
-        # (Ways to get it: Have specials as items, start with it in specials on, or roll an Invulnerability twiddle.)
-        exclude_question_mark = (world.options.logic_difficulty <= LogicDifficulty.option_standard)
-        if world.options.specials == "as_items" or has_invulnerability(world.multiworld.state, world.player):
-            logic_entrance_rule(world, "WINDY (Episode 1) @ Phase Through Walls", lambda state:
-                  has_invulnerability(state, world.player))
-        else:
-            exclude_question_mark = True
+        # If we don't have a way to get invulnerability, we consider the location realistically unreachable.
+        if not can_ever_have_invulnerability(world):
             logic_entrance_rule(world, "WINDY (Episode 1) @ Phase Through Walls", lambda state:
                   has_armor_level(state, world.player, 14))
-
-        if exclude_question_mark:
             logic_location_exclude(world, "WINDY (Episode 1) - Central Question Mark")
+        else:
+            logic_entrance_rule(world, "WINDY (Episode 1) @ Phase Through Walls", lambda state:
+                  has_invulnerability(state, world.player))
+            if world.options.logic_difficulty <= LogicDifficulty.option_standard:
+                logic_location_exclude(world, "WINDY (Episode 1) - Central Question Mark")
 
     # Regular block: 10
     dps_active = world.damage_tables.make_dps(active=scale_health(world, 10) / 1.4)
