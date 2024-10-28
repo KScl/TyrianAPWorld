@@ -12,7 +12,7 @@ from BaseClasses import LocationProgressType as LPType
 from worlds.generic.Rules import add_rule
 
 from .items import Episode
-from .options import GameDifficulty, LogicDifficulty
+from .options import LogicDifficulty
 from .twiddles import SpecialValues
 
 if TYPE_CHECKING:
@@ -426,18 +426,17 @@ class DamageTables:
 
 def scale_health(world: "TyrianWorld", health: int, adjust_difficulty: int = 0) -> int:
     health_scale: Dict[int, Callable[[int], int]] = {
-        GameDifficulty.option_easy:         lambda x: int(x * 0.75) + 1,
-        GameDifficulty.option_normal:       lambda x: x,
-        GameDifficulty.option_hard:         lambda x: min(254, int(x * 1.2)),
-        GameDifficulty.option_impossible:   lambda x: min(254, int(x * 1.5)),
-        5:                                  lambda x: min(254, int(x * 1.8)),
-        GameDifficulty.option_suicide:      lambda x: min(254, int(x * 2)),
-        7:                                  lambda x: min(254, int(x * 3)),
-        GameDifficulty.option_lord_of_game: lambda x: min(254, int(x * 4)),
-        9:                                  lambda x: min(254, int(x * 8)),
-        10:                                 lambda x: min(254, int(x * 8)),
+        1: lambda x: int(x * 0.75) + 1,
+        2: lambda x: x,
+        3: lambda x: min(254, int(x * 1.2)),
+        4: lambda x: min(254, int(x * 1.5)),
+        5: lambda x: min(254, int(x * 1.8)),
+        6: lambda x: min(254, int(x * 2)),
+        7: lambda x: min(254, int(x * 3)),
+        8: lambda x: min(254, int(x * 4)),
+        9: lambda x: min(254, int(x * 8)),
     }
-    difficulty = min(max(1, world.options.difficulty + adjust_difficulty), 10)
+    difficulty = min(max(1, world.options.difficulty + adjust_difficulty), 9)
     return health_scale[difficulty](health)
 
 
@@ -644,7 +643,7 @@ def episode_1_rules(world: "TyrianWorld") -> None:
 
     # Four trigger enemies among the starting U-Ship sets, need enough damage to clear them out
     # Below game difficulty Hard, the level layout is different
-    if world.options.difficulty >= GameDifficulty.option_hard:
+    if world.options.difficulty.value >= 3:
         dps_active = world.damage_tables.make_dps(active=scale_health(world, 19) / 2.0)
         dps_passive = world.damage_tables.make_dps(passive=scale_health(world, 19) / 1.5)
         logic_location_rule(world, "TYRIAN (Episode 1) - HOLES Warp Orb", lambda state, dps1=dps_active, dps2=dps_passive:

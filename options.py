@@ -362,20 +362,25 @@ class LogicBossTimeout(Toggle):
 # ===================================
 
 
-class GameDifficulty(Choice):
+class GameDifficulty(NamedRange):
     """Select the base difficulty of the game.
 
-    Anything beyond Impossible is VERY STRONGLY not recommended unless you know what you're doing.
+    Anything beyond Impossible (4) is VERY STRONGLY not recommended unless you know what you're doing.
     """
     display_name = "Game Difficulty"
-    option_easy = 1  # 75% enemy health
-    option_normal = 2  # 100% enemy health
-    option_hard = 3  # 120% enemy health
-    option_impossible = 4  # 150% enemy health, fast firing and bullet speeds
-    option_suicide = 6  # 200% enemy health, fast firing and bullet speeds
-    option_lord_of_game = 8  # 400% enemy health, incredibly fast firing and bullet speeds
-    alias_lord = option_lord_of_game
-    alias_zinglon = option_lord_of_game
+    range_start = 1
+    range_end = 9
+    special_range_names = {
+        "easy": 1,  # 75% enemy health
+        "normal": 2,  # 100% enemy health
+        "hard": 3,  # 120% enemy health, aimed bullet speed +1
+        "impossible": 4,  # 150% enemy health, fast firing, aimed bullet speed +2
+        # Difficulty 5: 180% enemy health, fast firing, aimed bullet speed +3
+        "suicide": 6,  # 200% enemy health, fast firing, aimed bullet speed +4
+        # Difficulty 7: 300% enemy health, fast firing, aimed bullet speed +5
+        "lord_of_game": 8,  # 400% enemy health, super fast firing, aimed bullet speed +6
+        # Difficulty 9: 800% enemy health, super fast firing, aimed bullet speed +7
+    }
     default = 2
 
 
