@@ -63,5 +63,5 @@ difficulties, these locations are usually excluded by default. For a full list o
 them, check the list of [Excluded and Commonly Missed Locations](/tutorial/Tyrian/locations/en).
 
 (If you're looking at this page through GitHub,
-[use this link instead](https://github.com/KScl/TyrianAPWorld/docs/locations_en.md).)
+[use this link instead](https://github.com/KScl/TyrianAPWorld/blob/main/docs/locations_en.md).)
 
