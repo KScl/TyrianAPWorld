@@ -56,3 +56,12 @@ ported back to Tyrian 2.1 to ensure consistent logic between the two versions.
 Tyrian 2000 data files can be used to play games designed for both Tyrian 2.1 and Tyrian 2000; it's a matter of
 personal preference if you prefer the balance and level design changes that Tyrian 2000 introduced.
 
+# I'm missing a location in a level, what gives?
+
+Some location require obscure knowledge or unusual behaviors in order to reach and obtain them. In lower logic
+difficulties, these locations are usually excluded by default. For a full list of these locations and how to obtain
+them, check the list of [Excluded and Commonly Missed Locations](/tutorial/Tyrian/locations/en).
+
+(If you're looking at this page through GitHub,
+[use this link instead](https://github.com/KScl/TyrianAPWorld/docs/locations_en.md).)
+

@@ -46,14 +46,24 @@ class TyrianWebWorld(WebWorld):
     game = "Tyrian"
     option_groups = tyrian_option_groups
     theme = "partyTime"
-    tutorials = [Tutorial(
-        "Multiworld Setup Guide",
-        "A guide to playing Tyrian with Archipelago.",
-        "English",
-        "setup_en.md",
-        "setup/en",
-        ["Kaito Sinclaire"]
-    )]
+    tutorials = [
+        Tutorial(
+            "Multiworld Setup Guide",
+            "A guide to playing Tyrian with Archipelago.",
+            "English",
+            "setup_en.md",
+            "setup/en",
+            ["Kaito Sinclaire"]
+        ),
+        Tutorial(
+            "Excluded and Commonly Missed Locations",
+            "A list of locations that are commonly missed and excluded on lower logic difficulties, and descriptions of how to obtain them.",  # noqa: E501
+            "English",
+            "locations_en.md",
+            "locations/en",
+            ["Kaito Sinclaire"]
+        ),
+    ]
 
 
 class TyrianWorld(World):
@@ -72,8 +82,6 @@ class TyrianWorld(World):
     item_name_groups = LocalItemData.get_item_groups()
     location_name_to_id = LevelLocationData.get_location_name_to_id(base_id)
     location_name_groups = LevelLocationData.get_location_groups()
-
-    location_descriptions = LevelLocationData.secret_descriptions
 
     # Raise this to force outdated clients to update.
     aptyrian_net_version = 5
