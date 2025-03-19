@@ -84,7 +84,7 @@ class TyrianWorld(World):
     location_name_groups = LevelLocationData.get_location_groups()
 
     # Raise this to force outdated clients to update.
-    aptyrian_net_version = 5
+    aptyrian_net_version = 6
 
     # --------------------------------------------------------------------------------------------
 
@@ -269,7 +269,7 @@ class TyrianWorld(World):
     # ================================================================================================================
 
     # ---------- Settings -----------------------------------------------------
-    # Game settings, user choices the game needs to know about
+    # Game settings, user choices the game needs to know about.
     # Present: Always.
     def output_settings(self) -> Dict[str, Any]:
         settings: Dict[str, Any] = {
@@ -294,16 +294,19 @@ class TyrianWorld(World):
             settings["ShopMode"] = int(self.options.shop_mode)
         if self.options.specials == "as_items":
             settings["SpecialMenu"] = True
-        if self.options.twiddles and self.options.show_twiddle_inputs:
-            settings["ShowTwiddles"] = True
-        if self.options.archipelago_radar:
-            settings["APRadar"] = True
         if self.options.christmas_mode:
             settings["Christmas"] = True
         if self.options.death_link:
             settings["DeathLink"] = True
 
         return settings
+
+    # ---------- ExcludedLocations --------------------------------------------
+    # Which locations are excluded. Used to show them differently in the client.
+    # Present: Always.
+    def output_excluded_locations(self) -> List[int]:
+        return [location.address - self.base_id for location in self.multiworld.get_locations(self.player)
+                if location.address is not None and location.progress_type == LPType.EXCLUDED]
 
     # ---------- StartState (obfuscated) --------------------------------------
     # Tell the game what we start with.
@@ -334,12 +337,17 @@ class TyrianWorld(World):
         if self.options.starting_money > 0:
             start_state["Credits"] = self.options.starting_money.value
 
+        if not self.options.add_bonus_games:
+            # Just giving the player the bonus games for free is the easiest way to handle this
+            start_state["Items"].extend([item.local_id for item in LocalItemData.bonus_games])
+
         for item in self.multiworld.precollected_items[self.player]:
             if item.name in LocalItemData.levels:            append_state("Items", item.name)
             elif item.name in LocalItemData.front_ports:     append_state("Items", item.name)
             elif item.name in LocalItemData.rear_ports:      append_state("Items", item.name)
             elif item.name in LocalItemData.special_weapons: append_state("Items", item.name)
             elif item.name in LocalItemData.sidekicks:       append_state("Items", item.name)
+            elif item.name in LocalItemData.bonus_games:     append_state("Items", item.name)
             elif item.name == "Data Cube":                   increase_state("DataCubes")
             elif item.name == "Armor Up":                    increase_state("Armor")
             elif item.name == "Maximum Power Up":            increase_state("Power")
@@ -385,7 +393,7 @@ class TyrianWorld(World):
     def output_location_count(self) -> int:
         return len([loc for loc in self.multiworld.get_locations(self.player) if loc.address is not None])
 
-    # ---------- LocationData -------------------------------------------------
+    # ---------- LocationData (obfuscated) ------------------------------------
     # The contents of every single location present in the player's game. Single player only.
     # Present: Only in local/offline .aptyrian files.
     def output_all_locations(self) -> Dict[int, str]:
@@ -458,6 +466,7 @@ class TyrianWorld(World):
         slot_data = {
             "NetVersion": self.aptyrian_net_version,
             "Settings": self.output_settings(),
+            "ExcludedLocations": self.output_excluded_locations(),
             "StartState": self.obfuscate_object(self.output_start_state()),
             "WeaponCost": self.obfuscate_object(self.output_weapon_cost()),
         }
@@ -504,15 +513,6 @@ class TyrianWorld(World):
         if self.options.episode_4 != 0: self.play_episodes.add(Episode.AnEndToFate)
         if self.options.episode_5 != 0: self.play_episodes.add(Episode.HazudraFodder)
 
-        # Beta: Warn on generating seeds with incomplete logic
-        def warn_incomplete_logic(episode_name: str) -> None:
-            logging.warning(f"{self.multiworld.get_player_name(self.player)}: "
-                            f"Logic for {episode_name} is not yet complete. "
-                            f"There will probably be issues, and the seed may be impossible as a result.")
-
-        if Episode.AnEndToFate in self.play_episodes:   warn_incomplete_logic("Episode 4 (An End to Fate)")
-        if Episode.HazudraFodder in self.play_episodes: warn_incomplete_logic("Episode 5 (Hazudra Fodder)")
-
         # Default to at least playing episode 1
         if len(self.play_episodes) == 0:
             logging.warning(f"No episodes were enabled in {self.multiworld.get_player_name(self.player)}'s "
@@ -523,7 +523,7 @@ class TyrianWorld(World):
         # If no goals, make all selected episodes goals by default
         if len(self.goal_episodes) == 0:
             logging.warning(f"No episodes were marked as goals in {self.multiworld.get_player_name(self.player)}'s "
-                            f"Tyrian world. Defaulting to all playable pisodes.")
+                            f"Tyrian world. Defaulting to all playable episodes.")
             self.goal_episodes = self.play_episodes
 
         if Episode.Escape in self.play_episodes:           self.default_start_level = "TYRIAN (Episode 1)"
@@ -539,7 +539,7 @@ class TyrianWorld(World):
 
         # May as well generate twiddles now, if the options are set.
         if self.options.twiddles:
-            self.twiddles = generate_twiddles(self, self.options.twiddles == "chaos")
+            self.twiddles = generate_twiddles(self, False)
         else:
             self.twiddles = []
 
@@ -723,6 +723,9 @@ class TyrianWorld(World):
         else:
             self.local_itempool.extend(self.get_dict_contents_as_items(LocalItemData.nonprogressive_items))
 
+        if self.options.add_bonus_games:
+            self.local_itempool.extend(self.get_dict_contents_as_items(LocalItemData.bonus_games))
+
         if self.options.data_cube_hunt:
             # Earlier code will ensure this is set to a final value already.
             self.local_itempool.extend(["Data Cube"] * self.options.data_cubes_total.value)
@@ -800,8 +803,11 @@ class TyrianWorld(World):
         # Returns remaining amount of space in itempool after tossing requested number of items
         def toss_from_itempool(num_to_toss: int) -> int:
             tossable_items = [name for name in self.local_itempool if LocalItemData.get(name).tossable]
-            if num_to_toss > len(tossable_items):  # Toss all we can, it's the best we can do.
-                num_to_toss = len(tossable_items)
+            if num_to_toss > len(tossable_items):
+                raise OptionError(f"Cannot trim enough items from the item pool in "
+                                  f"{self.multiworld.get_player_name(self.player)}'s Tyrian world; "
+                                  f" need to remove {num_to_toss}, but only {len(tossable_items)} can be removed."
+                                  f" Please adjust your settings to add more locations.")
 
             [pop_from_pool(i) for i in self.random.sample(tossable_items, num_to_toss)]
             logging.warning(f"Trimming {num_to_toss} item{'' if num_to_toss == 1 else 's'} "

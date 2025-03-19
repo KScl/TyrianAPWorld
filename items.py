@@ -206,7 +206,7 @@ class LocalItemData:
         "SandStorm":         LocalWeapon(707),
         "MineField":         LocalWeapon(708),
         "Dual Vulcan":       LocalWeapon(709),
-        "Banana Bomb":       LocalWeapon(710),
+        "Banana Bomb":       LocalWeapon(710, item_class=IClass.useful),
         "Protron Dispersal": LocalWeapon(711),
         "Astral Zone":       LocalWeapon(712),
         "Xega Ball":         LocalWeapon(713),
@@ -238,20 +238,20 @@ class LocalItemData:
         "Buster Rocket":              LocalWeapon(810, count=2),
         "Zica Supercharger":          LocalWeapon(811, count=2),
         "MicroBomb":                  LocalWeapon(812, count=2),
-        "8-Way MicroBomb":            LocalWeapon(813, count=2, item_class=IClass.useful),
+        "8-Way MicroBomb":            LocalWeapon(813, count=2),
         "Post-It Mine":               LocalWeapon(814, count=2),
         "Mint-O-Ship":                LocalWeapon(815, count=2),
         "Zica Flamethrower":          LocalWeapon(816, count=2),
         "Side Ship":                  LocalWeapon(817, count=2),
         "Companion Ship Warfly":      LocalWeapon(818, count=2),
-        "MicroSol FrontBlaster":      LocalWeapon(819, count=1),  # Right-only (limited to 1)
+        "MicroSol FrontBlaster":      LocalWeapon(819, count=1, item_class=IClass.useful),  # Right-only (limited to 1)
         "Companion Ship Gerund":      LocalWeapon(820, count=2),
         "BattleShip-Class Firebomb":  LocalWeapon(821, count=1, item_class=IClass.useful),  # Right-only (limited to 1)
-        "Protron Cannon Indigo":      LocalWeapon(822, count=1),  # Right-only (limited to 1)
+        "Protron Cannon Indigo":      LocalWeapon(822, count=1, item_class=IClass.useful),  # Right-only (limited to 1)
         "Companion Ship Quicksilver": LocalWeapon(823, count=2),
         "Protron Cannon Tangerine":   LocalWeapon(824, count=1, item_class=IClass.useful),  # Right-only (limited to 1)
         "MicroSol FrontBlaster II":   LocalWeapon(825, count=1, item_class=IClass.useful),  # Right-only (limited to 1)
-        "Beno Wallop Beam":           LocalWeapon(826, count=1),  # Right-only (limited to 1)
+        "Beno Wallop Beam":           LocalWeapon(826, count=1, item_class=IClass.useful),  # Right-only (limited to 1)
         "Beno Protron System -B-":    LocalWeapon(827, count=1, item_class=IClass.useful),  # Right-only (limited to 1)
         "Tropical Cherry Companion":  LocalWeapon(828, count=2),
         "Satellite Marlo":            LocalWeapon(829, count=2),
@@ -272,6 +272,12 @@ class LocalItemData:
 
     progressive_items: Dict[str, LocalItem] = {
         "Progressive Generator": LocalItem(905, count=5, item_class=IClass.progression),
+    }
+
+    bonus_games: Dict[str, LocalItem] = {
+        "Zinglon's Ale":         LocalItem(920, count=1),
+        "Zinglon's Squadrons":   LocalItem(921, count=1),
+        "Zinglon's Revenge":     LocalItem(922, count=1),
     }
 
     other_items: Dict[str, LocalItem] = {
@@ -333,6 +339,7 @@ class LocalItemData:
         all_items.update({name: (base_id + item.local_id) for (name, item) in cls.sidekicks.items()})
         all_items.update({name: (base_id + item.local_id) for (name, item) in cls.nonprogressive_items.items()})
         all_items.update({name: (base_id + item.local_id) for (name, item) in cls.progressive_items.items()})
+        all_items.update({name: (base_id + item.local_id) for (name, item) in cls.bonus_games.items()})
         all_items.update({name: (base_id + item.local_id) for (name, item) in cls.other_items.items()})
         return all_items
 
@@ -358,6 +365,7 @@ class LocalItemData:
         if name in cls.sidekicks:            return cls.sidekicks[name]
         if name in cls.nonprogressive_items: return cls.nonprogressive_items[name]
         if name in cls.progressive_items:    return cls.progressive_items[name]
+        if name in cls.bonus_games:          return cls.bonus_games[name]
         if name in cls.other_items:          return cls.other_items[name]
         raise KeyError(f"Item {name} not found")
 

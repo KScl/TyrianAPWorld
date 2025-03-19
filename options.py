@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from Options import (
+    Accessibility,
     Choice,
     DeathLink,
     DefaultOnToggle,
@@ -15,6 +16,7 @@ from Options import (
     NamedRange,
     OptionGroup,
     PerGameCommonOptions,
+    ProgressionBalancing,
     Range,
     TextChoice,
     Toggle,
@@ -33,7 +35,7 @@ if TYPE_CHECKING:
 
 
 class EnableTyrian2000Support(Toggle):
-    """Use Tyrian 2000's data instead of Tyrian 2.1.
+    """Use data from Tyrian 2000 instead of Tyrian 2.1.
 
     Turning this on is mandatory if you want to do anything with Episode 5. All of Tyrian 2000's weapons and new items will also be added to the item pool.
     """
@@ -77,8 +79,7 @@ class GoalEpisode3(Choice):
 
 
 class GoalEpisode4(Choice):
-    """
-    Add Episode 4 (An End to Fate) levels to the pool.
+    """Add Episode 4 (An End to Fate) levels to the pool.
 
     If "goal" is chosen, you'll need to complete "NOSE DRIP" (in addition to other episode goals) to win.
     """
@@ -86,13 +87,12 @@ class GoalEpisode4(Choice):
     option_goal = 2
     option_on = 1
     option_off = 0
-    default = 2
+    default = 0
 
 
 class GoalEpisode5(Choice):
-    """Add Episode 5 (Hazudra Fodder) levels to the pool.
+    """Add Episode 5 (Hazudra Fodder) levels to the pool. This requires enabling Tyrian 2000 support.
 
-    This requires you to enable Tyrian 2000 support.
     If "goal" is chosen, you'll need to complete "FRUIT" (in addition to other episode goals) to win.
     """
     display_name = "Episode 5"
@@ -125,7 +125,7 @@ class DataCubesTotal(NamedRange):
     """
     display_name = "Data Cubes Total"
     range_start = 1
-    range_end = 200
+    range_end = 400
     special_range_names = {
         "percentage": 0,
     }
@@ -140,7 +140,7 @@ class DataCubesTotalPercent(Range):
     display_name = "Data Cubes Total %"
     visibility = Visibility.all ^ Visibility.spoiler  # Overrides above option if it takes effect
     range_start = 100
-    range_end = 200
+    range_end = 400
     default = 100
 
 
@@ -196,6 +196,15 @@ class ProgressiveItems(DefaultOnToggle):
     display_name = "Progressive Items"
 
 
+class AddBonusGames(Toggle):
+    """Add the three bonus games into the item pool as additional filler.
+
+    If 'off', these bonus games will be available by default.
+    If 'on', the items for each bonus game will need to be obtained to play them, just like any other level.
+    """
+    display_name = "Add Bonus Games"
+
+
 class Specials(Choice):
     """Enable or disable specials (extra behaviors when starting to fire).
 
@@ -216,12 +225,14 @@ class Twiddles(Choice):
     """Enable or disable twiddles (Street Fighter-esque button combinations).
 
     If 'on', your ship will have up to three random twiddles. Their button combinations will be the same as in the original game; as will their use costs.
-    If 'chaos', your ship will have up to three random twiddles with new inputs. They may have new, unique behaviors; and they may have different use costs.
     If 'off', no twiddles will be available.
+
+    The following option is not currently available but is planned in the future:
+    If 'chaos', your ship will have up to three random twiddles with new inputs. They may have new, unique behaviors; and they may have different use costs.
     """
     display_name = "Twiddles"
     option_on = 1
-    option_chaos = 2
+    #option_chaos = 2
     option_off = 0
     alias_true = 1
     alias_false = 0
@@ -270,7 +281,7 @@ class ShopItemCount(NamedRange):
     """
     display_name = "Shop Item Count"
     range_start = 1
-    range_end = 330
+    range_end = 325
     special_range_names = {
         "always_one":   -1,
         "always_two":   -2,
@@ -291,11 +302,13 @@ class MoneyPoolScale(Range):
     """Change the amount of money in the pool, as a percentage.
 
     At 100 (100%), the total amount of money in the pool will be equal to the cost of upgrading the most expensive front weapon to the maximum level, plus the cost of purchasing all items from every shop.
+
+    Note that this does not take into account money that you earn while playing levels, so it is safe to set this to a relatively low value.
     """
     display_name = "Money Pool Scaling"
-    range_start = 20
-    range_end = 400
-    default = 100
+    range_start = 10
+    range_end = 200
+    default = 80
 
 
 class BaseWeaponCost(TextChoice):
@@ -369,7 +382,7 @@ class GameDifficulty(NamedRange):
     """
     display_name = "Game Difficulty"
     range_start = 1
-    range_end = 9
+    range_end = 8
     special_range_names = {
         "easy": 1,  # 75% enemy health
         "normal": 2,  # 100% enemy health
@@ -379,7 +392,9 @@ class GameDifficulty(NamedRange):
         "suicide": 6,  # 200% enemy health, fast firing, aimed bullet speed +4
         # Difficulty 7: 300% enemy health, fast firing, aimed bullet speed +5
         "lord_of_game": 8,  # 400% enemy health, super fast firing, aimed bullet speed +6
+
         # Difficulty 9: 800% enemy health, super fast firing, aimed bullet speed +7
+        # Playing on difficulty 9 is not feasible due to the insane enemy health, so we disallow it.
     }
     default = 2
 
@@ -421,22 +436,12 @@ class ForceGameSpeed(Choice):
     default = 0
 
 
-class ShowTwiddleInputs(DefaultOnToggle):
-    """If twiddles are enabled, show their inputs in "Ship Info" next to the name of each twiddle."""
-    display_name = "Show Twiddle Inputs"
-    visibility = Visibility.all ^ Visibility.spoiler  # Visual only
-
-
-class ArchipelagoRadar(DefaultOnToggle):
-    """Shows a bright outline around any enemy that contains an Archipelago Item. Recommended for beginners."""
-    display_name = "Archipelago Radar"
-    visibility = Visibility.all ^ Visibility.spoiler  # Visual only
-
-
 class Christmas(Toggle):
     """Use the Christmas set of graphics and sound effects."""
     display_name = "Christmas Mode"
-    visibility = Visibility.all ^ Visibility.spoiler  # Visual only
+    # This option is purely visual and audio changes, and has no effect on the way the game plays, or on generation.
+    # However, it cannot easily be toggled client-side, because it changes which set of data files are loaded.
+    visibility = Visibility.all ^ Visibility.spoiler
 
 
 class TyrianDeathLink(DeathLink):
@@ -455,8 +460,10 @@ class TyrianOptions(PerGameCommonOptions):
     # This is listed separately from others, so that it follows per-game common options.
     remove_from_item_pool: RemoveFromItemPool
 
-    # ----- Goals -------------------------------------------------------------
+    # ----- Version -----------------------------------------------------------
     enable_tyrian_2000_support: EnableTyrian2000Support
+
+    # ----- Episodes and Goals ------------------------------------------------
     episode_1: GoalEpisode1
     episode_2: GoalEpisode2
     episode_3: GoalEpisode3
@@ -467,40 +474,37 @@ class TyrianOptions(PerGameCommonOptions):
     data_cubes_total: DataCubesTotal
     data_cubes_total_percent: DataCubesTotalPercent
 
-    # ----- Item Pool Adjustments ---------------------------------------------
+    # ----- Difficulty Options ------------------------------------------------
+    difficulty: GameDifficulty
+    contact_bypasses_shields: HardContact
+    allow_excess_armor: ExcessArmor
+    logic_difficulty: LogicDifficulty
+    logic_boss_timeout: LogicBossTimeout
+
+    # ----- Other Options -----------------------------------------------------
+    local_level_percent: LocalLevelPercent
+    add_bonus_games: AddBonusGames
+    progressive_items: ProgressiveItems
     specials: Specials
     twiddles: Twiddles
-    local_level_percent: LocalLevelPercent
-    progressive_items: ProgressiveItems
     random_starting_weapon: RandomStartingWeapon
-    starting_money: StartingMoney
     starting_max_power: StartingMaxPower
-
-    # ----- Shops and Money ---------------------------------------------------
+    starting_money: StartingMoney
     shop_mode: ShopMode
     shop_item_count: ShopItemCount
     money_pool_scale: MoneyPoolScale
     base_weapon_cost: BaseWeaponCost
 
-    # ----- Logic Adjustments -------------------------------------------------
-    logic_difficulty: LogicDifficulty
-    logic_boss_timeout: LogicBossTimeout
-
-    # ----- Game Difficulty Adjustments ---------------------------------------
-    difficulty: GameDifficulty
-    contact_bypasses_shields: HardContact
-    allow_excess_armor: ExcessArmor
-
     # ----- Visual Tweaks and Other Things ------------------------------------
     force_game_speed: ForceGameSpeed
-    show_twiddle_inputs: ShowTwiddleInputs
-    archipelago_radar: ArchipelagoRadar
     christmas_mode: Christmas
-
     death_link: TyrianDeathLink
 
 
 tyrian_option_groups = [
+    OptionGroup("Version", [
+        EnableTyrian2000Support
+    ]),
     OptionGroup("Episodes & Goals", [
         GoalEpisode1,
         GoalEpisode2,
@@ -512,14 +516,36 @@ tyrian_option_groups = [
         DataCubesTotal,
         DataCubesTotalPercent
     ]),
+    OptionGroup("Difficulty Options", [
+        GameDifficulty,
+        HardContact,
+        ExcessArmor,
+        LogicDifficulty,
+        LogicBossTimeout
+    ]),
+    OptionGroup("Other Options", [
+        ProgressionBalancing,
+        Accessibility,
+        LocalLevelPercent,
+        AddBonusGames,
+        ProgressiveItems,
+        Specials,
+        Twiddles,
+        RandomStartingWeapon,
+        StartingMaxPower,
+        StartingMoney,
+        ShopMode,
+        ShopItemCount,
+        MoneyPoolScale,
+        BaseWeaponCost
+    ]),
     OptionGroup("Visual Tweaks & Other Things", [
         ForceGameSpeed,
-        ShowTwiddleInputs,
-        ArchipelagoRadar,
         Christmas,
-    ]),
+        TyrianDeathLink
+    ], start_collapsed=True),
     OptionGroup("Item & Location Options", [
         # Other options are automatically added.
         RemoveFromItemPool
-    ])
+    ], start_collapsed=True)
 ]
