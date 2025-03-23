@@ -118,7 +118,7 @@ class LevelLocationData:
                 "TYRIAN (Episode 1) - Boss": 9,
                 "Shop - TYRIAN (Episode 1)": (1000, 1001, 1002, 1003, 1004),
             },
-        }, shop_setups=["A#", "B", "C", "D", "D", "E", "F", "F", "G", "I!"]),
+        }, shop_setups=["A", "B", "C", "D", "D", "E", "F", "F", "G", "I!"]),
 
         "BUBBLES (Episode 1)": LevelRegion(episode=Episode.Escape, locations={
             "BUBBLES (Episode 1) @ Pass Bubble Lines": {
@@ -186,7 +186,7 @@ class LevelLocationData:
             "ASTEROID2 (Episode 1) - Tank Turn-around Secret 2": 52,
             "ASTEROID2 (Episode 1) - Second Tank Squadron": 53,
             "ASTEROID2 (Episode 1) - Tank Bridge": 54,
-            "ASTEROID2 (Episode 1) - Tank Assault Right Tank Secret": 55,
+            "ASTEROID2 (Episode 1) - Tank Assault, Right Tank Secret": 55,
             "ASTEROID2 (Episode 1) - MINEMAZE Warp Orb": 56,
 
             "ASTEROID2 (Episode 1) @ Destroy Boss": {
@@ -199,7 +199,7 @@ class LevelLocationData:
             "ASTEROID? (Episode 1) @ Initial Welcome": {
                 "ASTEROID? (Episode 1) - Welcoming Launchers 1": 60,
                 "ASTEROID? (Episode 1) - Welcoming Launchers 2": 61,
-                "ASTEROID? (Episode 1) - Boss Launcher": 62,
+                "ASTEROID? (Episode 1) - Mid-Boss Launcher": 62,
                 "ASTEROID? (Episode 1) - WINDY Warp Orb": 63,
 
                 "ASTEROID? (Episode 1) @ Quick Shots": {
@@ -722,60 +722,104 @@ class LevelLocationData:
         # =============================================================================================
 
         "SURFACE (Episode 4)": LevelRegion(episode=Episode.AnEndToFate, locations={
-            "SURFACE (Episode 4) - WINDY Warp Orb": 400,
-            "SURFACE (Episode 4) - Triple V Formation": 401,
+            "SURFACE (Episode 4) - Pulse-Turret Tank": 400,
+            "SURFACE (Episode 4) - Grey Fork Ships, Start": 401,
+            "SURFACE (Episode 4) - WINDY Warp Orb": 402,
+            "SURFACE (Episode 4) - Grey Fork Ships, Line of Three": 403,
 
-            "Shop - SURFACE (Episode 4)": (1400, 1401, 1402, 1403, 1404),
+            "SURFACE (Episode 4) @ Destroy Mid-Boss": {
+                "SURFACE (Episode 4) - Mid-Boss": 404,
+                "SURFACE (Episode 4) - Secret Orb Wheel": 405,
+                "SURFACE (Episode 4) - Grey Fork Ships, Ending": 406,
+
+                "SURFACE (Episode 4) @ Destroy Boss": {
+                    "SURFACE (Episode 4) - Boss": 407,
+                    "Shop - SURFACE (Episode 4)": (1400, 1401, 1402, 1403, 1404),
+                }
+            }
         }),
 
         "WINDY (Episode 4)": LevelRegion(episode=Episode.AnEndToFate, locations={
-            "Shop - WINDY (Episode 4)": (1410, 1411, 1412, 1413, 1414),
-        }),
+            "WINDY (Episode 4) @ Fly Through": {
+                "Shop - WINDY (Episode 4)": (1410, 1411, 1412, 1413, 1414),
 
-        "LAVA RUN (Episode 4)": LevelRegion(episode=Episode.AnEndToFate, locations={
-            "LAVA RUN (Episode 4) - Second Laser Shooter": 420,
-            "LAVA RUN (Episode 4) - Left Side Missile Launcher": 421,
+                "WINDY (Episode 4) @ Destroy Blocks": {
+                    "WINDY (Episode 4) - Main Section, Start 1": 410,
+                    "WINDY (Episode 4) - Main Section, Start 2": 411,
+                    "WINDY (Episode 4) - Main Section, End": 412,
 
-            "LAVA RUN (Episode 4) @ Pass Boss (can time out)": {
-                "LAVA RUN (Episode 4) - Boss": 422,
-                "Shop - LAVA RUN (Episode 4)": (1420, 1421, 1422, 1423, 1424),
+                    "WINDY (Episode 4) @ Reach Extra Section": {
+                        "WINDY (Episode 4) - Extra Section, Start": 413,
+                        "WINDY (Episode 4) - Extra Section, End": 414,
+                    },
+                },
             },
         }),
 
+        "LAVA RUN (Episode 4)": LevelRegion(episode=Episode.AnEndToFate, locations={
+            "LAVA RUN (Episode 4) @ Base Requirements": {
+                "LAVA RUN (Episode 4) - Laser Turret": 420,
+                "LAVA RUN (Episode 4) - Semi-Guided Missile Launcher": 421,
+                "LAVA RUN (Episode 4) - Fan Ships Traversing Screen 1": 422,
+                "LAVA RUN (Episode 4) - Fan Ships Traversing Screen 2": 423,
+
+                "LAVA RUN (Episode 4) @ Pass Boss (can time out)": {
+                    "LAVA RUN (Episode 4) - Boss": 424,
+                    "Shop - LAVA RUN (Episode 4)": (1420, 1421, 1422, 1423, 1424),
+                },            
+            }
+        }),
+
         "CORE (Episode 4)": LevelRegion(episode=Episode.AnEndToFate, locations={
+            "CORE (Episode 4) - Orbited by Lava Bubbles, Start": 430,
+            "CORE (Episode 4) - Zica Shield Ship, Start": 431,
+            "CORE (Episode 4) - Zica Shield Ship, In Lines": 432,
+            "CORE (Episode 4) - Orbited by Lava Bubbles, Critical Core": 433,
+            "CORE (Episode 4) - Critical Core Freebie Item, Left": 434,
+            "CORE (Episode 4) - Critical Core Freebie Item, Right": 435,
+
             "CORE (Episode 4) @ Destroy Boss": {
-                "CORE (Episode 4) - Boss": 430,
+                "CORE (Episode 4) - Boss": 436,
                 "Shop - CORE (Episode 4)": (1430, 1431, 1432, 1433, 1434),
             },
         }),
 
         "LAVA EXIT (Episode 4)": LevelRegion(episode=Episode.AnEndToFate, locations={
-            "LAVA EXIT (Episode 4) - Central Lightning Shooter": 440,
-            "LAVA EXIT (Episode 4) - Lava Bubble Wave 1": 441,
-            "LAVA EXIT (Episode 4) - Lava Bubble Wave 2": 442,
-            "LAVA EXIT (Episode 4) - DESERTRUN Warp Orb": 443,
-            "LAVA EXIT (Episode 4) - Final Lava Bubble Assault 1": 444,
-            "LAVA EXIT (Episode 4) - Final Lava Bubble Assault 2": 445,
-            "LAVA EXIT (Episode 4) - Boss": 446,
-            "Shop - LAVA EXIT (Episode 4)": (1440, 1441, 1442, 1443, 1444),
+            "LAVA EXIT (Episode 4) @ Base Requirements": {
+                "LAVA EXIT (Episode 4) - Central Lightning Turret": 440,
+
+                "LAVA EXIT (Episode 4) @ Items with Fixed Health": {
+                    "LAVA EXIT (Episode 4) - DESERTRUN Warp Orb": 441,
+                    "LAVA EXIT (Episode 4) - Counter-Clockwise Orb Wheel": 442,
+                    "LAVA EXIT (Episode 4) - Final Lava Bubble Assault, Right": 443,
+                    "LAVA EXIT (Episode 4) - Final Lava Bubble Assault, Left": 444,                
+                },
+                "LAVA EXIT (Episode 4) @ Pass Boss (can time out)": {
+                    "LAVA EXIT (Episode 4) - Boss": 445,
+                    "Shop - LAVA EXIT (Episode 4)": (1440, 1441, 1442, 1443, 1444),
+                }            
+            }
         }),
 
         "DESERTRUN (Episode 4)": LevelRegion(episode=Episode.AnEndToFate, locations={
-            "DESERTRUN (Episode 4) - Afterburner Smooth Flying": 450,
-            "DESERTRUN (Episode 4) - Ending Slalom 1": 451,
-            "DESERTRUN (Episode 4) - Ending Slalom 2": 452,
-            "DESERTRUN (Episode 4) - Ending Slalom 3": 453,
-            "DESERTRUN (Episode 4) - Ending Slalom 4": 454,
-            "DESERTRUN (Episode 4) - Ending Slalom 5": 455,
-            "Shop - DESERTRUN (Episode 4)": (1450, 1451, 1452, 1453, 1454),
+            "DESERTRUN (Episode 4) @ Base Requirements": {
+                "DESERTRUN (Episode 4) - Oasis": 450,
+                "DESERTRUN (Episode 4) - Afterburner Slalom 1": 451,
+                "DESERTRUN (Episode 4) - Afterburner Slalom 2": 452,
+                "DESERTRUN (Episode 4) - Afterburner Slalom 3": 453,
+                "DESERTRUN (Episode 4) - Afterburner Slalom 4": 454,
+                "DESERTRUN (Episode 4) - Afterburner Slalom 5": 455,
+                "Shop - DESERTRUN (Episode 4)": (1450, 1451, 1452, 1453, 1454),
+            },
         }),
 
         "SIDE EXIT (Episode 4)": LevelRegion(episode=Episode.AnEndToFate, locations={
-            "SIDE EXIT (Episode 4) - Waving X-shaped Enemies 1": 460,
-            "SIDE EXIT (Episode 4) - Third Laser Shooter": 461,
-            "SIDE EXIT (Episode 4) - Waving X-shaped Enemies 2": 462,
-            "SIDE EXIT (Episode 4) - Final Laser Shooter Onslaught": 463,
-            "Shop - SIDE EXIT (Episode 4)": (1460, 1461, 1462, 1463, 1464),
+            "SIDE EXIT (Episode 4) @ Base Requirements": {
+                "SIDE EXIT (Episode 4) - Laser Turret, Start": 460,
+                "SIDE EXIT (Episode 4) - Fan Ship Wave": 461,
+                "SIDE EXIT (Episode 4) - Laser Turret, Final Onslaught": 462,                
+                "Shop - SIDE EXIT (Episode 4)": (1460, 1461, 1462, 1463, 1464),
+            }
         }),
 
         "?TUNNEL? (Episode 4)": LevelRegion(episode=Episode.AnEndToFate, locations={
@@ -786,78 +830,143 @@ class LevelLocationData:
         }),
 
         "ICE EXIT (Episode 4)": LevelRegion(episode=Episode.AnEndToFate, locations={
-            "ICE EXIT (Episode 4) - ICESECRET Orb": 480,
+            "ICE EXIT (Episode 4) - Large Ice Block": 480,
+            "ICE EXIT (Episode 4) - Small Ice Block Wave": 481,
+            "ICE EXIT (Episode 4) - ICESECRET Warp Orb": 482,
 
             "ICE EXIT (Episode 4) @ Destroy Boss": {
-                "ICE EXIT (Episode 4) - Boss": 481,
+                "ICE EXIT (Episode 4) - Boss": 483,
                 "Shop - ICE EXIT (Episode 4)": (1480, 1481, 1482, 1483, 1484),
             },
         }),
 
         "ICESECRET (Episode 4)": LevelRegion(episode=Episode.AnEndToFate, locations={
-            "ICESECRET (Episode 4) - Large U-Ship Mini-Boss": 490,
-            "ICESECRET (Episode 4) - MegaLaser Dual Drop": 491,
-            "ICESECRET (Episode 4) - Boss": 492,
-            "Shop - ICESECRET (Episode 4)": (1490, 1491, 1492, 1493, 1494),
+            "ICESECRET (Episode 4) @ Base Requirements": {
+                "ICESECRET (Episode 4) - Ice Block, Start": 490,
+                "ICESECRET (Episode 4) - Large U-Ship Mid-Boss": 491,
+                "ICESECRET (Episode 4) - Ice Block, After Mid-Boss": 492,
+                "ICESECRET (Episode 4) - MegaLaser Dual Drop": 493,
+
+                "ICESECRET (Episode 4) @ Time Gate, Start of Station": {
+                    "ICESECRET (Episode 4) - Ice Block, In Camanis Station": 494,
+                    "ICESECRET (Episode 4) - Large Lightning Ship": 495,
+
+                    "ICESECRET (Episode 4) @ Time Gate, End of Station": {
+                        "ICESECRET (Episode 4) - Ice Block, End of Station": 496,
+                        "ICESECRET (Episode 4) - SDF Main Gun Drop": 497,
+
+                        "ICESECRET (Episode 4) @ Destroy Boss": {
+                            "ICESECRET (Episode 4) - Boss": 498,
+                            "Shop - ICESECRET (Episode 4)": (1490, 1491, 1492, 1493, 1494),
+                        }
+                    }
+                }
+            }
         }),
 
         "HARVEST (Episode 4)": LevelRegion(episode=Episode.AnEndToFate, locations={
-            "HARVEST (Episode 4) - High Speed V Formation": 500,
-            "HARVEST (Episode 4) - Shooter with Gravity Orbs": 501,
-            "HARVEST (Episode 4) - Shooter with Clone Bosses": 502,
-            "HARVEST (Episode 4) - Grounded Shooter 1": 503,
-            "HARVEST (Episode 4) - Grounded Shooter 2": 504,
-            "HARVEST (Episode 4) - Ending V Formation": 505,
+            "HARVEST (Episode 4) @ Base Requirements": {            
+                "HARVEST (Episode 4) - V Formation, Start": 500,
+                "HARVEST (Episode 4) - V Formation, High Speed": 501,
+                "HARVEST (Episode 4) - V Formation, Ending": 507,
 
-            "HARVEST (Episode 4) @ Destroy Boss": {
-                "HARVEST (Episode 4) - Boss": 506,
-                "Shop - HARVEST (Episode 4)": (1500, 1501, 1502, 1503, 1504),
-            },
+                "HARVEST (Episode 4) @ Destroy Energy Blasters": {
+                    "HARVEST (Episode 4) - Energy Blaster, in Ship Pincer": 502,
+                    "HARVEST (Episode 4) - Energy Blaster, with Gravity Orbs": 503,
+                    "HARVEST (Episode 4) - Energy Blaster, with Boss Fleet": 504,
+                    "HARVEST (Episode 4) - Grounded Energy Blaster 1": 505,
+                    "HARVEST (Episode 4) - Grounded Energy Blaster 2": 506,
+                },
+                "HARVEST (Episode 4) @ Destroy Boss": {
+                    "HARVEST (Episode 4) - Boss": 508,
+                    "HARVEST (Episode 4) - Post-Boss Platforms": 509,
+                    "Shop - HARVEST (Episode 4)": (1500, 1501, 1502, 1503, 1504),
+                },
+            }
         }),
 
         "UNDERDELI (Episode 4)": LevelRegion(episode=Episode.AnEndToFate, locations={
-            "UNDERDELI (Episode 4) - Boss's Red Eye": 510,
-            "UNDERDELI (Episode 4) - Boss": 511,
-            "Shop - UNDERDELI (Episode 4)": (1510, 1511, 1512, 1513, 1514),
+            "UNDERDELI (Episode 4) @ Base Requirements": {
+                "UNDERDELI (Episode 4) - Missile Bay, Start": 510,
+                "UNDERDELI (Episode 4) - Platform Free Item, Speed Up": 511,
+                "UNDERDELI (Episode 4) - Missile Bay, After Speed Up": 512,
+                "UNDERDELI (Episode 4) - Battle Section Free Item, Left": 513,
+                "UNDERDELI (Episode 4) - Battle Section Free Item, Right": 514,
+                "UNDERDELI (Episode 4) - Platform Free Item, Ending": 515,
+                "UNDERDELI (Episode 4) - Boss's Red Cell": 516,
+
+                "UNDERDELI (Episode 4) @ Pass Boss (can time out)": {
+                    "UNDERDELI (Episode 4) - Boss": 517,
+                    "Shop - UNDERDELI (Episode 4)": (1510, 1511, 1512, 1513, 1514),
+                }            
+            }
         }),
 
         "APPROACH (Episode 4)": LevelRegion(episode=Episode.AnEndToFate, locations={
-            "Shop - APPROACH (Episode 4)": (1520, 1521, 1522, 1523, 1524),
+            "APPROACH (Episode 4) @ Base Requirements": {
+                "APPROACH (Episode 4) - Solo White Plane": 520,
+                "APPROACH (Episode 4) - Brown Planes, Single Helix": 521,
+                "APPROACH (Episode 4) - Brown Planes, Double Helix 1": 522,
+                "APPROACH (Episode 4) - Brown Planes, Double Helix 2": 523,
+
+                "APPROACH (Episode 4) @ Destroy Boss Orb": {
+                    "APPROACH (Episode 4) - Boss Orb": 524,
+                    "Shop - APPROACH (Episode 4)": (1520, 1521, 1522, 1523, 1524),
+                }
+            }
         }),
 
         "SAVARA IV (Episode 4)": LevelRegion(episode=Episode.AnEndToFate, locations={
-            "SAVARA IV (Episode 4) - Early Breakaway V Formation": 530,
-            "SAVARA IV (Episode 4) - First Drunk Plane": 531,
-            "SAVARA IV (Episode 4) - Last Breakaway V Formation": 532,
-            "SAVARA IV (Episode 4) - Second Drunk Plane": 533,
-            "SAVARA IV (Episode 4) - Boss": 534,
-            "Shop - SAVARA IV (Episode 4)": (1530, 1531, 1532, 1533, 1534),
+            "SAVARA IV (Episode 4) - White Formation Leader, Start": 530,
+            "SAVARA IV (Episode 4) - White Formation Leader, Middle": 532,
+
+            "SAVARA IV (Episode 4) @ Destroy Drunk Planes": {
+                "SAVARA IV (Episode 4) - Drunk Plane, Middle": 531,
+                "SAVARA IV (Episode 4) - Drunk Plane, Ending": 533,
+            },
+            "SAVARA IV (Episode 4) @ Pass Boss (can time out)": {
+                "SAVARA IV (Episode 4) - Boss": 534,
+                "Shop - SAVARA IV (Episode 4)": (1530, 1531, 1532, 1533, 1534),
+            }
         }),
 
         "DREAD-NOT (Episode 4)": LevelRegion(episode=Episode.AnEndToFate, locations={
-            "DREAD-NOT (Episode 4) @ Defeat Boss": {
+            "DREAD-NOT (Episode 4) @ Destroy Boss": {
                 "DREAD-NOT (Episode 4) - Boss": 540,
                 "Shop - DREAD-NOT (Episode 4)": (1540, 1541, 1542, 1543, 1544),
             }
         }),
 
         "EYESPY (Episode 4)": LevelRegion(episode=Episode.AnEndToFate, locations={
-            "EYESPY (Episode 4) - Green Exploding Eye 1": 550,
-            "EYESPY (Episode 4) - Blue Splitting Eye 1": 551,
-            "EYESPY (Episode 4) - Green Exploding Eye 2": 552,
-            "EYESPY (Episode 4) - Blue Splitting Eye 2": 553,
-            "EYESPY (Episode 4) - Blue Splitting Eye 3": 554,
+            "EYESPY (Episode 4) - Green Exploding Eye": 550,
+            "EYESPY (Episode 4) - Blue Splitting Eye, Start": 551,
+            "EYESPY (Episode 4) - Blue Splitting Eye, Middle": 552,
+            "EYESPY (Episode 4) - Guarded Green Eye, Static": 553,
+            "EYESPY (Episode 4) - Guarded Green Eye, Swaying": 554,
             "EYESPY (Episode 4) - Billiard Break Secret": 555,
-            "EYESPY (Episode 4) - Boss": 556,
-            "Shop - EYESPY (Episode 4)": (1550, 1551, 1552, 1553, 1554),
+
+            "EYESPY (Episode 4) @ Destroy Boss": {
+                "EYESPY (Episode 4) - Boss": 556,
+                "Shop - EYESPY (Episode 4)": (1550, 1551, 1552, 1553, 1554),
+            }
         }),
 
         "BRAINIAC (Episode 4)": LevelRegion(episode=Episode.AnEndToFate, locations={
-            "BRAINIAC (Episode 4) - Turret-Guarded Pathway": 560,
-            "BRAINIAC (Episode 4) - Mid-Boss 1": 561,
-            "BRAINIAC (Episode 4) - Mid-Boss 2": 562,
-            "BRAINIAC (Episode 4) - Boss": 563,
-            "Shop - BRAINIAC (Episode 4)": (1560, 1561, 1562, 1563, 1564),
+            "BRAINIAC (Episode 4) @ Base Requirements": {
+                "BRAINIAC (Episode 4) - Alcove at Start": 560,
+                "BRAINIAC (Episode 4) - Second Alcove": 561,
+                "BRAINIAC (Episode 4) - Turret-Guarded Pathway": 562,
+                "BRAINIAC (Episode 4) - Protron Spreader": 563,
+                "BRAINIAC (Episode 4) - Fire Mid-Boss": 564,
+                "BRAINIAC (Episode 4) - Rolling Orb Wheel": 565,
+                "BRAINIAC (Episode 4) - Ice Mid-Boss": 566,
+                "BRAINIAC (Episode 4) - Turret Before Boss": 567,
+
+                "BRAINIAC (Episode 4) @ Destroy Boss": {
+                    "BRAINIAC (Episode 4) - Boss": 568,
+                    "Shop - BRAINIAC (Episode 4)": (1560, 1561, 1562, 1563, 1564),
+                }
+            }
         }),
 
         "NOSE DRIP (Episode 4)": LevelRegion(episode=Episode.AnEndToFate, locations={
@@ -873,42 +982,86 @@ class LevelLocationData:
         # =============================================================================================
 
         "ASTEROIDS (Episode 5)": LevelRegion(episode=Episode.HazudraFodder, locations={
-            "ASTEROIDS (Episode 5) - Ship 1": 580,
-            "ASTEROIDS (Episode 5) - Railgunner 1": 581,
-            "ASTEROIDS (Episode 5) - Ship": 582,
-            "ASTEROIDS (Episode 5) - Railgunner 2": 583,
-            "ASTEROIDS (Episode 5) - Ship 2": 584,
-            "ASTEROIDS (Episode 5) - Boss": 585,
-            "Shop - ASTEROIDS (Episode 5)": (1580, 1581, 1582, 1583, 1584),
+            "ASTEROIDS (Episode 5) - Claw Ship Wave, Start": 580,
+            "ASTEROIDS (Episode 5) - Railgunner, Start": 582,
+            "ASTEROIDS (Episode 5) - Railgunner, Before Bubble Section": 584,
+            "ASTEROIDS (Episode 5) - Claw Ship Wave, Ending": 586,
+
+            "ASTEROIDS (Episode 5) @ Destroy Spinning Orbs": {
+                "ASTEROIDS (Episode 5) - Spinning Orbs, Start": 581,
+                "ASTEROIDS (Episode 5) - Spinning Orbs, Before Bubble Section": 583,
+                "ASTEROIDS (Episode 5) - Spinning Orbs, Ending": 585,
+            },
+            "ASTEROIDS (Episode 5) @ Destroy Boss": {
+                "ASTEROIDS (Episode 5) - Boss": 587,
+                "Shop - ASTEROIDS (Episode 5)": (1580, 1581, 1582, 1583, 1584),
+            }
         }),
 
         "AST ROCK (Episode 5)": LevelRegion(episode=Episode.HazudraFodder, locations={
-            "Shop - AST ROCK (Episode 5)": (1590, 1591, 1592, 1593, 1594),
+            "AST ROCK (Episode 5) - Solitary Plasma Turret": 590,
+            "AST ROCK (Episode 5) - Red Shield Ship 1": 591,
+            "AST ROCK (Episode 5) - Warehouse Colony, Bottom": 592,
+            "AST ROCK (Episode 5) - Warehouse Colony, Top-Left": 593,
+            "AST ROCK (Episode 5) - Warehouse Colony, Top-Right": 594,
+            "AST ROCK (Episode 5) - Red Shield Ship 2": 595,
+            "AST ROCK (Episode 5) - Item 7": 596,
+            "AST ROCK (Episode 5) - Red Shield Ship 3": 597,
+
+            "AST ROCK (Episode 5) @ Destroy Boss": {
+                "AST ROCK (Episode 5) - Boss": 598,
+                "Shop - AST ROCK (Episode 5)": (1590, 1591, 1592, 1593, 1594),
+            }
         }),
 
         "MINERS (Episode 5)": LevelRegion(episode=Episode.HazudraFodder, locations={
-            "MINERS (Episode 5) - Boss": 600,
-            "Shop - MINERS (Episode 5)": (1600, 1601, 1602, 1603, 1604),
+            "MINERS (Episode 5) - Rock Hauler": 600,
+            "MINERS (Episode 5) - Missile Launcher, Start": 601,
+            "MINERS (Episode 5) - Bat-Ship Guarded By Rocks": 602,
+            "MINERS (Episode 5) - Monorail Train": 603,
+            "MINERS (Episode 5) - Missile Launcher, Dodging Rocks": 604,
+            "MINERS (Episode 5) - UFO Turret, Ending": 605,
+
+            "MINERS (Episode 5) @ Pass Boss (can time out)": {
+                "MINERS (Episode 5) - Boss": 606,
+                "Shop - MINERS (Episode 5)": (1600, 1601, 1602, 1603, 1604),
+            }
         }),
 
         "SAVARA (Episode 5)": LevelRegion(episode=Episode.HazudraFodder, locations={
-            "SAVARA (Episode 5) - Green Vulcan Plane 1": 610,
-            "SAVARA (Episode 5) - Huge Plane Formation": 611,
-            "SAVARA (Episode 5) - Surrounded Vulcan Plane": 612,
-            "SAVARA (Episode 5) - Unknown 1": 613,
-            "SAVARA (Episode 5) - Unknown 2": 614,
+            "SAVARA (Episode 5) - Vulcan Plane, Start": 610,
+            "SAVARA (Episode 5) - Huge Planes, Start": 611,
+            "SAVARA (Episode 5) - Brown Plane Sequence": 612,
+            "SAVARA (Episode 5) - Vulcan Plane, Boxed In": 613,
+            "SAVARA (Episode 5) - White Formation Leader": 614,
+            "SAVARA (Episode 5) - Huge Planes, Halfway": 615,
+            "SAVARA (Episode 5) - Vulcan Plane, Before Speed Up": 616,
+            "SAVARA (Episode 5) - Green Plane, End of Speed Up": 617,
 
-            "SAVARA (Episode 5) @ Destroy Boss": {
-                "SAVARA (Episode 5) - Boss": 615,
+            "SAVARA (Episode 5) @ Pass Boss (can time out)": {
+                "SAVARA (Episode 5) - Boss": 618,
                 "Shop - SAVARA (Episode 5)": (1610, 1611, 1612, 1613, 1614),
             },
         }),
 
         "CORAL (Episode 5)": LevelRegion(episode=Episode.HazudraFodder, locations={
-            "CORAL (Episode 5) @ Destroy Boss": {
-                "CORAL (Episode 5) - Boss": 620,
-                "Shop - CORAL (Episode 5)": (1620, 1621, 1622, 1623, 1624),
-            },
+            "CORAL (Episode 5) - Breakaway Dolphin": 620,
+            "CORAL (Episode 5) @ After Opening": {
+                "CORAL (Episode 5) - Lightning Stingray, Near Seahorses": 621,
+                "CORAL (Episode 5) - Protron Eel, Near Seahorses 1": 622,
+                "CORAL (Episode 5) - Protron Eel, Near Seahorses 2": 623,
+
+                "CORAL (Episode 5) @ Pass Starfish": {
+                    "CORAL (Episode 5) - Protron Eel, Near Starfish": 624,
+                    "CORAL (Episode 5) - Lightning Stingray, Near Starfish": 625,
+                    "CORAL (Episode 5) - High Speed Submarine": 626,
+
+                    "CORAL (Episode 5) @ Destroy Boss": {
+                        "CORAL (Episode 5) - Boss": 627,
+                        "Shop - CORAL (Episode 5)": (1620, 1621, 1622, 1623, 1624),
+                    },            
+                }
+            }
         }),
 
         # Remains here for possible future use (corresponds to unused level)
@@ -917,15 +1070,15 @@ class LevelLocationData:
 #       })
 
         "STATION (Episode 5)": LevelRegion(episode=Episode.HazudraFodder, locations={
-            "STATION (Episode 5) - Pulse-Turret 1": 640,
-            "STATION (Episode 5) - Pulse-Turret 2": 641,
-            "STATION (Episode 5) - Pulse-Turret 3": 642,
-            "STATION (Episode 5) - Spike from Rear Corner 1": 643,
-            "STATION (Episode 5) - Pulse-Turret 4": 644,
-            "STATION (Episode 5) - Spike from Rear Corner 2": 645,
+            "STATION (Episode 5) - Pulse-Turret, Platform Ship Wave 1": 640,
+            "STATION (Episode 5) - Pulse-Turret, Platform Ship Wave 2": 641,
+            "STATION (Episode 5) - Pulse-Turret, Long Spike Wave": 642,
+            "STATION (Episode 5) - Spike, Bottom-Right Corner": 643,
+            "STATION (Episode 5) - Pulse-Turret, Drill Wave": 644,
+            "STATION (Episode 5) - Spike, Bottom-Left Corner": 645,
             "STATION (Episode 5) - Repulsor Crane": 646,
-            "STATION (Episode 5) - Pulse-Turret 5": 647,
-            "STATION (Episode 5) - Pulse-Turret 6": 648,
+            "STATION (Episode 5) - Pulse-Turret, With Crane 1": 647,
+            "STATION (Episode 5) - Pulse-Turret, With Crane 2": 648,
 
             "STATION (Episode 5) @ Pass Boss (can time out)": {
                 "STATION (Episode 5) - Boss": 649,
@@ -934,12 +1087,17 @@ class LevelLocationData:
         }),
 
         "FRUIT (Episode 5)": LevelRegion(episode=Episode.HazudraFodder, locations={
-            "FRUIT (Episode 5) - Apple UFO Wave": 650,
+            "FRUIT (Episode 5) @ Base Requirements": {
+                "FRUIT (Episode 5) - Apple UFO Wave, Start": 650,
+                "FRUIT (Episode 5) - Cherry Stealth Ship": 651,
+                "FRUIT (Episode 5) - Banana Blaster Ship": 652,
+                "FRUIT (Episode 5) - Apple UFO Wave, Ending": 653,
 
-            "FRUIT (Episode 5) @ Destroy Boss": {
-                "FRUIT (Episode 5) - Boss": 651,
-                "Shop - FRUIT (Episode 5)": (1650, 1651, 1652, 1653, 1654),
-                # Event: "Episode 5 (Hazudra Fodder) Complete"
+                "FRUIT (Episode 5) @ Destroy Boss": {
+                    "FRUIT (Episode 5) - Boss": 654,
+                    "Shop - FRUIT (Episode 5)": (1650, 1651, 1652, 1653, 1654),
+                    # Event: "Episode 5 (Hazudra Fodder) Complete"
+                }            
             }
         }, shop_setups=["W"]),
     }
@@ -964,66 +1122,3 @@ class LevelLocationData:
     def get_location_groups(cls) -> Dict[str, Set[str]]:
         # Bring all locations in a level, shop included, into a region named after the level.
         return {level: region.get_location_names() for (level, region) in cls.level_regions.items()}
-
-    secret_descriptions: Dict[str, str] = {
-        "TYRIAN (Episode 1) - First U-Ship Secret": """
-            Wait for the first U-Ship in the level to start heading upwards.
-        """,
-        "TYRIAN (Episode 1) - HOLES Warp Orb": """
-            Destroy every wave of U-Ships at the start of the level.
-            The first spinner formation after you approach the enemy platforms will then yield this item.
-        """,
-        "TYRIAN (Episode 1) - Tank Turn-and-fire Secret": """
-            At the section with four tanks driving across two parallel strips of road, wait for the rightmost tank
-            to get into position, turn, and start firing.
-        """,
-        "TYRIAN (Episode 1) - SOH JIN Warp Orb": """
-            Destry none of the U-Ships at the start of the level, except for the one that drops the
-            "First U-Ship Secret" item.
-            Just before the boss flies in, there will be an additional ship that will give this item.
-        """,
-        "ASTEROID2 (Episode 1) - Tank Turn-around Secret 1": """
-            Wait for the first tank you see to turn around and start firing at you.
-        """,
-        "ASTEROID2 (Episode 1) - Tank Turn-around Secret 2": """
-            In the second squadron of tanks, two tanks will turn around and start heading upwards after a short time.
-            One of those two tanks will yield this item if you wait until it turns around and starts firing again.
-        """,
-        "ASTEROID2 (Episode 1) - Tank Assault Right Tank Secret": """
-            As you're approaching the Tank Assault section, destroy the rightmost tank as it turns onto the
-            rightmost road, but before it goes offscreen and turns around to fire at you.
-        """,
-        "ASTEROID? (Episode 1) - WINDY Warp Orb": """
-            Destroy the platform on the left side of the screen next to the four "welcoming" launchers,
-            then destroy the two heavy missile launchers that spawn afterwards.
-            After the miniboss launcher, an additional tank will spawn containing this item.
-        """,
-        "ASTEROID? (Episode 1) - Quick Shot 1": """
-            Destroy the two ships after the miniboss launcher within 1 1/2 seconds of them spawning.
-        """,
-        "TORM (Episode 2) - Ship Fleeing Dragon Secret": """
-            One plane will stick around long enough for a dragon to fly towards it. Shoot it as it starts to flee.
-        """,
-        "SAWBLADES (Episode 3) - SuperCarrot Secret Drop": """
-            Throughout the level, carrot-shaped ships will fly towards you.
-            Destroy all of them, and the last will yield this item.
-        """,
-        "TYRIAN X (Episode 3) - First U-Ship Secret": """
-            Wait for the first pair of U-Ship formations to start heading upwards.
-        """,
-        "TYRIAN X (Episode 3) - Second Secret, Same as the First": """
-            As with the first U-Ship secret, wait for the second pair of U-Ship formations to start heading upwards.
-        """,
-        "SURFACE (Episode 4) - WINDY Warp Orb": """
-            Destroy all four waves of ships flying in a V formation at the start of the level.
-            One of the ships flying through arches later on will then yield this item.
-        """,
-        "DESERTRUN (Episode 4) - Afterburner Smooth Flying": """
-            Fly through all the arches in the Afterburner section. The oasis will then throw out this item.
-        """,
-        "EYESPY (Episode 4) - Billiard Break Secret": """
-            Near the end of the level, eyes will line up in a formation that resembles a rack of 9-ball, and then
-            be hit by a green eye that breaks them up.
-            Wait until the eyes get broken up, and the topmost one will yield this item.
-        """
-    }

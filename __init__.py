@@ -602,6 +602,13 @@ class TyrianWorld(World):
         # === Levels ===
         # ==============
 
+        # Before we start, track levels the player wants removed.
+        removed_levels = []
+        for removed_item in self.options.remove_from_item_pool.keys():
+            if removed_item not in LocalItemData.levels:
+                continue
+            removed_levels.append(removed_item)
+
         def recursive_create_subregions(locations: Dict[str, Any], parent_region: Region) -> None:
             for name, value in locations.items():
                 # Create a new subregion, recurse to add subregions/locations to it
@@ -624,6 +631,8 @@ class TyrianWorld(World):
 
         for (name, region_info) in LevelLocationData.level_regions.items():
             if region_info.episode not in self.play_episodes:
+                continue
+            if name in removed_levels:
                 continue
 
             self.all_levels.append(name)
@@ -685,10 +694,15 @@ class TyrianWorld(World):
 
         all_events = []
         episode_num = 0
-        for event_name in LevelLocationData.events.keys():
+        for (event_name, level_name) in LevelLocationData.events.items():
             episode_num += 1
             if episode_num not in self.goal_episodes:
                 continue
+
+            if level_name in removed_levels:
+                raise OptionError(f"Cannot remove '{level_name}' from the item pool"
+                                  f" because it's required to complete the goal."
+                                  f"\nIf you want to do this, change the Episode {episode_num} option to 'on' instead of 'goal'.")
 
             all_events.append(event_name)
             self.create_event(event_name, menu_region)
@@ -750,9 +764,6 @@ class TyrianWorld(World):
 
         # Remove items we've been requested to remove from the pool.
         for (removed_item, remove_count) in self.options.remove_from_item_pool.items():
-            if removed_item in LocalItemData.levels:
-                raise OptionError(f"Cannot remove levels from the item pool"
-                                  f" (tried to remove '{removed_item}')")
             for i in range(remove_count):
                 pop_from_pool(removed_item)
 
@@ -765,18 +776,24 @@ class TyrianWorld(World):
         if not precollected_level_exists:
             # Precollect the default starting level and pop it from the item pool.
             start_level = pop_from_pool(self.default_start_level)
-            assert start_level is not None  # Tautological because of above condition (can't remove levels from pool)
-            self.multiworld.push_precollected(self.create_item(start_level))
+            if start_level is not None:
+                self.multiworld.push_precollected(self.create_item(start_level))
+            else:
+                raise OptionError(f"Cannot remove default starting level from the item pool."
+                                  f" (tried to remove '{self.default_start_level}')"
+                                  f"\nIf you want to do this, add another level to start_inventory.")
 
         if not precollected_weapon_exists:
             # Pick a starting weapon and pull it from the pool.
             start_weapon_name = self.get_starting_weapon_name()
             start_weapon = pop_from_pool(start_weapon_name)
-            if start_weapon is not None:  # Not actually tautological, this can happen if someone removes Pulse-Cannon
+            if start_weapon is not None:
                 self.multiworld.push_precollected(self.create_item(start_weapon))
             else:
-                raise OptionError(f"Cannot remove starting weapon from the item pool"
-                                  f" (tried to remove '{start_weapon_name}')")
+                raise OptionError(f"Cannot remove default starting weapon from the item pool."
+                                  f" (tried to remove '{start_weapon_name}')"
+                                  f"\nIf you want to do this, add another front weapon to start_inventory"
+                                  f" or use a random starting weapon.")
 
         if self.options.specials == "on":  # Get a random special, no others
             possible_specials = self.get_dict_contents_as_items(LocalItemData.special_weapons)

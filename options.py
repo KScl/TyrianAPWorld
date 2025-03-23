@@ -43,7 +43,7 @@ class EnableTyrian2000Support(Toggle):
 
 
 class GoalEpisode1(Choice):
-    """Add Episode 1 (Escape) levels to the pool.
+    """Add Episode 1 (Escape) levels to the pool. Adds 93 locations across 16 levels.
 
     If "goal" is chosen, you'll need to complete "ASSASSIN" (in addition to other episode goals) to win.
     """
@@ -55,7 +55,7 @@ class GoalEpisode1(Choice):
 
 
 class GoalEpisode2(Choice):
-    """Add Episode 2 (Treachery) levels to the pool.
+    """Add Episode 2 (Treachery) levels to the pool. Adds 75 locations across 12 levels.
 
     If "goal" is chosen, you'll need to complete "GRYPHON" (in addition to other episode goals) to win.
     """
@@ -67,7 +67,7 @@ class GoalEpisode2(Choice):
 
 
 class GoalEpisode3(Choice):
-    """Add Episode 3 (Mission: Suicide) levels to the pool.
+    """Add Episode 3 (Mission: Suicide) levels to the pool. Adds 81 locations across 12 levels.
 
     If "goal" is chosen, you'll need to complete "FLEET" (in addition to other episode goals) to win.
     """
@@ -79,7 +79,7 @@ class GoalEpisode3(Choice):
 
 
 class GoalEpisode4(Choice):
-    """Add Episode 4 (An End to Fate) levels to the pool.
+    """Add Episode 4 (An End to Fate) levels to the pool. Adds 100 locations across 18 levels.
 
     If "goal" is chosen, you'll need to complete "NOSE DRIP" (in addition to other episode goals) to win.
     """
@@ -91,8 +91,9 @@ class GoalEpisode4(Choice):
 
 
 class GoalEpisode5(Choice):
-    """Add Episode 5 (Hazudra Fodder) levels to the pool. This requires enabling Tyrian 2000 support.
+    """Add Episode 5 (Hazudra Fodder) levels to the pool. Adds 56 locations across 7 levels.
 
+    This setting requires enabling Tyrian 2000 support to have any effect.
     If "goal" is chosen, you'll need to complete "FRUIT" (in addition to other episode goals) to win.
     """
     display_name = "Episode 5"
