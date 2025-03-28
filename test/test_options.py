@@ -130,3 +130,41 @@ class TestShopsOnly(TyrianTestBase):
         locations_with_credits = [location for location in level_locations
               if location.item and location.item.name.endswith(" Credits")]
         self.assertEqual(len(locations_with_credits), len(level_locations), msg="Some in-level locations contain non-Credits items")
+
+# =============================================================================
+# Testing Option: Remove from Item Pool
+# =============================================================================
+
+
+class TestRemovedItems(TyrianTestBase):
+    options = {
+        "episode_1": "on",
+        "episode_2": "on",
+        "episode_3": "on",
+        "episode_4": "goal",
+        "specials": "as_items",
+        "remove_from_item_pool": {
+            "Atom Bombs": 1,
+            "Atomic RailGun": 1,
+            "MISTAKES (Episode 2)": 1,
+        }
+    }
+
+    # Items present multiple times should allow partial removal
+    def test_removing_partial_from_pool(self) -> None:
+        removed_items = self.get_items_by_name("Atom Bombs")
+        self.assertEqual(len(removed_items), 1, msg="Wrong amount of removed item present in item pool (expected 1 removed, 1 remaining)")
+
+    # Progression items should still be allowed to be removed
+    def test_removing_progression_from_pool(self) -> None:
+        removed_items = self.get_items_by_name("Atomic RailGun")
+        self.assertEqual(len(removed_items), 0, msg="Progression weapon is still present despite requested removal")
+
+    # Levels should be allowed to be removed; their locations should also be removed
+    def test_removing_level_from_pool(self) -> None:
+        removed_items = self.get_items_by_name("MISTAKES (Episode 2)")
+        self.assertEqual(len(removed_items), 0, msg="Level is still present despite requested removal")
+
+        level_locations = [location for location in self.multiworld.get_locations(self.player)
+              if "MISTAKES (Episode 2)" in location.name]
+        self.assertEqual(len(level_locations), 0, msg="Locations of removed level still present")

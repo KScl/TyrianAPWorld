@@ -337,10 +337,6 @@ class TyrianWorld(World):
         if self.options.starting_money > 0:
             start_state["Credits"] = self.options.starting_money.value
 
-        if not self.options.add_bonus_games:
-            # Just giving the player the bonus games for free is the easiest way to handle this
-            start_state["Items"].extend([item.local_id for item in LocalItemData.bonus_games])
-
         for item in self.multiworld.precollected_items[self.player]:
             if item.name in LocalItemData.levels:            append_state("Items", item.name)
             elif item.name in LocalItemData.front_ports:     append_state("Items", item.name)
@@ -702,7 +698,8 @@ class TyrianWorld(World):
             if level_name in removed_levels:
                 raise OptionError(f"Cannot remove '{level_name}' from the item pool"
                                   f" because it's required to complete the goal."
-                                  f"\nIf you want to do this, change the Episode {episode_num} option to 'on' instead of 'goal'.")
+                                  f"\nIf you want to do this, change the Episode {episode_num} option"
+                                  f" to 'on' instead of 'goal'.")
 
             all_events.append(event_name)
             self.create_event(event_name, menu_region)
@@ -739,6 +736,10 @@ class TyrianWorld(World):
 
         if self.options.add_bonus_games:
             self.local_itempool.extend(self.get_dict_contents_as_items(LocalItemData.bonus_games))
+        else:
+            all_bonus_games = self.get_dict_contents_as_items(LocalItemData.bonus_games)
+            for bonus_game in all_bonus_games:
+                self.multiworld.push_precollected(self.create_item(bonus_game))
 
         if self.options.data_cube_hunt:
             # Earlier code will ensure this is set to a final value already.
@@ -820,9 +821,18 @@ class TyrianWorld(World):
         # Returns remaining amount of space in itempool after tossing requested number of items
         def toss_from_itempool(num_to_toss: int) -> int:
             tossable_items = [name for name in self.local_itempool if LocalItemData.get(name).tossable]
+
+            # Excess data cubes can be tossed too, though we try to restrict this to really excessive numbers.
+            # Consider anything trimmable past 400% of the requirement, or 198 cubes, whichever is lower.
+            if self.options.data_cube_hunt:
+                tossable_cube_count = (self.options.data_cubes_total.value -
+                                       min(198, self.options.data_cubes_required.value * 4))
+                if tossable_cube_count > 0:
+                    tossable_items.extend(["Data Cube"] * tossable_cube_count)
+
             if num_to_toss > len(tossable_items):
                 raise OptionError(f"Cannot trim enough items from the item pool in "
-                                  f"{self.multiworld.get_player_name(self.player)}'s Tyrian world; "
+                                  f"{self.multiworld.get_player_name(self.player)}'s Tyrian world;"
                                   f" need to remove {num_to_toss}, but only {len(tossable_items)} can be removed."
                                   f" Please adjust your settings to add more locations.")
 

@@ -1,5 +1,7 @@
 # Excluded and Commonly Missed Locations
 
+An ✗ indicates that the given location is excluded in the logic difficulty that column belongs to. Excluded locations are still present in the game, but will always contain an unimportant filler item. (No locations are ever excluded by default in Master logic difficulty.)
+
 ## Episode 1
 
 <table>
@@ -68,6 +70,30 @@ Do not destroy any of the waves of U-Ships at the start of the level.
 <br>
 <br>
 Just before the boss flies in, there will be an additional ship that contains an item.
+  </td>
+</tr>
+
+<tr>
+  <td style="font-weight: bold; background-color: rgba(0, 0, 0, 0.4)">BUBBLES (Episode 1) - Coin Rain, First Line</td>
+  <td style="text-align: center; padding: 0px; font-size: 175%; background-color: rgba(255, 0, 0, 0.2)">✗</td>
+  <td style="text-align: center; padding: 0px; font-size: 175%; background-color: rgba(0, 255, 0, 0.2)">✓</td>
+  <td style="text-align: center; padding: 0px; font-size: 175%; background-color: rgba(0, 255, 0, 0.2)">✓</td>
+</tr>
+<tr>
+  <td style="font-weight: bold; background-color: rgba(0, 0, 0, 0.4)">BUBBLES (Episode 1) - Coin Rain, Fourth Line</td>
+  <td style="text-align: center; padding: 0px; font-size: 175%; background-color: rgba(255, 0, 0, 0.2)">✗</td>
+  <td style="text-align: center; padding: 0px; font-size: 175%; background-color: rgba(0, 255, 0, 0.2)">✓</td>
+  <td style="text-align: center; padding: 0px; font-size: 175%; background-color: rgba(0, 255, 0, 0.2)">✓</td>
+</tr>
+<tr>
+  <td style="font-weight: bold; background-color: rgba(0, 0, 0, 0.4)">BUBBLES (Episode 1) - Coin Rain, Sixth Line</td>
+  <td style="text-align: center; padding: 0px; font-size: 175%; background-color: rgba(255, 0, 0, 0.2)">✗</td>
+  <td style="text-align: center; padding: 0px; font-size: 175%; background-color: rgba(0, 255, 0, 0.2)">✓</td>
+  <td style="text-align: center; padding: 0px; font-size: 175%; background-color: rgba(0, 255, 0, 0.2)">✓</td>
+</tr>
+<tr>
+  <td style="font-size: 90%; background-color: rgba(0, 0, 0, 0.4)" colspan=4>
+These locations are excluded on Beginner logic due to the light and color effects during the Coin Rain section.
   </td>
 </tr>
 
