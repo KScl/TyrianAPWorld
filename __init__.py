@@ -847,6 +847,12 @@ class TyrianWorld(World):
 
         # Shops-only mode junk fill
         if self.options.shop_mode == "shops_only":
+            # Warn on currently unsupported option combinations (that we still allow generation of, for the daring)
+            if self.options.logic_difficulty != "no_logic" and self.options.logic_difficulty != "master":
+                logging.warning(f"{self.multiworld.get_player_name(self.player)}:"
+                                f" Shop mode 'shops_only' is not designed for these logic settings."
+                                f" You may experience an empty sphere 1, or failed generations in solo play.")
+
             # We're going to take all locations that are not shop locations, and pre-fill all of them with
             # junk Credits items. This gives shops a wide variety of items, while still giving a way to earn money.
             in_level_locations = [location for location in self.multiworld.get_unfilled_locations(self.player)
@@ -874,9 +880,9 @@ class TyrianWorld(World):
             # Size of itempool versus number of locations. May be negative (!), will be fixed shortly if it is.
             rest_item_count = len(self.multiworld.get_unfilled_locations(self.player)) - len(self.local_itempool)
 
-            # Don't spam the seed with all SuperBombs jfc
-            if self.total_money_needed <= 400 * rest_item_count:
-                self.total_money_needed = 400 * rest_item_count
+            # Don't spam the seed with SuperBombs; lower limit to 200 credits per base item in the junk pool.
+            # If the junk pool size and total money needed are both negative, the 0 is there to catch that.
+            self.total_money_needed = max(0, 200 * rest_item_count, self.total_money_needed)
 
             # We want to at least have SOME variety of credit items in the pool regardless of settings.
             # We also don't want to leave ourselves with a situation where, say,
