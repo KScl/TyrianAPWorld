@@ -19,7 +19,6 @@ class LevelRegion:
     # instead we have multiple different types of random prices that can get generated, and we choose
     # which one we want randomly (based on the level we're generating it for).
     # Appending an "!" makes the shop location prioritized.
-    # Appending a "#" makes the shop location excluded.
     base_shop_setup_list: Dict[str, Tuple[int, int, int]] = {
         "A": (   50,   501,   1),
         "B": (  100,  1001,   1),
@@ -43,9 +42,9 @@ class LevelRegion:
         "T": (10000, 30001,  25),
         "U": (10000, 40001,  50),
         "V": (10000, 50001, 100),
-        "W": (10000, 65601, 100),
-        "X": (20000, 65601, 100),
-        "Y": (30000, 65601, 100),
+        "W": (10000, 65001, 250),
+        "X": (20000, 65001, 100),
+        "Y": (20000, 65001, 250),
         "Z": (65535, 65536,   1)  # Always max shop price
     }
 
@@ -78,11 +77,11 @@ class LevelRegion:
         self.flattened_locations = flatten(locations)
 
     # Gets a random price based on this level's shop setups, and assigns it to the locaton.
-    # Also changes location to prioritized/excluded automatically based on the setup rolled.
+    # Also changes location progress type automatically based on the setup rolled.
     def set_random_shop_price(self, world: "TyrianWorld", location: "TyrianLocation") -> None:
         setup_choice = world.random.choice(self.shop_setups)
-        if len(setup_choice) > 1:
-            location.progress_type = LPType.PRIORITY if setup_choice[-1] == "!" else LPType.EXCLUDED
+        if len(setup_choice) > 1 and setup_choice[-1] == "!":
+            location.progress_type = LPType.PRIORITY
         location.shop_price = min(world.random.randrange(*self.base_shop_setup_list[setup_choice[0]]), 65535)
 
     # Gets a flattened dict of all locations, id: name
@@ -346,7 +345,7 @@ class LevelLocationData:
                 "TORM (Episode 2) - Boss": 167,
                 "Shop - TORM (Episode 2)": (1160, 1161, 1162, 1163, 1164),
             },
-        }, shop_setups=["A#", "B", "C", "D", "D", "E", "F", "F", "G", "I!"]),
+        }, shop_setups=["A", "B", "C", "D", "D", "E", "F", "F", "G", "I!"]),
 
         "GYGES (Episode 2)": LevelRegion(episode=Episode.Treachery, locations={
             "GYGES (Episode 2) - Circled Shapeshifting Turret 1": 170,
@@ -362,13 +361,13 @@ class LevelLocationData:
                     "Shop - GYGES (Episode 2)": (1170, 1171, 1172, 1173, 1174),
                 },
             },
-        }),
+        }, shop_setups=["F", "F", "H", "H", "M"]),
 
         "BONUS 1 (Episode 2)": LevelRegion(episode=Episode.Treachery, locations={
             "BONUS 1 (Episode 2) @ Destroy Patterns": {
                 "Shop - BONUS 1 (Episode 2)": (1180, 1181, 1182, 1183, 1184),
             },
-        }),
+        }, shop_setups=["J", "J", "J", "K", "K", "L"]),
 
         "ASTCITY (Episode 2)": LevelRegion(episode=Episode.Treachery, locations={
             "ASTCITY (Episode 2) @ Base Requirements": {
@@ -384,11 +383,11 @@ class LevelLocationData:
                 "ASTCITY (Episode 2) - Ending Turret Group": 199,
                 "Shop - ASTCITY (Episode 2)": (1190, 1191, 1192, 1193, 1194),
             },
-        }),
+        }, shop_setups=["I", "M", "P"]),
 
         "BONUS 2 (Episode 2)": LevelRegion(episode=Episode.Treachery, locations={
             "Shop - BONUS 2 (Episode 2)": (1200, 1201, 1202, 1203, 1204),
-        }),
+        }, shop_setups=["J", "N", "N", "Q"]),
 
         "GEM WAR (Episode 2)": LevelRegion(episode=Episode.Treachery, locations={
             "GEM WAR (Episode 2) @ Base Requirements": {
@@ -410,7 +409,7 @@ class LevelLocationData:
                     "Shop - GEM WAR (Episode 2)": (1210, 1211, 1212, 1213, 1214),
                 },
             },
-        }),
+        }, shop_setups=["H", "M", "P"]),
 
         "MARKERS (Episode 2)": LevelRegion(episode=Episode.Treachery, locations={
             "MARKERS (Episode 2) @ Base Requirements": {
@@ -424,7 +423,7 @@ class LevelLocationData:
                     "Shop - MARKERS (Episode 2)": (1220, 1221, 1222, 1223, 1224),
                 },
             },
-        }),
+        }, shop_setups=["D", "J", "K", "L", "N", "O"]),
 
         "MISTAKES (Episode 2)": LevelRegion(episode=Episode.Treachery, locations={
             "MISTAKES (Episode 2) @ Base Requirements": {
@@ -466,7 +465,7 @@ class LevelLocationData:
                     },
                 },
             },
-        }),
+        }, shop_setups=["G", "I", "L", "O"]),
 
         "BOTANY A (Episode 2)": LevelRegion(episode=Episode.Treachery, locations={
             "BOTANY A (Episode 2) - Retreating Mobile Turret": 250,
@@ -484,7 +483,7 @@ class LevelLocationData:
                     "Shop - BOTANY A (Episode 2)": (1250, 1251, 1252, 1253, 1254),
                 },
             },
-        }),
+        }, shop_setups=["J", "N", "R"]),
 
         "BOTANY B (Episode 2)": LevelRegion(episode=Episode.Treachery, locations={
             "BOTANY B (Episode 2) - Starting Platform Sensor": 260,
@@ -500,7 +499,7 @@ class LevelLocationData:
                     "Shop - BOTANY B (Episode 2)": (1260, 1261, 1262, 1263, 1264),
                 },
             },
-        }),
+        }, shop_setups=["J", "N", "R"]),
 
         "GRYPHON (Episode 2)": LevelRegion(episode=Episode.Treachery, locations={
             "GRYPHON (Episode 2) @ Base Requirements": {
@@ -540,7 +539,7 @@ class LevelLocationData:
 
                 "Shop - GAUNTLET (Episode 3)": (1280, 1281, 1282, 1283, 1284),
             }
-        }, shop_setups=["A#", "B", "C", "D", "D", "E", "F", "F", "G", "I!"]),
+        }, shop_setups=["A", "B", "C", "D", "D", "E", "F", "F", "G", "I!"]),
 
         "IXMUCANE (Episode 3)": LevelRegion(episode=Episode.MissionSuicide, locations={
             "IXMUCANE (Episode 3) - Pebble Ship, Start": 290,
@@ -557,7 +556,7 @@ class LevelLocationData:
                     "Shop - IXMUCANE (Episode 3)": (1290, 1291, 1292, 1293, 1294),
                 },
             }
-        }),
+        }, shop_setups=["F", "H", "N"]),
 
         "BONUS (Episode 3)": LevelRegion(episode=Episode.MissionSuicide, locations={
             "BONUS (Episode 3) - Lone Turret 1": 300,
@@ -574,7 +573,7 @@ class LevelLocationData:
                     "Shop - BONUS (Episode 3)": (1300, 1301, 1302, 1303, 1304),
                 },
             },
-        }, shop_setups=["G", "G"]),
+        }, shop_setups=["M", "O", "Q"]),
 
         "STARGATE (Episode 3)": LevelRegion(episode=Episode.MissionSuicide, locations={
             "STARGATE (Episode 3) - The Bubbleway": 310,
@@ -588,7 +587,7 @@ class LevelLocationData:
                 "STARGATE (Episode 3) - Super Bubble Spawner": 316,
                 "Shop - STARGATE (Episode 3)": (1310, 1311, 1312, 1313, 1314),
             },
-        }),
+        }, shop_setups=["D", "D", "F", "F", "J"]),
 
         "AST. CITY (Episode 3)": LevelRegion(episode=Episode.MissionSuicide, locations={
             "AST. CITY (Episode 3) @ Base Requirements": {
@@ -606,7 +605,7 @@ class LevelLocationData:
                     "AST. CITY (Episode 3) - Boss Dome 4": 328,
                 }
             }
-        }),
+        }, shop_setups=["I", "M", "P"]),
 
         "SAWBLADES (Episode 3)": LevelRegion(episode=Episode.MissionSuicide, locations={
             "SAWBLADES (Episode 3) @ Base Requirements": {
@@ -619,7 +618,7 @@ class LevelLocationData:
                 "SAWBLADES (Episode 3) - SuperCarrot Secret Drop": 336,
                 "Shop - SAWBLADES (Episode 3)": (1330, 1331, 1332, 1333, 1334),
             }
-        }),
+        }, shop_setups=["G", "K", "O"]),
 
         "CAMANIS (Episode 3)": LevelRegion(episode=Episode.MissionSuicide, locations={
             "CAMANIS (Episode 3) @ Base Requirements": {
@@ -634,7 +633,7 @@ class LevelLocationData:
                     "Shop - CAMANIS (Episode 3)": (1340, 1341, 1342, 1343, 1344),
                 }
             }
-        }),
+        }, shop_setups=["J", "P", "P", "U"]),
 
         "MACES (Episode 3)": LevelRegion(episode=Episode.MissionSuicide, locations={
             "MACES (Episode 3) - Third Mace's Path": 350,
@@ -643,7 +642,7 @@ class LevelLocationData:
             "MACES (Episode 3) - A Brief Reprieve, Center": 353,
             "MACES (Episode 3) - A Brief Reprieve, Right": 354,
             "Shop - MACES (Episode 3)": (1350, 1351, 1352, 1353, 1354),
-        }),
+        }, shop_setups=["A", "I", "I", "L", "L", "L", "N", "N", "N", "N"]),
 
         "TYRIAN X (Episode 3)": LevelRegion(episode=Episode.MissionSuicide, locations={
             "TYRIAN X (Episode 3) @ Base Requirements": {
@@ -662,7 +661,7 @@ class LevelLocationData:
                     "Shop - TYRIAN X (Episode 3)": (1360, 1361, 1362, 1363, 1364),
                 },
             }
-        }),
+        }, shop_setups=["A", "B", "C", "D", "D", "E", "F", "F", "G", "I!"]),
 
         "SAVARA Y (Episode 3)": LevelRegion(episode=Episode.MissionSuicide, locations={
             "SAVARA Y (Episode 3) - White Formation Leader": 370,
@@ -681,7 +680,7 @@ class LevelLocationData:
                     "Shop - SAVARA Y (Episode 3)": (1370, 1371, 1372, 1373, 1374),
                 },
             }
-        }),
+        }, shop_setups=["E", "H", "L", "P"]),
 
         "NEW DELI (Episode 3)": LevelRegion(episode=Episode.MissionSuicide, locations={
             "NEW DELI (Episode 3) @ Base Requirements": {
@@ -700,7 +699,7 @@ class LevelLocationData:
                     },
                 }
             }
-        }),
+        }, shop_setups=["K", "M", "O", "P", "Q"]),
 
         "FLEET (Episode 3)": LevelRegion(episode=Episode.MissionSuicide, locations={
             "FLEET (Episode 3) @ Base Requirements": {
@@ -715,7 +714,7 @@ class LevelLocationData:
                     # Event: "Episode 3 (Mission: Suicide) Complete"
                 },
             }
-        }, shop_setups=["S", "V", "X"]),
+        }, shop_setups=["V", "V", "W", "X"]),
 
         # =============================================================================================
         # EPISODE 4 - AN END TO FATE
@@ -737,7 +736,7 @@ class LevelLocationData:
                     "Shop - SURFACE (Episode 4)": (1400, 1401, 1402, 1403, 1404),
                 }
             }
-        }),
+        }, shop_setups=["B", "B", "C", "D", "E", "E", "F", "G", "J", "M!"]),
 
         "WINDY (Episode 4)": LevelRegion(episode=Episode.AnEndToFate, locations={
             "WINDY (Episode 4) @ Fly Through": {
@@ -754,7 +753,7 @@ class LevelLocationData:
                     },
                 },
             },
-        }),
+        }, shop_setups=["G", "L", "R"]),
 
         "LAVA RUN (Episode 4)": LevelRegion(episode=Episode.AnEndToFate, locations={
             "LAVA RUN (Episode 4) @ Base Requirements": {
@@ -768,7 +767,7 @@ class LevelLocationData:
                     "Shop - LAVA RUN (Episode 4)": (1420, 1421, 1422, 1423, 1424),
                 },
             }
-        }),
+        }, shop_setups=["C", "F", "I", "L"]),
 
         "CORE (Episode 4)": LevelRegion(episode=Episode.AnEndToFate, locations={
             "CORE (Episode 4) @ Starting Section": {
@@ -787,7 +786,7 @@ class LevelLocationData:
                     },
                 }
             }
-        }),
+        }, shop_setups=["C", "F", "I", "L"]),
 
         "LAVA EXIT (Episode 4)": LevelRegion(episode=Episode.AnEndToFate, locations={
             "LAVA EXIT (Episode 4) @ Base Requirements": {
@@ -804,7 +803,7 @@ class LevelLocationData:
                     "Shop - LAVA EXIT (Episode 4)": (1440, 1441, 1442, 1443, 1444),
                 }
             }
-        }),
+        }, shop_setups=["A", "B"]),  # If the planet is actively turning into a sun, perhaps money's not a concern
 
         "DESERTRUN (Episode 4)": LevelRegion(episode=Episode.AnEndToFate, locations={
             "DESERTRUN (Episode 4) @ Base Requirements": {
@@ -816,7 +815,7 @@ class LevelLocationData:
                 "DESERTRUN (Episode 4) - Afterburner Slalom 5": 455,
                 "Shop - DESERTRUN (Episode 4)": (1450, 1451, 1452, 1453, 1454),
             },
-        }),
+        }, shop_setups=["A", "B"]),  # As above
 
         "SIDE EXIT (Episode 4)": LevelRegion(episode=Episode.AnEndToFate, locations={
             "SIDE EXIT (Episode 4) @ Base Requirements": {
@@ -825,14 +824,14 @@ class LevelLocationData:
                 "SIDE EXIT (Episode 4) - Laser Turret, Final Onslaught": 462,
                 "Shop - SIDE EXIT (Episode 4)": (1460, 1461, 1462, 1463, 1464),
             }
-        }),
+        }, shop_setups=["C", "F", "I", "L"]),
 
         "?TUNNEL? (Episode 4)": LevelRegion(episode=Episode.AnEndToFate, locations={
             "?TUNNEL? (Episode 4) @ Destroy Boss": {
                 "?TUNNEL? (Episode 4) - Boss": 470,
                 "Shop - ?TUNNEL? (Episode 4)": (1470, 1471, 1472, 1473, 1474),
             },
-        }),
+        }, shop_setups=["M", "M", "M", "S", "S", "S", "W", "W", "W", "Z!"]),
 
         "ICE EXIT (Episode 4)": LevelRegion(episode=Episode.AnEndToFate, locations={
             "ICE EXIT (Episode 4) @ Base Requirements": {
@@ -845,7 +844,7 @@ class LevelLocationData:
                     "Shop - ICE EXIT (Episode 4)": (1480, 1481, 1482, 1483, 1484),
                 },
             }
-        }),
+        }, shop_setups=["F", "I", "L", "O"]),
 
         "ICESECRET (Episode 4)": LevelRegion(episode=Episode.AnEndToFate, locations={
             "ICESECRET (Episode 4) @ Time Gate, To Station Start": {
@@ -866,7 +865,7 @@ class LevelLocationData:
                     }
                 }
             }
-        }),
+        }, shop_setups=["P", "R", "V", "Y"]),
 
         "HARVEST (Episode 4)": LevelRegion(episode=Episode.AnEndToFate, locations={
             "HARVEST (Episode 4) @ Base Requirements": {
@@ -887,7 +886,7 @@ class LevelLocationData:
                     "Shop - HARVEST (Episode 4)": (1500, 1501, 1502, 1503, 1504),
                 },
             }
-        }),
+        }, shop_setups=["M", "M", "Q", "S"]),
 
         "UNDERDELI (Episode 4)": LevelRegion(episode=Episode.AnEndToFate, locations={
             "UNDERDELI (Episode 4) @ Base Requirements": {
@@ -904,7 +903,7 @@ class LevelLocationData:
                     "Shop - UNDERDELI (Episode 4)": (1510, 1511, 1512, 1513, 1514),
                 }
             }
-        }),
+        }, shop_setups=["M", "M", "Q", "S"]),
 
         "APPROACH (Episode 4)": LevelRegion(episode=Episode.AnEndToFate, locations={
             "APPROACH (Episode 4) @ Base Requirements": {
@@ -918,7 +917,7 @@ class LevelLocationData:
                     "Shop - APPROACH (Episode 4)": (1520, 1521, 1522, 1523, 1524),
                 }
             }
-        }),
+        }, shop_setups=["K", "L", "N", "R"]),
 
         "SAVARA IV (Episode 4)": LevelRegion(episode=Episode.AnEndToFate, locations={
             "SAVARA IV (Episode 4) - White Formation Leader, Start": 530,
@@ -932,14 +931,14 @@ class LevelLocationData:
                 "SAVARA IV (Episode 4) - Boss": 534,
                 "Shop - SAVARA IV (Episode 4)": (1530, 1531, 1532, 1533, 1534),
             }
-        }),
+        }, shop_setups=["K", "L", "N", "R"]),
 
         "DREAD-NOT (Episode 4)": LevelRegion(episode=Episode.AnEndToFate, locations={
             "DREAD-NOT (Episode 4) @ Destroy Boss": {
                 "DREAD-NOT (Episode 4) - Boss": 540,
                 "Shop - DREAD-NOT (Episode 4)": (1540, 1541, 1542, 1543, 1544),
             }
-        }),
+        }, shop_setups=["W"]),
 
         "EYESPY (Episode 4)": LevelRegion(episode=Episode.AnEndToFate, locations={
             "EYESPY (Episode 4) @ Base Requirements": {
@@ -955,7 +954,7 @@ class LevelLocationData:
                     "Shop - EYESPY (Episode 4)": (1550, 1551, 1552, 1553, 1554),
                 }
             }
-        }),
+        }, shop_setups=["Q", "T", "T", "U", "U", "V"]),
 
         "BRAINIAC (Episode 4)": LevelRegion(episode=Episode.AnEndToFate, locations={
             "BRAINIAC (Episode 4) @ Base Requirements": {
@@ -973,7 +972,7 @@ class LevelLocationData:
                     "Shop - BRAINIAC (Episode 4)": (1560, 1561, 1562, 1563, 1564),
                 }
             }
-        }),
+        }, shop_setups=["Q", "T", "T", "U", "U", "V"]),
 
         "NOSE DRIP (Episode 4)": LevelRegion(episode=Episode.AnEndToFate, locations={
             "NOSE DRIP (Episode 4) @ Destroy Boss": {
@@ -981,7 +980,7 @@ class LevelLocationData:
                 "Shop - NOSE DRIP (Episode 4)": (1570, 1571, 1572, 1573, 1574),
                 # Event: "Episode 4 (An End To Fate) Complete"
             },
-        }, shop_setups=["S", "W", "Y"]),
+        }, shop_setups=["W", "X", "X", "Y"]),
 
         # =============================================================================================
         # EPISODE 5 - HAZUDRA FODDER
@@ -1002,7 +1001,7 @@ class LevelLocationData:
                 "ASTEROIDS (Episode 5) - Boss": 587,
                 "Shop - ASTEROIDS (Episode 5)": (1580, 1581, 1582, 1583, 1584),
             }
-        }),
+        }, shop_setups=["A", "B", "C", "D", "D", "E", "F", "F", "G", "I!"]),
 
         "AST ROCK (Episode 5)": LevelRegion(episode=Episode.HazudraFodder, locations={
             "AST ROCK (Episode 5) @ Base Requirements": {
@@ -1020,7 +1019,7 @@ class LevelLocationData:
                     "Shop - AST ROCK (Episode 5)": (1590, 1591, 1592, 1593, 1594),
                 }
             }
-        }),
+        }, shop_setups=["D", "E", "G", "K", "L"]),
 
         "MINERS (Episode 5)": LevelRegion(episode=Episode.HazudraFodder, locations={
             "MINERS (Episode 5) @ Base Requirements": {
@@ -1038,7 +1037,7 @@ class LevelLocationData:
                     "Shop - MINERS (Episode 5)": (1600, 1601, 1602, 1603, 1604),
                 }
             }
-        }),
+        }, shop_setups=["D", "E", "G", "K", "L"]),
 
         "SAVARA (Episode 5)": LevelRegion(episode=Episode.HazudraFodder, locations={
             "SAVARA (Episode 5) @ Destroy Most Planes": {
@@ -1057,7 +1056,7 @@ class LevelLocationData:
                 "SAVARA (Episode 5) - Boss": 618,
                 "Shop - SAVARA (Episode 5)": (1610, 1611, 1612, 1613, 1614),
             },
-        }),
+        }, shop_setups=["F", "H", "J", "M", "N"]),
 
         "CORAL (Episode 5)": LevelRegion(episode=Episode.HazudraFodder, locations={
             "CORAL (Episode 5) - Breakaway Dolphin": 620,
@@ -1078,12 +1077,12 @@ class LevelLocationData:
                     },
                 }
             }
-        }),
+        }, shop_setups=["F", "H", "J", "M", "N"]),
 
         # Remains here for possible future use (corresponds to unused level)
 #       "CANYONRUN (Episode 5)": LevelRegion(episode=Episode.HazudraFodder, locations={
 #           "Shop - CANYONRUN (Episode 5)": (1630, 1631, 1632, 1633, 1634),
-#       })
+#       }, shop_setups=[])
 
         "STATION (Episode 5)": LevelRegion(episode=Episode.HazudraFodder, locations={
             "STATION (Episode 5) @ Base Requirements": {
@@ -1105,7 +1104,7 @@ class LevelLocationData:
                     },
                 }
             }
-        }),
+        }, shop_setups=["J", "P", "Q"]),
 
         "FRUIT (Episode 5)": LevelRegion(episode=Episode.HazudraFodder, locations={
             "FRUIT (Episode 5) @ Base Requirements": {
@@ -1120,7 +1119,7 @@ class LevelLocationData:
                     # Event: "Episode 5 (Hazudra Fodder) Complete"
                 }
             }
-        }, shop_setups=["W"]),
+        }, shop_setups=["S"]),
     }
 
     # Events for game completion

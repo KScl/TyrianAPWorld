@@ -311,7 +311,7 @@ class LocalItemData:
         "40000 Credits":         LocalItem(996),
         "75000 Credits":         LocalItem(997),
         "100000 Credits":        LocalItem(998),
-        "1000000 Credits":       LocalItem(999),  # Should only be seen in case of emergency
+        "1000000 Credits":       LocalItem(999, item_class=IClass.useful),  # Should only be seen in case of emergency
     }
 
     # ----------------------------------------------------------------------------------------------------------------
