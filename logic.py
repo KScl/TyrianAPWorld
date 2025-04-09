@@ -622,7 +622,7 @@ def has_specific_loadout(state: "CollectionState", player: int,
 
 
 def can_ever_have_invulnerability(world: "TyrianWorld") -> bool:
-    return has_invulnerability(world.multiworld.get_all_state(True), world.player)
+    return has_invulnerability(world.multiworld.get_all_state(False, allow_partial_entrances=True), world.player)
 
 
 # =================================================================================================
