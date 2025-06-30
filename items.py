@@ -376,30 +376,30 @@ class LocalItemData:
         # (0x, 1x, 4x, 10x, 20x, 35x, 56x, 84x, 120x, 165x, 220x)
 
         # Original is the values from the original game.
-        # Balanced places the Pulse-Cannon at 700, and everything balanced around compared usefulness to that.
+        # Balanced places the Pulse-Cannon at 800, and everything balanced around compared usefulness to that.
 
         # Front ports
-        "Pulse-Cannon":                   UpgradeCost(original=500,  balanced=700),
-        "Multi-Cannon (Front)":           UpgradeCost(original=750,  balanced=600),
+        "Pulse-Cannon":                   UpgradeCost(original=500,  balanced=800),
+        "Multi-Cannon (Front)":           UpgradeCost(original=750,  balanced=700),
         "Mega Cannon":                    UpgradeCost(original=1000, balanced=1000),
         "Laser":                          UpgradeCost(original=900,  balanced=1750),
         "Zica Laser":                     UpgradeCost(original=1100, balanced=1800),
-        "Protron Z":                      UpgradeCost(original=900,  balanced=1200),
+        "Protron Z":                      UpgradeCost(original=900,  balanced=1250),
         "Vulcan Cannon (Front)":          UpgradeCost(original=600,  balanced=500),
-        "Lightning Cannon":               UpgradeCost(original=1000, balanced=1500),
+        "Lightning Cannon":               UpgradeCost(original=1000, balanced=1250),
         "Protron (Front)":                UpgradeCost(original=600,  balanced=900),
         "Missile Launcher":               UpgradeCost(original=850,  balanced=600),
-        "Mega Pulse (Front)":             UpgradeCost(original=900,  balanced=1100),
+        "Mega Pulse (Front)":             UpgradeCost(original=900,  balanced=1000),
         "Heavy Missile Launcher (Front)": UpgradeCost(original=1000, balanced=1000),
         "Banana Blast (Front)":           UpgradeCost(original=950,  balanced=1000),
-        "HotDog (Front)":                 UpgradeCost(original=1100, balanced=950),
-        "Hyper Pulse":                    UpgradeCost(original=1050, balanced=750),
-        "Guided Bombs":                   UpgradeCost(original=800,  balanced=900),
-        "Shuriken Field":                 UpgradeCost(original=850,  balanced=1000),
-        "Poison Bomb":                    UpgradeCost(original=800,  balanced=1700),
-        "Protron Wave":                   UpgradeCost(original=750,  balanced=600),
-        "The Orange Juicer":              UpgradeCost(original=900,  balanced=1000),
-        "NortShip Super Pulse":           UpgradeCost(original=1100, balanced=1100),
+        "HotDog (Front)":                 UpgradeCost(original=1100, balanced=900),
+        "Hyper Pulse":                    UpgradeCost(original=1050, balanced=850),
+        "Guided Bombs":                   UpgradeCost(original=800,  balanced=800),
+        "Shuriken Field":                 UpgradeCost(original=850,  balanced=950),
+        "Poison Bomb":                    UpgradeCost(original=800,  balanced=1750),
+        "Protron Wave":                   UpgradeCost(original=750,  balanced=500),
+        "The Orange Juicer":              UpgradeCost(original=900,  balanced=900),
+        "NortShip Super Pulse":           UpgradeCost(original=1100, balanced=1500),
         "Atomic RailGun":                 UpgradeCost(original=1101, balanced=1800),  # Yes, that's not a typo
         "Widget Beam":                    UpgradeCost(original=950,  balanced=500),
         "Sonic Impulse":                  UpgradeCost(original=1000, balanced=1000),
@@ -408,27 +408,27 @@ class LocalItemData:
         # Rear ports
         "Starburst":                     UpgradeCost(original=900,  balanced=900),
         "Multi-Cannon (Rear)":           UpgradeCost(original=750,  balanced=700),
-        "Sonic Wave":                    UpgradeCost(original=950,  balanced=1000),
-        "Protron (Rear)":                UpgradeCost(original=650,  balanced=750),
-        "Wild Ball":                     UpgradeCost(original=800,  balanced=600),
+        "Sonic Wave":                    UpgradeCost(original=950,  balanced=1500),
+        "Protron (Rear)":                UpgradeCost(original=650,  balanced=900),
+        "Wild Ball":                     UpgradeCost(original=800,  balanced=800),
         "Vulcan Cannon (Rear)":          UpgradeCost(original=500,  balanced=500),
-        "Fireball":                      UpgradeCost(original=1000, balanced=700),
+        "Fireball":                      UpgradeCost(original=1000, balanced=950),
         "Heavy Missile Launcher (Rear)": UpgradeCost(original=1000, balanced=1000),
-        "Mega Pulse (Rear)":             UpgradeCost(original=900,  balanced=1200),
+        "Mega Pulse (Rear)":             UpgradeCost(original=900,  balanced=1250),
         "Banana Blast (Rear)":           UpgradeCost(original=1100, balanced=1500),
         "HotDog (Rear)":                 UpgradeCost(original=1100, balanced=700),
         "Guided Micro Bombs":            UpgradeCost(original=1100, balanced=800),
-        "Heavy Guided Bombs":            UpgradeCost(original=1000, balanced=1000),
-        "Scatter Wave":                  UpgradeCost(original=900,  balanced=750),
-        "NortShip Spreader":             UpgradeCost(original=1100, balanced=1100),
-        "NortShip Spreader B":           UpgradeCost(original=1100, balanced=1100),
+        "Heavy Guided Bombs":            UpgradeCost(original=1000, balanced=950),
+        "Scatter Wave":                  UpgradeCost(original=900,  balanced=700),
+        "NortShip Spreader":             UpgradeCost(original=1100, balanced=1250),
+        "NortShip Spreader B":           UpgradeCost(original=1100, balanced=1250),
 
         # Tyrian 2000 stuff -- Original prices of 50 have been changed to 1000.
         # Front ports
-        "Needle Laser":                  UpgradeCost(original=600,  balanced=700),
+        "Needle Laser":                  UpgradeCost(original=600,  balanced=750),
         "Pretzel Missile":               UpgradeCost(original=1000, balanced=900),
         "Dragon Frost":                  UpgradeCost(original=700,  balanced=900),
-        "Dragon Flame":                  UpgradeCost(original=1000, balanced=1100),
+        "Dragon Flame":                  UpgradeCost(original=1000, balanced=1000),
 
         # Rear ports
         "People Pretzels":               UpgradeCost(original=1000, balanced=900),
