@@ -36,15 +36,15 @@ class LevelRegion:
         "N": ( 5000, 15001,  25),
         "O": ( 7500, 15001,  50),
         "P": ( 4000, 20001,  10),
-        "Q": ( 6000, 20001,  25),
-        "R": ( 5000, 25001,  50),
-        "S": ( 5000, 30001, 100),
-        "T": (10000, 30001,  25),
-        "U": (10000, 40001,  50),
-        "V": (10000, 50001, 100),
-        "W": (10000, 65001, 250),
-        "X": (20000, 65001, 100),
-        "Y": (20000, 65001, 250),
+        "Q": ( 5000, 20001,  25),
+        "R": ( 6000, 20001,  50),
+        "S": ( 8000, 20001, 100),
+        "T": ( 7500, 30001,  25),
+        "U": ( 9000, 30001,  50),
+        "V": (10000, 30001, 100),
+        "W": (12000, 30001, 250),
+        "X": (15000, 40001, 100),
+        "Y": (15000, 40001, 250),
         "Z": (65535, 65536,   1)  # Always max shop price
     }
 
@@ -117,7 +117,7 @@ class LevelLocationData:
                 "TYRIAN (Episode 1) - Boss": 9,
                 "Shop - TYRIAN (Episode 1)": (1000, 1001, 1002, 1003, 1004),
             },
-        }, shop_setups=["A", "B", "C", "D", "D", "E", "F", "F", "G", "I!"]),
+        }, shop_setups=["A", "B", "C", "D", "D", "E", "F", "F", "G", "I"]),
 
         "BUBBLES (Episode 1)": LevelRegion(episode=Episode.Escape, locations={
             "BUBBLES (Episode 1) @ Pass Bubble Lines": {
@@ -345,7 +345,7 @@ class LevelLocationData:
                 "TORM (Episode 2) - Boss": 167,
                 "Shop - TORM (Episode 2)": (1160, 1161, 1162, 1163, 1164),
             },
-        }, shop_setups=["A", "B", "C", "D", "D", "E", "F", "F", "G", "I!"]),
+        }, shop_setups=["A", "B", "C", "D", "D", "E", "F", "F", "G", "I"]),
 
         "GYGES (Episode 2)": LevelRegion(episode=Episode.Treachery, locations={
             "GYGES (Episode 2) - Circled Shapeshifting Turret 1": 170,
@@ -539,7 +539,7 @@ class LevelLocationData:
 
                 "Shop - GAUNTLET (Episode 3)": (1280, 1281, 1282, 1283, 1284),
             }
-        }, shop_setups=["A", "B", "C", "D", "D", "E", "F", "F", "G", "I!"]),
+        }, shop_setups=["A", "B", "C", "D", "D", "E", "F", "F", "G", "I"]),
 
         "IXMUCANE (Episode 3)": LevelRegion(episode=Episode.MissionSuicide, locations={
             "IXMUCANE (Episode 3) - Pebble Ship, Start": 290,
@@ -661,7 +661,7 @@ class LevelLocationData:
                     "Shop - TYRIAN X (Episode 3)": (1360, 1361, 1362, 1363, 1364),
                 },
             }
-        }, shop_setups=["A", "B", "C", "D", "D", "E", "F", "F", "G", "I!"]),
+        }, shop_setups=["A", "B", "C", "D", "D", "E", "F", "F", "G", "I"]),
 
         "SAVARA Y (Episode 3)": LevelRegion(episode=Episode.MissionSuicide, locations={
             "SAVARA Y (Episode 3) - White Formation Leader": 370,
@@ -736,7 +736,7 @@ class LevelLocationData:
                     "Shop - SURFACE (Episode 4)": (1400, 1401, 1402, 1403, 1404),
                 }
             }
-        }, shop_setups=["B", "B", "C", "D", "E", "E", "F", "G", "J", "M!"]),
+        }, shop_setups=["B", "B", "C", "D", "E", "E", "F", "G", "J", "M"]),
 
         "WINDY (Episode 4)": LevelRegion(episode=Episode.AnEndToFate, locations={
             "WINDY (Episode 4) @ Fly Through": {
@@ -1001,7 +1001,7 @@ class LevelLocationData:
                 "ASTEROIDS (Episode 5) - Boss": 587,
                 "Shop - ASTEROIDS (Episode 5)": (1580, 1581, 1582, 1583, 1584),
             }
-        }, shop_setups=["A", "B", "C", "D", "D", "E", "F", "F", "G", "I!"]),
+        }, shop_setups=["A", "B", "C", "D", "D", "E", "F", "F", "G", "I"]),
 
         "AST ROCK (Episode 5)": LevelRegion(episode=Episode.HazudraFodder, locations={
             "AST ROCK (Episode 5) @ Base Requirements": {
