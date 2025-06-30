@@ -371,10 +371,10 @@ class DamageTables:
 
         self.local_power_provided = self.generator_power_provided[logic_difficulty]
 
-        if logic_difficulty == LogicDifficulty.option_beginner:   self.logic_difficulty_multiplier = 1.25
-        elif logic_difficulty == LogicDifficulty.option_standard: self.logic_difficulty_multiplier = 1.1
-        elif logic_difficulty == LogicDifficulty.option_expert:   self.logic_difficulty_multiplier = 1.1
-        else:                                                     self.logic_difficulty_multiplier = 1.0
+        if logic_difficulty == LogicDifficulty.option_beginner:   self.logic_difficulty_multiplier = 1.20
+        elif logic_difficulty == LogicDifficulty.option_standard: self.logic_difficulty_multiplier = 1.10
+        elif logic_difficulty == LogicDifficulty.option_expert:   self.logic_difficulty_multiplier = 1.07
+        else:                                                     self.logic_difficulty_multiplier = 1.00
 
     def can_meet_dps(self, target_dps: DPS, weapons: List[str],
           max_power_level: int = 11, rest_energy: int = 99) -> bool:
@@ -769,7 +769,7 @@ def rules_e1_asteroid1(world: "TyrianWorld", difficulty: int) -> None:
     dps_piercing = world.damage_tables.make_dps(piercing=scale_health(difficulty, 100) / 30.0)
     logic_entrance_rule(world, "ASTEROID1 (Episode 1) @ Destroy Boss", lambda state, dps1=dps_piercing, dps2=dps_active:
           can_deal_damage(state, world.player, dps1)
-          or can_deal_damage(state, world.player, dps2))
+          or can_deal_damage(state, world.player, dps2, exclude=["The Orange Juicer"]))
 
 
 # =================================================================================================
@@ -1884,8 +1884,8 @@ def rules_e4_windy(world: "TyrianWorld", difficulty: int) -> None:
     dps_option1 = world.damage_tables.make_dps(active=(scale_health(difficulty, 20) * 2) / 0.7)
     dps_option2 = world.damage_tables.make_dps(active=scale_health(difficulty, 20) / 1.0, passive=scale_health(difficulty, 20) / 0.5)
     logic_entrance_rule(world, "WINDY (Episode 4) @ Reach Extra Section", lambda state, dps1=dps_option1, dps2=dps_option2:
-          can_deal_damage(state, world.player, dps1)
-          or can_deal_damage(state, world.player, dps2))
+          can_deal_damage(state, world.player, dps1, exclude=["The Orange Juicer", "Wild Ball", "Fireball"])
+          or can_deal_damage(state, world.player, dps2, exclude=["The Orange Juicer", "Wild Ball", "Fireball"]))
 
 
 # =================================================================================================
@@ -2029,11 +2029,11 @@ def rules_e4_lava_exit(world: "TyrianWorld", difficulty: int) -> None:
 def rules_e4_desertrun(world: "TyrianWorld", difficulty: int) -> None:
     # Simple fly through but a lot of things shoot bullets at you.
     # No need to destroy anything, so no damage requirements.
-    wanted_armor = get_logic_difficulty_choice(world, base=(6, 5, 5, 4))
+    wanted_armor = get_logic_difficulty_choice(world, base=(6, 5, 4, 3))
     if difficulty >= 8:  # Lord of the Game (super fast firing)
-        wanted_armor += 4
-    elif difficulty >= 4:  # Impossible or above (fast firing)
-        wanted_armor += 1
+        wanted_armor += 5
+    elif difficulty >= 3:  # Hard or above (fast firing)
+        wanted_armor += 2
 
     logic_entrance_rule(world, "DESERTRUN (Episode 4) @ Base Requirements", lambda state, armor=wanted_armor:
           has_repulsor(state, world.player)
@@ -2280,7 +2280,7 @@ def rules_e4_eyespy(world: "TyrianWorld", difficulty: int) -> None:
 
     # Lips: 30, Green eyes, 20, Blue eyes: 10 (but have multiple overlapping enemies), small spam eyes: 4
     wanted_power = get_logic_difficulty_choice(world, base=(6, 6, 5, 5))
-    wanted_armor = get_logic_difficulty_choice(world, base=(13, 12, 11, 10), hard_contact=(14, 14, 13, 10))
+    wanted_armor = get_logic_difficulty_choice(world, base=(13, 12, 11, 10), hard_contact=(14, 13, 12, 10))
     wanted_passive = (scale_health(difficulty, 4) * 6) / 1.6
     dps_mixed = world.damage_tables.make_dps(active=scale_health(difficulty, 30) / 1.6, passive=wanted_passive)
     logic_entrance_rule(world, "EYESPY (Episode 4) @ Base Requirements", lambda state, armor=wanted_armor, power=wanted_power, dps1=dps_mixed:
@@ -2310,7 +2310,7 @@ def rules_e4_brainiac(world: "TyrianWorld", difficulty: int) -> None:
     # Embedded turrets have 28 health, destructible wall segments have 20.
     # Contact does an abnormally high amount of damage in this stage.
     wanted_power = get_logic_difficulty_choice(world, base=(6, 6, 5, 5))
-    wanted_armor = get_logic_difficulty_choice(world, base=(13, 13, 12, 10), hard_contact=(14, 14, 13, 10))
+    wanted_armor = get_logic_difficulty_choice(world, base=(13, 13, 12, 10), hard_contact=(14, 13, 12, 10))
     dps_mixed = world.damage_tables.make_dps(active=scale_health(difficulty, 28) / 1.4, passive=scale_health(difficulty, 20) / 1.4)
 
     logic_entrance_rule(world, "BRAINIAC (Episode 4) @ Base Requirements", lambda state, dps1=dps_mixed, armor=wanted_armor, power=wanted_power:
@@ -2362,7 +2362,7 @@ def rules_e4_brainiac(world: "TyrianWorld", difficulty: int) -> None:
 def rules_e4_nose_drip(world: "TyrianWorld", difficulty: int) -> None:
     # This stage is another gigantic boss with a fixed total HP pool of 1,524.
     wanted_power = get_logic_difficulty_choice(world, base=(7, 7, 7, 6))
-    wanted_armor = get_logic_difficulty_choice(world, base=(14, 14, 14, 10))
+    wanted_armor = get_logic_difficulty_choice(world, base=(14, 13, 12, 10))
     dps_boss = world.damage_tables.make_dps(active=1524 / 32.0)
 
     logic_entrance_rule(world, "NOSE DRIP (Episode 4) @ Destroy Boss", lambda state, dps1=dps_boss, armor=wanted_armor, power=wanted_power:
