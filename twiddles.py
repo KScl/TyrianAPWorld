@@ -5,7 +5,7 @@
 # See "LICENSE" for more details.
 
 from enum import IntEnum
-from typing import TYPE_CHECKING, Any, Dict, List
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from . import TyrianWorld
@@ -59,12 +59,12 @@ class TwidDir(IntEnum):
 
 class Twiddle:
     name: str
-    command: List[TwidDir]
+    command: list[TwidDir]
     action: SpecialValues
     cost: int
 
     def __init__(self, name: str, action: SpecialValues,
-          command: List[TwidDir] = [], shield_cost: Any = None, armor_cost: Any = None):
+          command: list[TwidDir] = [], shield_cost: Any = None, armor_cost: Any = None):
         self.name = name
         self.action = action
         self.command = command
@@ -88,7 +88,7 @@ class Twiddle:
     def spoiler_str(self) -> str:
         return f"{self.name}: {self.spoiler_command()} ({self.spoiler_cost()})\n"
 
-    def to_json(self) -> Dict[str, Any]:
+    def to_json(self) -> dict[str, Any]:
         return {
             "Name": self.name,
             "Action": int(self.action),
@@ -97,7 +97,7 @@ class Twiddle:
         }
 
 
-vanilla_twiddle_list: List[List[Twiddle]] = [
+vanilla_twiddle_list: list[list[Twiddle]] = [
     [
         # Due to potential conflicts, pool these commands together
         # Second Invuln input sequence is the special one for the Stalker 21.126
@@ -160,7 +160,7 @@ vanilla_twiddle_list: List[List[Twiddle]] = [
 ]
 
 
-def generate_twiddles(world: "TyrianWorld", chaos_mode: bool = False) -> List[Twiddle]:
+def generate_twiddles(world: "TyrianWorld", chaos_mode: bool = False) -> list[Twiddle]:
     random_value = world.random.randrange(100)
     if   random_value < 10: max_twiddle_count = 1
     elif random_value < 50: max_twiddle_count = 2

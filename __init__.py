@@ -8,7 +8,8 @@ import json
 import logging
 import math
 import os
-from typing import TYPE_CHECKING, Any, Dict, List, Mapping, Optional, Set, TextIO, cast
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any, TextIO, cast
 
 from BaseClasses import Item, Location, Region, Tutorial
 from BaseClasses import ItemClassification as IClass
@@ -35,9 +36,9 @@ class TyrianItem(Item):
 class TyrianLocation(Location):
     game = "Tyrian"
 
-    shop_price: Optional[int]  # None if not a shop, price in credits if it is
+    shop_price: int | None  # None if not a shop, price in credits if it is
 
-    def __init__(self, player: int, name: str, address: Optional[int], parent: Region):
+    def __init__(self, player: int, name: str, address: int | None, parent: Region):
         super().__init__(player, name, address, parent)
         self.shop_price = None
 
@@ -88,17 +89,17 @@ class TyrianWorld(World):
 
     # --------------------------------------------------------------------------------------------
 
-    goal_episodes: Set[int]  # Require these episodes for goal (1, 2, 3, 4, 5)
-    play_episodes: Set[int]  # Add levels from these episodes (1, 2, 3, 4, 5)
+    goal_episodes: set[int]  # Require these episodes for goal (1, 2, 3, 4, 5)
+    play_episodes: set[int]  # Add levels from these episodes (1, 2, 3, 4, 5)
 
     default_start_level: str  # Level we start on, gets precollected automatically
-    all_levels: List[str]  # List of all levels available in seed
-    local_itempool: List[str]  # String-based item pool for us, becomes multiworld item pool after create_items
+    all_levels: list[str]  # List of all levels available in seed
+    local_itempool: list[str]  # String-based item pool for us, becomes multiworld item pool after create_items
 
-    single_special_weapon: Optional[str]  # For output to spoiler log only
-    twiddles: List[Twiddle]  # Twiddle/SF Code inputs and their results.
+    single_special_weapon: str | None  # For output to spoiler log only
+    twiddles: list[Twiddle]  # Twiddle/SF Code inputs and their results.
 
-    weapon_costs: Dict[str, int]  # Costs of each weapon's upgrades (see LocalItemData.default_upgrade_costs)
+    weapon_costs: dict[str, int]  # Costs of each weapon's upgrades (see LocalItemData.default_upgrade_costs)
     total_money_needed: int  # Sum total of shop prices and max upgrades, used to calculate filler items
 
     damage_tables: DamageTables  # Used for rule generation
@@ -138,7 +139,7 @@ class TyrianWorld(World):
     # Item Pool Methods
     # ================================================================================================================
 
-    def get_dict_contents_as_items(self, target_dict: Mapping[str, LocalItem]) -> List[str]:
+    def get_dict_contents_as_items(self, target_dict: Mapping[str, LocalItem]) -> list[str]:
         item_list = []
 
         for (name, item) in target_dict.items():
@@ -147,7 +148,7 @@ class TyrianWorld(World):
 
         return item_list
 
-    def get_junk_items(self, total_checks: int, total_money: int, allow_superbombs: bool = True) -> List[str]:
+    def get_junk_items(self, total_checks: int, total_money: int, allow_superbombs: bool = True) -> list[str]:
         total_money = int(total_money * (self.options.money_pool_scale / 100))
 
         valid_money_amounts = [int(name.removesuffix(" Credits"))
@@ -195,7 +196,7 @@ class TyrianWorld(World):
     # Option Parsing Helpers
     # ================================================================================================================
 
-    def get_weapon_costs(self) -> Dict[str, int]:
+    def get_weapon_costs(self) -> dict[str, int]:
         if self.options.base_weapon_cost.current_key == "original":
             return {key: value.original for (key, value) in LocalItemData.default_upgrade_costs.items()}
         elif self.options.base_weapon_cost.current_key == "balanced":
@@ -271,8 +272,8 @@ class TyrianWorld(World):
     # ---------- Settings -----------------------------------------------------
     # Game settings, user choices the game needs to know about.
     # Present: Always.
-    def output_settings(self) -> Dict[str, Any]:
-        settings: Dict[str, Any] = {
+    def output_settings(self) -> dict[str, Any]:
+        settings: dict[str, Any] = {
             "RequireT2K": bool(self.options.enable_tyrian_2000_support),
             "Episodes": sum(1 << (i - 1) for i in self.play_episodes),
             "Goal": sum(1 << (i - 1) for i in self.goal_episodes),
@@ -304,15 +305,15 @@ class TyrianWorld(World):
     # ---------- ExcludedLocations --------------------------------------------
     # Which locations are excluded. Used to show them differently in the client.
     # Present: Always.
-    def output_excluded_locations(self) -> List[int]:
+    def output_excluded_locations(self) -> list[int]:
         return [location.address - self.base_id for location in self.multiworld.get_locations(self.player)
                 if location.address is not None and location.progress_type == LPType.EXCLUDED]
 
     # ---------- StartState (obfuscated) --------------------------------------
     # Tell the game what we start with.
     # Present: Always. (Optional in theory, but in practice there will always at least be the starting level.)
-    def output_start_state(self) -> Dict[str, Any]:
-        start_state: Dict[str, Any] = {}
+    def output_start_state(self) -> dict[str, Any]:
+        start_state: dict[str, Any] = {}
 
         def increase_state(option: str) -> None:
             nonlocal start_state
@@ -365,19 +366,19 @@ class TyrianWorld(World):
     # ---------- WeaponCost (obfuscated) --------------------------------------
     # Base cost of each weapon's upgrades
     # Present: Always.
-    def output_weapon_cost(self) -> Dict[int, int]:
+    def output_weapon_cost(self) -> dict[int, int]:
         return {self.item_name_to_id[key] - self.base_id: value for (key, value) in self.weapon_costs.items()}
 
     # ---------- TwiddleData (obfuscated) -------------------------------------
     # Twiddle inputs, costs, etc.
     # Present: If the option "Twiddles" is not set to "off".
-    def output_twiddles(self) -> List[Dict[str, Any]]:
+    def output_twiddles(self) -> list[dict[str, Any]]:
         return [twiddle.to_json() for twiddle in self.twiddles]
 
     # ---------- ProgressionData (obfuscated) ---------------------------------
     # Which locations contain progression items for any player.
     # Present: Only in slot_data (remote games).
-    def output_progression_data(self) -> List[int]:
+    def output_progression_data(self) -> list[int]:
         return [location.address - self.base_id for location in self.multiworld.get_locations(self.player)
                 if location.address is not None and location.item is not None
                 and getattr(location, "shop_price", None) is None  # Ignore shop items (they're scouted in game)
@@ -392,7 +393,7 @@ class TyrianWorld(World):
     # ---------- LocationData (obfuscated) ------------------------------------
     # The contents of every single location present in the player's game. Single player only.
     # Present: Only in local/offline .aptyrian files.
-    def output_all_locations(self) -> Dict[int, str]:
+    def output_all_locations(self) -> dict[int, str]:
         assert self.multiworld.players == 1
 
         def get_location_item(location: Location) -> str:
@@ -406,7 +407,7 @@ class TyrianWorld(World):
     # ---------- ShopData (obfuscated) ----------------------------------------
     # The price of every shop present in the player's world.
     # Present: If the option "Shop Mode" is not set to "none".
-    def output_shop_data(self) -> Dict[int, int]:
+    def output_shop_data(self) -> dict[int, int]:
         def correct_shop_price(location: TyrianLocation) -> int:
             assert location.shop_price is not None  # Tautological
 
@@ -457,7 +458,7 @@ class TyrianWorld(World):
 
     # --------------------------------------------------------------------------------------------
 
-    def get_slot_data(self, local_mode: bool = False) -> Dict[str, Any]:
+    def get_slot_data(self, local_mode: bool = False) -> dict[str, Any]:
         # local_mode: If true, return a JSON file meant to be downloaded, for offline play
         slot_data = {
             "NetVersion": self.aptyrian_net_version,
@@ -605,7 +606,7 @@ class TyrianWorld(World):
                 continue
             removed_levels.append(removed_item)
 
-        def recursive_create_subregions(locations: Dict[str, Any], parent_region: Region) -> None:
+        def recursive_create_subregions(locations: dict[str, Any], parent_region: Region) -> None:
             for name, value in locations.items():
                 # Create a new subregion, recurse to add subregions/locations to it
                 if type(value) is dict:
@@ -709,7 +710,7 @@ class TyrianWorld(World):
 
     def create_items(self) -> None:
 
-        def pop_from_pool(item_name: str) -> Optional[str]:
+        def pop_from_pool(item_name: str) -> str | None:
             if item_name in self.local_itempool:  # Regular item
                 self.local_itempool.remove(item_name)
                 return item_name
@@ -971,5 +972,5 @@ class TyrianWorld(World):
             for twiddle in self.twiddles:
                 spoiler_handle.write(twiddle.spoiler_str())
 
-    def fill_slot_data(self) -> Dict[str, Any]:
+    def fill_slot_data(self) -> dict[str, Any]:
         return self.get_slot_data(local_mode=False)

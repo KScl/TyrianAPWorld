@@ -6,7 +6,7 @@
 
 import itertools
 import logging
-from typing import Dict, List, NamedTuple, Tuple
+from typing import NamedTuple
 
 from .. import TyrianWorld
 
@@ -22,7 +22,7 @@ class TyrianALTTPText(NamedTuple):
 
 
 # Items associated with text strings -> list of strings to give to ALTTP world
-alttp_item_texts: List[Tuple[List[str], TyrianALTTPText]] = [
+alttp_item_texts: list[tuple[list[str], TyrianALTTPText]] = [
     # Items currently missing:
     # - "Mega Cannon"
     # - "Widget Beam"
@@ -405,11 +405,11 @@ try:
 
     # -------------------------------------------------------------------------
 
-    pedestal_credit_texts: Dict[int, str] = {}
-    sickkid_credit_texts: Dict[int, str] = {}
-    zora_credit_texts: Dict[int, str] = {}
-    magicshop_credit_texts: Dict[int, str] = {}
-    fluteboy_credit_texts: Dict[int, str] = {}
+    pedestal_credit_texts: dict[int, str] = {}
+    sickkid_credit_texts: dict[int, str] = {}
+    zora_credit_texts: dict[int, str] = {}
+    magicshop_credit_texts: dict[int, str] = {}
+    fluteboy_credit_texts: dict[int, str] = {}
 
     # Convert from our format that makes combining them easier, into item_id->string dicts
     for (items, text_strings) in alttp_item_texts:
@@ -422,7 +422,7 @@ try:
 
     # -------------------------------------------------------------------------
 
-    def try_update_alttp_texts(attr_name: str, our_texts: Dict[int, str]) -> None:
+    def try_update_alttp_texts(attr_name: str, our_texts: dict[int, str]) -> None:
         lttp_attr = getattr(ALTTPWorld, attr_name, None)
         if lttp_attr is None or not isinstance(lttp_attr, dict):
             logging.debug(f"Tyrian crossgame.alttp: 'ALTTPWorld.{attr_name}' not found. "

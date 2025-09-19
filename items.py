@@ -5,7 +5,7 @@
 # See "LICENSE" for more details.
 
 from enum import IntEnum
-from typing import Dict, NamedTuple, Set
+from typing import NamedTuple
 
 from BaseClasses import ItemClassification as IClass
 
@@ -64,7 +64,7 @@ class UpgradeCost(NamedTuple):
 
 
 class LocalItemData:
-    levels: Dict[str, LocalLevel] = {
+    levels: dict[str, LocalLevel] = {
         "TYRIAN (Episode 1)":    LocalLevel(  0, Episode.Escape),
         "BUBBLES (Episode 1)":   LocalLevel(  1, Episode.Escape),
         "HOLES (Episode 1)":     LocalLevel(  2, Episode.Escape),
@@ -141,7 +141,7 @@ class LocalItemData:
 
     # All Front and Rear port weapons are progression, some specific specials are too
     # All other specials and sidekicks are useful at most
-    front_ports: Dict[str, LocalWeapon] = {
+    front_ports: dict[str, LocalWeapon] = {
         "Pulse-Cannon":                   LocalWeapon(500, item_class=IClass.progression),  # Default starting weapon
         "Multi-Cannon (Front)":           LocalWeapon(501, item_class=IClass.progression),
         "Mega Cannon":                    LocalWeapon(502, item_class=IClass.progression),
@@ -174,7 +174,7 @@ class LocalItemData:
         "Dragon Flame":                   LocalWeapon(528, count=0, item_class=IClass.progression),
     }
 
-    rear_ports: Dict[str, LocalWeapon] = {
+    rear_ports: dict[str, LocalWeapon] = {
         "Starburst":                     LocalWeapon(600, item_class=IClass.progression),
         "Multi-Cannon (Rear)":           LocalWeapon(601, item_class=IClass.progression),
         "Sonic Wave":                    LocalWeapon(602, item_class=IClass.progression, tossable=False),
@@ -195,7 +195,7 @@ class LocalItemData:
         "People Pretzels":               LocalWeapon(616, count=0, item_class=IClass.progression),
     }
 
-    special_weapons: Dict[str, LocalWeapon] = {
+    special_weapons: dict[str, LocalWeapon] = {
         "Repulsor":          LocalWeapon(700, item_class=IClass.progression, tossable=False),
         "Pearl Wind":        LocalWeapon(701),
         "Soul of Zinglon":   LocalWeapon(702),
@@ -224,7 +224,7 @@ class LocalItemData:
         "Dragon Lightning":  LocalWeapon(724, count=0),
     }
 
-    sidekicks: Dict[str, LocalWeapon] = {
+    sidekicks: dict[str, LocalWeapon] = {
         "Single Shot Option":         LocalWeapon(800, count=2),
         "Dual Shot Option":           LocalWeapon(801, count=2),
         "Charge Cannon":              LocalWeapon(802, count=2),
@@ -262,7 +262,7 @@ class LocalItemData:
 
     # ----------------------------------------------------------------------------------------------------------------
 
-    nonprogressive_items: Dict[str, LocalItem] = {
+    nonprogressive_items: dict[str, LocalItem] = {
         "Advanced MR-12":        LocalItem(900, count=1, item_class=IClass.progression),
         "Gencore Custom MR-12":  LocalItem(901, count=1, item_class=IClass.progression),
         "Standard MicroFusion":  LocalItem(902, count=1, item_class=IClass.progression),
@@ -270,17 +270,17 @@ class LocalItemData:
         "Gravitron Pulse-Wave":  LocalItem(904, count=1, item_class=IClass.progression),
     }
 
-    progressive_items: Dict[str, LocalItem] = {
+    progressive_items: dict[str, LocalItem] = {
         "Progressive Generator": LocalItem(905, count=5, item_class=IClass.progression),
     }
 
-    bonus_games: Dict[str, LocalItem] = {
+    bonus_games: dict[str, LocalItem] = {
         "Zinglon's Ale":         LocalItem(920, count=1),
         "Zinglon's Squadrons":   LocalItem(921, count=1),
         "Zinglon's Revenge":     LocalItem(922, count=1),
     }
 
-    other_items: Dict[str, LocalItem] = {
+    other_items: dict[str, LocalItem] = {
         "Maximum Power Up":      LocalItem(906, count=10, item_class=IClass.progression_skip_balancing),  # 1 -> 11
         "Armor Up":              LocalItem(907, count=9,  item_class=IClass.progression_skip_balancing),  # 5 -> 14
         "Shield Up":             LocalItem(908, count=9,  item_class=IClass.useful),  # 5 -> 14
@@ -330,7 +330,7 @@ class LocalItemData:
         cls.sidekicks["Flying Punch"].count = (2 if enable else 0)
 
     @classmethod
-    def get_item_name_to_id(cls, base_id: int) -> Dict[str, int]:
+    def get_item_name_to_id(cls, base_id: int) -> dict[str, int]:
         all_items = {}
         all_items.update({name: (base_id + item.local_id) for (name, item) in cls.levels.items()})
         all_items.update({name: (base_id + item.local_id) for (name, item) in cls.front_ports.items()})
@@ -344,7 +344,7 @@ class LocalItemData:
         return all_items
 
     @classmethod
-    def get_item_groups(cls) -> Dict[str, Set[str]]:
+    def get_item_groups(cls) -> dict[str, set[str]]:
         return {
             "Levels": {name for name in cls.levels.keys()},
             "Front Weapons": {name for name in cls.front_ports.keys()},
@@ -371,7 +371,7 @@ class LocalItemData:
 
     # ================================================================================================================
 
-    default_upgrade_costs: Dict[str, UpgradeCost] = {
+    default_upgrade_costs: dict[str, UpgradeCost] = {
         # To upgrade a weapon to a specific level, multiply the cost by:
         # (0x, 1x, 4x, 10x, 20x, 35x, 56x, 84x, 120x, 165x, 220x)
 

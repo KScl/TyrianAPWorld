@@ -4,7 +4,7 @@
 # and is released under the terms of the zlib license.
 # See "LICENSE" for more details.
 
-from typing import TYPE_CHECKING, Any, Dict, List, Set, Tuple
+from typing import TYPE_CHECKING, Any
 
 from BaseClasses import LocationProgressType as LPType
 
@@ -19,7 +19,7 @@ class LevelRegion:
     # instead we have multiple different types of random prices that can get generated, and we choose
     # which one we want randomly (based on the level we're generating it for).
     # Appending an "!" makes the shop location prioritized.
-    base_shop_setup_list: Dict[str, Tuple[int, int, int]] = {
+    base_shop_setup_list: dict[str, tuple[int, int, int]] = {
         "A": (   50,   501,   1),
         "B": (  100,  1001,   1),
         "C": (  200,  2001,   2),
@@ -49,22 +49,22 @@ class LevelRegion:
     }
 
     episode: Episode
-    locations: Dict[str, Any]  # List of strings to location or sub-region names
-    flattened_locations: Dict[str, int]  # Only location names, ignoring sub-regions
-    shop_setups: List[str]  # See base_shop_setups_list above
+    locations: dict[str, Any]  # List of strings to location or sub-region names
+    flattened_locations: dict[str, int]  # Only location names, ignoring sub-regions
+    shop_setups: list[str]  # See base_shop_setups_list above
 
-    def __init__(self, episode: Episode, locations: Dict[str, Any], shop_setups: List[str] = ["F", "H", "K", "L"]):
+    def __init__(self, episode: Episode, locations: dict[str, Any], shop_setups: list[str] = ["F", "H", "K", "L"]):
         self.episode = episode
         self.locations = locations
         self.shop_setups = shop_setups
 
         # Immediately create a flattened location list
-        def shop_locations(name: str, all_ids: Tuple[Any]) -> Dict[str, int]:
+        def shop_locations(name: str, all_ids: tuple[int, ...]) -> dict[str, int]:
             # Turns "Shop - LEVELNAME (Episode 1)": (...) into individual location names
             return {f"{name} - Item {(shop_id - all_ids[0]) + 1}": shop_id for shop_id in all_ids}
 
-        def flatten(locations: Dict[str, Any]) -> Dict[str, int]:
-            results: Dict[str, int] = {}
+        def flatten(locations: dict[str, Any]) -> dict[str, int]:
+            results: dict[str, int] = {}
             for name, value in locations.items():
                 if type(value) is dict:
                     results.update(flatten(value))
@@ -85,17 +85,17 @@ class LevelRegion:
         location.shop_price = min(world.random.randrange(*self.base_shop_setup_list[setup_choice[0]]), 65535)
 
     # Gets a flattened dict of all locations, id: name
-    def get_locations(self, base_id: int = 0) -> Dict[str, int]:
+    def get_locations(self, base_id: int = 0) -> dict[str, int]:
         return {name: base_id + location_id for (name, location_id) in self.flattened_locations.items()}
 
     # Returns just names from the above.
-    def get_location_names(self) -> Set[str]:
+    def get_location_names(self) -> set[str]:
         return {name for name in self.flattened_locations.keys()}
 
 
 class LevelLocationData:
 
-    level_regions: Dict[str, LevelRegion] = {
+    level_regions: dict[str, LevelRegion] = {
 
         # =============================================================================================
         # EPISODE 1 - ESCAPE
@@ -1123,7 +1123,7 @@ class LevelLocationData:
     }
 
     # Events for game completion
-    events: Dict[str, str] = {
+    events: dict[str, str] = {
         "Episode 1 (Escape) Complete":           "ASSASSIN (Episode 1)",
         "Episode 2 (Treachery) Complete":        "GRYPHON (Episode 2)",
         "Episode 3 (Mission: Suicide) Complete": "FLEET (Episode 3)",
@@ -1132,13 +1132,13 @@ class LevelLocationData:
     }
 
     @classmethod
-    def get_location_name_to_id(cls, base_id: int) -> Dict[str, int]:
+    def get_location_name_to_id(cls, base_id: int) -> dict[str, int]:
         all_locs = {}
         for region in cls.level_regions.values():
             all_locs.update(region.get_locations(base_id=base_id))
         return all_locs
 
     @classmethod
-    def get_location_groups(cls) -> Dict[str, Set[str]]:
+    def get_location_groups(cls) -> dict[str, set[str]]:
         # Bring all locations in a level, shop included, into a region named after the level.
         return {level: region.get_location_names() for (level, region) in cls.level_regions.items()}
