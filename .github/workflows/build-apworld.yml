@@ -1,7 +1,5 @@
-on:
-  push:
-    branches:
-      - main
+name: Build APWorld
+on: push
 
 jobs:
   build_apworld:
@@ -10,6 +8,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+
+    - uses: oprypin/find-latest-tag@v1
+      with:
+        repository: KScl/TyrianArchipelago
+        prefix: v1
+      id: aptyrian
+
     - name: Create APWorld (zip)
       shell: bash
       run: |
@@ -22,7 +27,9 @@ jobs:
         cp test/*.py tyrian/test/
         cp crossgame/*.py tyrian/crossgame/
         cp docs/*.md tyrian/docs/
-        zip -r ~/tyrian.apworld tyrian
+        bash .github/manifest.sh ${{ steps.aptyrian.outputs.tag }}
+        zip -r ~/tyrian.apworld tyrian archipelago.json
+
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
