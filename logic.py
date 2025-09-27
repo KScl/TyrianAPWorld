@@ -4,6 +4,8 @@
 # and is released under the terms of the zlib license.
 # See "LICENSE" for more details.
 
+from dataclasses import dataclass
+from functools import cached_property, lru_cache
 from itertools import product
 from typing import TYPE_CHECKING, Callable
 
@@ -20,37 +22,36 @@ if TYPE_CHECKING:
     from . import TyrianWorld
 
 
+@dataclass(frozen=True)
 class DPS:
-    _type_active: bool
-    _type_passive: bool
-    _type_sideways: bool
-    _type_piercing: bool
-    active: float
-    passive: float
-    sideways: float
-    piercing: float
+    active: float = 0.0
+    passive: float = 0.0
+    sideways: float = 0.0
+    piercing: float = 0.0
 
-    def __init__(self, active: float = 0.0, passive: float = 0.0, sideways: float = 0.0, piercing: float = 0.0):
-        self.active = active
-        self.passive = passive
-        self.sideways = sideways
-        self.piercing = piercing
-        self._type_active = (active > 0.0)
-        self._type_passive = (passive > 0.0)
-        self._type_sideways = (sideways > 0.0)
-        self._type_piercing = (piercing > 0.0)
+    @cached_property
+    def _type_active(self):
+        return self.active > 0.0
+
+    @cached_property
+    def _type_passive(self):
+        return self.passive > 0.0
+
+    @cached_property
+    def _type_sideways(self):
+        return self.sideways > 0.0
+
+    @cached_property
+    def _type_piercing(self):
+        return self.piercing > 0.0
 
     def __sub__(self, other: "DPS") -> "DPS":
-        new_dps = DPS.__new__(DPS)
-        new_dps.active = max(self.active - other.active, 0.0)
-        new_dps.passive = max(self.passive - other.passive, 0.0)
-        new_dps.sideways = max(self.sideways - other.sideways, 0.0)
-        new_dps.piercing = max(self.piercing - other.piercing, 0.0)
-        new_dps._type_active = (new_dps.active > 0.0)
-        new_dps._type_passive = (new_dps.passive > 0.0)
-        new_dps._type_sideways = (new_dps.sideways > 0.0)
-        new_dps._type_piercing = (new_dps.piercing > 0.0)
-        return new_dps
+        return DPS(
+            self.active - other.active,
+            self.passive - other.passive,
+            self.sideways - other.sideways,
+            self.piercing - other.piercing
+        )
 
     def meets_requirements(self, requirements: "DPS") -> tuple[bool, float]:
         distance = 0.0
@@ -376,7 +377,14 @@ class DamageTables:
         elif logic_difficulty == LogicDifficulty.option_expert:   self.logic_difficulty_multiplier = 1.07
         else:                                                     self.logic_difficulty_multiplier = 1.00
 
-    def can_meet_dps(self, target_dps: DPS, weapons: list[str],
+        # The two methods below are hot, but they also take a considerable amount of time.
+        # Where possible we want to cache their results, but just wrapping them in @lru_cache would make the cache
+        # global, and we don't want that (not least because it results in memory leaks).
+        # The max sizes have been chosen to keep cache misses low without making the cache too big.
+        self.can_meet_dps = lru_cache(maxsize=1024)(self.can_meet_dps)  # type: ignore[method-assign]
+        self.get_dps_shot_types = lru_cache(maxsize=512)(self.get_dps_shot_types)  # type: ignore[method-assign]
+
+    def can_meet_dps(self, target_dps: DPS, weapons: tuple[str, ...],
           max_power_level: int = 11, rest_energy: int = 99) -> bool:
         for (weapon, power) in product(weapons, range(max_power_level)):
             if self.generator_power_required[weapon][power] > rest_energy:
@@ -386,7 +394,7 @@ class DamageTables:
                 return True
         return False
 
-    def get_dps_shot_types(self, target_dps: DPS, weapons: list[str],
+    def get_dps_shot_types(self, target_dps: DPS, weapons: tuple[str, ...],
           max_power_level: int = 11, rest_energy: int = 99) -> bool | dict[int, DPS]:
         best_distances: dict[int, float] = {}  # energy required: distance
         best_dps: dict[int, DPS] = {}  # energy required: best DPS object
@@ -559,14 +567,14 @@ def can_deal_damage(state: "CollectionState", player: int, target_dps: DPS, ener
     power_level_max = min(11, 1 + state.count("Maximum Power Up", player))
     start_energy = damage_tables.local_power_provided[get_generator_level(state, player)] + energy_adjust
 
-    result = damage_tables.get_dps_shot_types(target_dps, owned_front, power_level_max, start_energy)
+    result = damage_tables.get_dps_shot_types(target_dps, tuple(owned_front), power_level_max, start_energy)
 
     if type(result) is bool:  # Immediate pass/fail
         return result
 
     for (used_energy, rest_dps) in result.items():
         rest_energy = start_energy - used_energy
-        if damage_tables.can_meet_dps(rest_dps, owned_rear, power_level_max, rest_energy):
+        if damage_tables.can_meet_dps(rest_dps, tuple(owned_rear), power_level_max, rest_energy):
             return True
     return False
 
