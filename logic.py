@@ -4,10 +4,11 @@
 # and is released under the terms of the zlib license.
 # See "LICENSE" for more details.
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from functools import cached_property, lru_cache
 from itertools import product
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 from BaseClasses import LocationProgressType as LPType
 
