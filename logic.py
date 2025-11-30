@@ -989,13 +989,13 @@ def rules_e1_bonus(world: "TyrianWorld", difficulty: int) -> None:
 def rules_e1_mines(world: "TyrianWorld", difficulty: int) -> None:
     # Rotating orbs: 20
     enemy_health = scale_health(difficulty, 20)  # Rotating Orbs
-    dps_active = world.damage_tables.make_dps(active=enemy_health / 1.0)
+    dps_active = world.damage_tables.make_dps(active=enemy_health / 1.4)
     dps_piercing = world.damage_tables.make_dps(piercing=enemy_health / 2.7)
     logic_entrance_rule(world, "MINES (Episode 1) @ Destroy First Orb", lambda state, dps1=dps_piercing, dps2=dps_active:
           can_deal_damage(state, world.player, dps1)
           or can_deal_damage(state, world.player, dps2))
 
-    dps_active = world.damage_tables.make_dps(active=enemy_health / 0.5)
+    dps_active = world.damage_tables.make_dps(active=enemy_health / 0.8)
     dps_piercing = world.damage_tables.make_dps(piercing=enemy_health / 1.2)
     logic_entrance_rule(world, "MINES (Episode 1) @ Destroy Second Orb", lambda state, dps1=dps_piercing, dps2=dps_active:
           can_deal_damage(state, world.player, dps1)
@@ -1891,7 +1891,7 @@ def rules_e4_windy(world: "TyrianWorld", difficulty: int) -> None:
     # want either enough active to knock out both rapidly, or to defeat one with active and one with passive.
     # Guaranteeing we can get those should be enough to get all of them.
     dps_option1 = world.damage_tables.make_dps(active=(scale_health(difficulty, 20) * 2) / 0.7)
-    dps_option2 = world.damage_tables.make_dps(active=scale_health(difficulty, 20) / 1.0, passive=scale_health(difficulty, 20) / 0.5)
+    dps_option2 = world.damage_tables.make_dps(active=scale_health(difficulty, 20) / 1.0, passive=scale_health(difficulty, 20) / 0.7)
     logic_entrance_rule(world, "WINDY (Episode 4) @ Reach Extra Section", lambda state, dps1=dps_option1, dps2=dps_option2:
           can_deal_damage(state, world.player, dps1, exclude=["The Orange Juicer", "Wild Ball", "Fireball"])
           or can_deal_damage(state, world.player, dps2, exclude=["The Orange Juicer", "Wild Ball", "Fireball"]))
@@ -2302,8 +2302,11 @@ def rules_e4_eyespy(world: "TyrianWorld", difficulty: int) -> None:
     dps_pierceopt = world.damage_tables.make_dps(piercing=scale_health(difficulty, 20) / 2.5, passive=wanted_passive)
 
     # Static eye is almost impossible to damage with active, so requires piercing only
+    # NortShip Spreader at max also hits from behind hard enough
+    # The Banana Blast isn't strictly necessary, but we need *a* front weapon and it's the least generator expensive
     logic_location_rule(world, "EYESPY (Episode 4) - Guarded Green Eye, Static", lambda state, dps1=dps_pierceopt:
-          can_deal_damage(state, world.player, dps1))
+          has_specific_loadout(state, world.player, front_weapon=("Banana Blast (Front)", 11), rear_weapon=("NortShip Spreader", 11))
+          or can_deal_damage(state, world.player, dps1))
     logic_location_rule(world, "EYESPY (Episode 4) - Guarded Green Eye, Swaying", lambda state, dps1=dps_pierceopt, dps2=dps_normalopt:
           can_deal_damage(state, world.player, dps1)
           or can_deal_damage(state, world.player, dps2, exclude=["The Orange Juicer", "Guided Bombs", "Banana Blast (Rear)"]))
