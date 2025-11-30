@@ -823,11 +823,9 @@ class TyrianWorld(World):
         def toss_from_itempool(num_to_toss: int) -> int:
             tossable_items = [name for name in self.local_itempool if LocalItemData.get(name).tossable]
 
-            # Excess data cubes can be tossed too, though we try to restrict this to really excessive numbers.
-            # Consider anything trimmable past 400% of the requirement, or 198 cubes, whichever is lower.
+            # Any data cubes that are more than the total required are tossable, too.
             if self.options.data_cube_hunt:
-                tossable_cube_count = (self.options.data_cubes_total.value -
-                                       min(198, self.options.data_cubes_required.value * 4))
+                tossable_cube_count = (self.options.data_cubes_total.value - self.options.data_cubes_required.value)
                 if tossable_cube_count > 0:
                     tossable_items.extend(["Data Cube"] * tossable_cube_count)
 
@@ -850,6 +848,11 @@ class TyrianWorld(World):
         if self.options.shop_mode == "shops_only":
             # Warn on currently unsupported option combinations (that we still allow generation of, for the daring)
             if self.options.logic_difficulty != "no_logic" and self.options.logic_difficulty != "master":
+                if self.multiworld.players == 1:
+                    raise OptionError(f"Cowardly refusing to generate a solo 'shops_only' game for "
+                                      f"{self.multiworld.get_player_name(self.player)} "
+                                      f"due to improper logic difficulty settings. "
+                                      f"A logic difficulty of 'master' or 'no logic' is required.")
                 logging.warning(f"{self.multiworld.get_player_name(self.player)}:"
                                 f" Shop mode 'shops_only' is not designed for these logic settings."
                                 f" You may experience an empty sphere 1, or failed generations in solo play.")
