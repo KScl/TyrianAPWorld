@@ -149,8 +149,6 @@ class TyrianWorld(World):
         return item_list
 
     def get_junk_items(self, total_checks: int, total_money: int, allow_superbombs: bool = True) -> list[str]:
-        total_money = int(total_money * (self.options.money_pool_scale / 100))
-
         valid_money_amounts = [int(name.removesuffix(" Credits"))
                                for name in LocalItemData.other_items if name.endswith(" Credits")]
 
@@ -841,8 +839,10 @@ class TyrianWorld(World):
 
             return len(self.multiworld.get_unfilled_locations(self.player)) - len(self.local_itempool)
 
-        # Subtract what we start with.
+        # Subtract what we start with, and then scale as requested.
+        # Catch negative money needed (because we start with more than we need) and set to zero.
         self.total_money_needed -= self.options.starting_money.value
+        self.total_money_needed = max(0, int(self.total_money_needed * (self.options.money_pool_scale / 100)))
 
         # Shops-only mode junk fill
         if self.options.shop_mode == "shops_only":
@@ -885,8 +885,7 @@ class TyrianWorld(World):
             rest_item_count = len(self.multiworld.get_unfilled_locations(self.player)) - len(self.local_itempool)
 
             # Don't spam the seed with SuperBombs; lower limit to 200 credits per base item in the junk pool.
-            # If the junk pool size and total money needed are both negative, the 0 is there to catch that.
-            self.total_money_needed = max(0, 200 * rest_item_count, self.total_money_needed)
+            self.total_money_needed = max(200 * rest_item_count, self.total_money_needed)
 
             # We want to at least have SOME variety of credit items in the pool regardless of settings.
             # We also don't want to leave ourselves with a situation where, say,
