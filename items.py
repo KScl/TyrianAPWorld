@@ -28,7 +28,7 @@ class LocalItem:
         self.local_id = local_id
         self.count = count
         self.item_class = item_class
-        self.tossable = (item_class != IClass.progression and item_class != IClass.progression_skip_balancing)
+        self.tossable = (IClass.progression not in item_class)
 
 
 class LocalLevel(LocalItem):
@@ -289,7 +289,7 @@ class LocalItemData:
         "SuperBomb":             LocalItem(910, count=1),  # More can be added in junk fill
 
         # Goal collectible item for Data Cube Hunt mode
-        "Data Cube":             LocalItem(911, item_class=IClass.progression_skip_balancing),
+        "Data Cube":             LocalItem(911, item_class=IClass.progression_deprioritized_skip_balancing),
 
         # All Credits items have their count set dynamically.
         "50 Credits":            LocalItem(980),
