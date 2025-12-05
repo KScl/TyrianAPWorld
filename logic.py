@@ -860,7 +860,8 @@ def rules_e1_minemaze(world: "TyrianWorld", difficulty: int) -> None:
 # =================================================================================================
 def rules_e1_windy(world: "TyrianWorld", difficulty: int) -> None:
     # Regular block: 10
-    dps_active = world.damage_tables.make_dps(active=scale_health(difficulty, 10) / 1.2)
+    # Time is based on when the shooting blocks start to fire, instead of the maximum possible for damage
+    dps_active = world.damage_tables.make_dps(active=scale_health(difficulty, 10) / 1.0)
     wanted_armor = get_logic_difficulty_choice(world, base=(7, 7, 5, 5), hard_contact=(11, 11, 8, 6))
     logic_entrance_rule(world, "WINDY (Episode 1) @ Fly Through", lambda state, dps1=dps_active, armor=wanted_armor:
           has_armor_level(state, world.player, armor)
