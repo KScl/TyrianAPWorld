@@ -649,7 +649,7 @@ class TyrianWorld(World):
         if self.options.shop_mode != "none":
             # One of the "always_x" choices, add each level shop exactly x times
             if self.options.shop_item_count <= -1:
-                times_to_add = abs(self.options.shop_item_count)
+                times_to_add = abs(self.options.shop_item_count.value)
                 items_per_shop = dict.fromkeys(self.all_levels, times_to_add)
 
             # Not enough items for one in every shop
