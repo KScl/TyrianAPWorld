@@ -8,7 +8,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from functools import cached_property, lru_cache
 from itertools import product
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from BaseClasses import LocationProgressType as LPType
 
@@ -457,6 +457,15 @@ def get_logic_difficulty_choice(world: "TyrianWorld",
     return base[world.options.logic_difficulty.value - 1]
 
 
+def has_twiddle(world: "TyrianWorld", action: SpecialValues) -> bool:
+    if world.options.logic_difficulty < LogicDifficulty.option_master:
+        return False
+    for twiddle in world.twiddles:
+        if action == twiddle.action:
+            return True
+    return False
+
+
 # =================================================================================================
 
 
@@ -592,19 +601,14 @@ def has_generator_level(state: "CollectionState", player: int, gen_level: int) -
     return get_generator_level(state, player) >= gen_level
 
 
-def has_twiddle(state: "CollectionState", player: int, action: SpecialValues) -> bool:
-    for twiddle in state.multiworld.worlds[player].twiddles:
-        if action == twiddle.action:
-            return True
-    return False
-
-
 def has_invulnerability(state: "CollectionState", player: int) -> bool:
-    return state.has("Invulnerability", player) or has_twiddle(state, player, SpecialValues.Invulnerability)
+    return state.has("Invulnerability", player) \
+          or has_twiddle(cast("TyrianWorld", state.multiworld.worlds[player]), SpecialValues.Invulnerability)
 
 
 def has_repulsor(state: "CollectionState", player: int) -> bool:
-    return state.has("Repulsor", player) or has_twiddle(state, player, SpecialValues.Repulsor)
+    return state.has("Repulsor", player) \
+          or has_twiddle(cast("TyrianWorld", state.multiworld.worlds[player]), SpecialValues.Repulsor)
 
 
 # Alternative to the can_deal_damage, that checks for a specific loadout without doing calculations.
@@ -856,8 +860,8 @@ def rules_e1_minemaze(world: "TyrianWorld", difficulty: int) -> None:
 # =================================================================================================
 def rules_e1_windy(world: "TyrianWorld", difficulty: int) -> None:
     # Regular block: 10
-    dps_active = world.damage_tables.make_dps(active=scale_health(difficulty, 10) / 1.4)
-    wanted_armor = get_logic_difficulty_choice(world, base=(7, 5, 5, 5), hard_contact=(11, 9, 8, 6))
+    dps_active = world.damage_tables.make_dps(active=scale_health(difficulty, 10) / 1.2)
+    wanted_armor = get_logic_difficulty_choice(world, base=(7, 7, 5, 5), hard_contact=(11, 11, 8, 6))
     logic_entrance_rule(world, "WINDY (Episode 1) @ Fly Through", lambda state, dps1=dps_active, armor=wanted_armor:
           has_armor_level(state, world.player, armor)
           and can_deal_damage(state, world.player, dps1))
