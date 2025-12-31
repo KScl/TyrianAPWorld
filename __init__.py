@@ -85,7 +85,7 @@ class TyrianWorld(World):
     location_name_groups = LevelLocationData.get_location_groups()
 
     # Raise this to force outdated clients to update.
-    aptyrian_net_version = 6
+    aptyrian_net_version = 7
 
     # --------------------------------------------------------------------------------------------
 
@@ -474,7 +474,7 @@ class TyrianWorld(World):
             slot_data["LocationMax"] = self.output_location_count()
 
         if self.options.twiddles:
-            slot_data["TwiddleData"] = self.obfuscate_object(self.output_twiddles())
+            slot_data["TwiddleData"] = self.output_twiddles()
         if self.options.shop_mode != "none":
             slot_data["ShopData"] = self.obfuscate_object(self.output_shop_data())
 
