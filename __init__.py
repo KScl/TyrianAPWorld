@@ -276,6 +276,7 @@ class TyrianWorld(World):
             "Episodes": sum(1 << (i - 1) for i in self.play_episodes),
             "Goal": sum(1 << (i - 1) for i in self.goal_episodes),
             "Difficulty": int(self.options.difficulty),
+            "LogicDifficulty": int(self.options.logic_difficulty),  # For trackers
         }
 
         # The following settings are only added if their values are truthy or non-zero
